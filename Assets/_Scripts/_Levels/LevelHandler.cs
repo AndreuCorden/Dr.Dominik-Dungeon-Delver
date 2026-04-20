@@ -10,15 +10,33 @@ public class LevelHandler : MonoBehaviour
     public int spawnX = 0;
     public int spawnZ = 2;
 
+    [Header("Level Settings")]
+    public bool shouldFloorFall = true;
+
     private GameObject activePlayer;
 
     void Start()
     {
-        // Automatically find the GridGenerator on the same object
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
+        // 1. Setup the Grid
         gridGen.GenerateLevel();
+        
+        // 2. Setup the Player
         SpawnPlayer();
+
+        // 3. Start the Falling Floor (If enabled)
+        if (shouldFloorFall)
+        {
+            if (TryGetComponent<FloorManager>(out FloorManager fm))
+            {
+                fm.StartFallingLogic();
+            }
+            else
+            {
+                Debug.LogWarning("ShouldFloorFall is true, but FloorManager component is missing!");
+            }
+        }
     }
 
     void SpawnPlayer()
