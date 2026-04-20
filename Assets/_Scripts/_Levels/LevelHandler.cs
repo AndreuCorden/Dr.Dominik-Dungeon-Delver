@@ -21,7 +21,7 @@ public class LevelHandler : MonoBehaviour
 
         // 1. Setup the Grid
         gridGen.GenerateLevel();
-        
+
         // 2. Setup the Player
         SpawnPlayer();
 
@@ -41,25 +41,21 @@ public class LevelHandler : MonoBehaviour
 
     void SpawnPlayer()
     {
-        // Calculate the world position based on grid coordinates
         Vector3 spawnPos = gridGen.GetTilePosition(spawnX, spawnZ);
         spawnPos.y = 1.0f;
 
-        // If player doesn't exist, create them. If they do, just move them.
-        if (activePlayer == null)
-        {
-            activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
-            activePlayer.name = "Player";
+        activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+        activePlayer.name = "Player";
 
-            // Link the Camera to the new Player
-            if (Camera.main.TryGetComponent<CameraFollow>(out CameraFollow follow))
-            {
-                follow.target = activePlayer.transform;
-            }
-        }
-        else
+        // RE-FIND THE CAMERA AND TARGET THE NEW PLAYER
+        Camera mainCam = Camera.main;
+        if (mainCam != null && mainCam.TryGetComponent<CameraFollow>(out CameraFollow follow))
         {
-            activePlayer.transform.position = spawnPos;
+            follow.target = activePlayer.transform;
+
+            // Snap camera to position immediately so it doesn't "slide" from the old spot
+            Vector3 targetCamPos = activePlayer.transform.position + follow.offset;
+            mainCam.transform.position = targetCamPos;
         }
     }
 }

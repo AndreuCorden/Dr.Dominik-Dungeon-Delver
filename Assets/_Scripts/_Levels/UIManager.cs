@@ -18,7 +18,12 @@ public class UIManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+    }
+
+    void Start()
+    {
         coinText.text = $"Coins: {coins}";
+        UpdateHealth(PlayerController.health);
     }
 
     public void UpdateCoins(int amount)
@@ -35,7 +40,7 @@ public class UIManager : MonoBehaviour
         for (int i = 0; i < heartImages.Length; i++)
         {
             if (i < currentHealth)
-                heartImages[i].color = Color.white;
+                heartImages[i].color = Color.red;
             else
                 heartImages[i].color = heartEmptyColor; // Makes lost hearts look empty
         }
