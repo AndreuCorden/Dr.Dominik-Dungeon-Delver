@@ -35,6 +35,11 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        if (!isMoving)
+        {
+            CheckForVoid();
+        }
+
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
 
         if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
@@ -64,7 +69,7 @@ public class PlayerController : MonoBehaviour
         {
             // Trigger Lose Heart / Game Over logic here
             Debug.Log("Player fell into the void!");
-        }   
+        }
 
         // Nothing was hit (the floor is gone or it's the edge of the world)
         Debug.Log("Path blocked: No floor at " + dest);
@@ -76,5 +81,39 @@ public class PlayerController : MonoBehaviour
         targetPosition = targetPosition + direction; // Move relative to current target
         isMoving = true;
         transform.forward = direction;
+    }
+
+    void CheckForVoid()
+    {
+        // Cast a ray straight down from the player's center
+        // We check slightly further than the floor height (1.1f)
+        Ray ray = new Ray(transform.position, Vector3.down);
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, 1.1f, floorLayer))
+        {
+            // NO FLOOR FOUND! 
+            StartCoroutine(HandleFallingDeath());
+        }
+    }
+
+    System.Collections.IEnumerator HandleFallingDeath()
+    {
+        isMoving = true; // Block input so player can't "jump" out of the hole
+
+        float fallTimer = 0;
+        while (fallTimer < 1.5f)
+        {
+            // Move the player down
+            transform.Translate(Vector3.down * Time.deltaTime * 10f);
+            // Spin them for a dramatic "falling" effect
+            transform.Rotate(Vector3.up * Time.deltaTime * 500f);
+
+            fallTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.Log("Player is dead! Resetting Level...");
+        // For now, we just reload the scene. Later, we will subtract a heart.
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 }
