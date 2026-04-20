@@ -9,6 +9,7 @@ public class GridGenerator : MonoBehaviour
     [Header("Prefabs")]
     public GameObject floorPrefab;
     public GameObject wallPrefab;
+    public GameObject CoinPrefab;
 
     void Start()
     {
@@ -39,6 +40,15 @@ public class GridGenerator : MonoBehaviour
                     GameObject tile = Instantiate(floorPrefab, spawnPos, Quaternion.identity);
                     tile.name = $"Tile_{x}_{z}";
                     tile.transform.parent = this.transform;
+
+                    // RANDOM COIN SPAWN (e.g., 10% chance)
+                    if (Random.value < 0.1f)
+                    {
+                        // Spawn the coin 1 unit above the tile
+                        Vector3 coinPos = new Vector3(spawnPos.x, 1.0f, spawnPos.z);
+                        Quaternion coinRotation = Quaternion.Euler(90, 0, 0);
+                        GameObject newCoin = Instantiate(CoinPrefab, coinPos, coinRotation);
+                    }
                 }
             }
         }

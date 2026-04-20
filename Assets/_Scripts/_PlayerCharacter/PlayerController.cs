@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour
     private Vector3 targetPosition;
     private bool isMoving = false;
 
+    public int health = 3;
+
     void Start()
     {
         targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
@@ -95,25 +97,51 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(HandleFallingDeath());
         }
     }
-
     System.Collections.IEnumerator HandleFallingDeath()
     {
-        isMoving = true; // Block input so player can't "jump" out of the hole
+        isMoving = true;
 
         float fallTimer = 0;
         while (fallTimer < 1.5f)
         {
-            // Move the player down
             transform.Translate(Vector3.down * Time.deltaTime * 10f);
-            // Spin them for a dramatic "falling" effect
             transform.Rotate(Vector3.up * Time.deltaTime * 500f);
-
             fallTimer += Time.deltaTime;
             yield return null;
         }
 
-        Debug.Log("Player is dead! Resetting Level...");
-        // For now, we just reload the scene. Later, we will subtract a heart.
-        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        // 1. Subtract heart and update UI
+        TakeDamage();
+
+        // 2. Move player back to spawn (Reset Rotation too so they aren't dizzy!)
+        transform.position = new Vector3(0, 1, 2);
+        transform.rotation = Quaternion.identity;
+        targetPosition = transform.position;
+
+        // 3. Allow movement again
+        isMoving = false;
+
+        Debug.Log("Player fell! One heart lost. Respawning...");
+
+        // REMOVED: SceneManager.LoadScene(...) 
+        // We stay in the scene so the floor that already fell STAYS gone!
+    }
+
+    public void TakeDamage()
+    {
+        health--;
+        UIManager.Instance.UpdateHealth(health);
+
+        if (health <= 0)
+        {
+            Debug.Log("Game Over!");
+            // Load Game Over Scene or Restart Game
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
+        else
+        {
+            // Respawn the player at the start of the current room
+            // You'll need to call your LevelHandler's spawn function here
+        }
     }
 }
