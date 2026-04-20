@@ -12,7 +12,6 @@ public class GridGenerator : MonoBehaviour
 
     void Start()
     {
-        GenerateLevel();
     }
 
     public void GenerateLevel()

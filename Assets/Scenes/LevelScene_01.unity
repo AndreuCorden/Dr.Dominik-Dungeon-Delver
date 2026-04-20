@@ -282,8 +282,9 @@ GameObject:
   - component: {fileID: 566127726}
   - component: {fileID: 566127727}
   - component: {fileID: 566127728}
+  - component: {fileID: 566127729}
   m_Layer: 0
-  m_Name: LevelGenerator
+  m_Name: LevelManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -336,6 +337,19 @@ MonoBehaviour:
   playerPrefab: {fileID: 4971320521847776260, guid: f0f29f82e5bdfa84091fe92dd45469ee, type: 3}
   spawnX: 2
   spawnZ: 0
+--- !u!114 &566127729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566127725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloorManager
+  timeBetweenRows: 2
 --- !u!1 &798862479
 GameObject:
   m_ObjectHideFlags: 0
