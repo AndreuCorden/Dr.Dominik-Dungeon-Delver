@@ -8,12 +8,15 @@ public class PlayerController : MonoBehaviour
     private Vector3 targetPosition;
     private bool isMoving = false;
 
-    public int health = 3;
+    public static int health = 3;
+
+    private LevelHandler levelHandler;
 
     void Start()
     {
         targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
         transform.position = targetPosition;
+        levelHandler = Object.FindFirstObjectByType<LevelHandler>();
     }
 
     void Update()
@@ -113,14 +116,6 @@ public class PlayerController : MonoBehaviour
         // 1. Subtract heart and update UI
         TakeDamage();
 
-        // 2. Move player back to spawn (Reset Rotation too so they aren't dizzy!)
-        transform.position = new Vector3(0, 1, 2);
-        transform.rotation = Quaternion.identity;
-        targetPosition = transform.position;
-
-        // 3. Allow movement again
-        isMoving = false;
-
         Debug.Log("Player fell! One heart lost. Respawning...");
 
         // REMOVED: SceneManager.LoadScene(...) 
@@ -129,19 +124,22 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage()
     {
-        health--;
-        UIManager.Instance.UpdateHealth(health);
+        health--; // Subtract 1 from the "Permanent" memory
 
         if (health <= 0)
         {
-            Debug.Log("Game Over!");
-            // Load Game Over Scene or Restart Game
+            Debug.Log("Game Over! No hearts left.");
+            health = 3; // Reset static health for a brand new game
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
         else
         {
-            // Respawn the player at the start of the current room
-            // You'll need to call your LevelHandler's spawn function here
+            Debug.Log("Hearts remaining: " + health + ". Resetting Level...");
+
+            // This reloads the scene exactly as it is in the editor.
+            // All fallen blocks will reappear.
+            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
         }
     }
 }
