@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     public float moveSpeed = 5f;
+
+    [Header("Status Effects")]
+    public float currentMoveMultiplier = 1.0f;
     public LayerMask floorLayer; // Assign the "Floor" layer in the inspector
     private Vector3 targetPosition;
     private bool isMoving = false;
@@ -45,7 +48,7 @@ public class PlayerController : MonoBehaviour
             CheckForVoid();
         }
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
 
         if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
         {
@@ -100,6 +103,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(HandleFallingDeath());
         }
     }
+
     System.Collections.IEnumerator HandleFallingDeath()
     {
         isMoving = true;
@@ -113,33 +117,37 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
 
-        // 1. Subtract heart and update UI
-        TakeDamage();
-
-        Debug.Log("Player fell! One heart lost. Respawning...");
-
-        // REMOVED: SceneManager.LoadScene(...) 
-        // We stay in the scene so the floor that already fell STAYS gone!
+        // Pass 'true' because this was a fall, requiring a scene reset
+        TakeDamage(true);
     }
 
-    public void TakeDamage()
+    // Added a parameter 'isFall' to decide if we reload the scene
+    public void TakeDamage(bool isFall = false)
     {
-        health--; // Subtract 1 from the "Permanent" memory
+        health--;
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateHealth(health);
 
         if (health <= 0)
         {
-            Debug.Log("Game Over! No hearts left.");
-            health = 3; // Reset static health for a brand new game
+            Debug.Log("Game Over!");
+            health = 3;
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
+        else if (isFall)
+        {
+            // Only reload the scene if the player actually fell
+            Debug.Log("Fell! Reloading scene...");
+            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
         }
         else
         {
-            Debug.Log("Hearts remaining: " + health + ". Resetting Level...");
+            // Enemy hit or other damage: No reload, just a small "Ouch"
+            Debug.Log("Hit by enemy! Health is now: " + health);
 
-            // This reloads the scene exactly as it is in the editor.
-            // All fallen blocks will reappear.
-            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
+            // OPTIONAL: Add a small knockback or invincibility frames here
         }
     }
 }
