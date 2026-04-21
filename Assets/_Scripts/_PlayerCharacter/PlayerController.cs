@@ -5,6 +5,11 @@ public class PlayerController : MonoBehaviour
 {
     public float moveSpeed = 5f;
 
+    [Header("Visual")]
+    [SerializeField] private Transform visualRoot;
+    [SerializeField] private float visualYOffset = 0f;
+    private Vector3 visualRootInitialLocalPosition;
+
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
     public LayerMask floorLayer; // Assign the "Floor" layer in the inspector
@@ -17,9 +22,32 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        if (visualRoot == null)
+        {
+            visualRoot = GetComponentInChildren<Animator>()?.transform;
+            if (visualRoot == transform) visualRoot = null;
+
+            if (visualRoot == null)
+                visualRoot = GetComponentInChildren<SkinnedMeshRenderer>()?.transform;
+
+            if (visualRoot == null)
+                visualRoot = GetComponentInChildren<MeshRenderer>()?.transform;
+
+            if (visualRoot == transform) visualRoot = null;
+        }
+
+        if (visualRoot != null)
+            visualRootInitialLocalPosition = visualRoot.localPosition;
+
         targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
         transform.position = targetPosition;
         levelHandler = Object.FindFirstObjectByType<LevelHandler>();
+    }
+
+    void LateUpdate()
+    {
+        if (visualRoot != null)
+            visualRoot.localPosition = visualRootInitialLocalPosition + new Vector3(0f, visualYOffset, 0f);
     }
 
     void Update()
