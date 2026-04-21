@@ -1,12 +1,16 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnemyFollower : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float timeBetweenSteps = 1.0f; // Enemy waits 1 second between moves
+
+    [Header("Layers")]
     public LayerMask floorLayer;
+    public LayerMask blockingLayers;
 
     protected Vector3 targetPosition;
     protected bool isMoving = false;
@@ -14,13 +18,26 @@ public class EnemyFollower : MonoBehaviour
     protected float nextMoveTime;
     private Transform player;
 
+    public static HashSet<Vector3> OccupiedTiles = new HashSet<Vector3>();
+
     protected void Start()
     {
         // Find the player in the scene
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null) player = playerObj.transform;
+        if (GameObject.FindObjectsByType<EnemyFollower>(FindObjectsSortMode.None).Length <= 1)
+        {
+            OccupiedTiles.Clear();
+        }
 
         targetPosition = transform.position;
+    }
+
+    private void OnDestroy()
+    {
+        // If an enemy falls or is killed, make sure it releases its tile claim!
+        OccupiedTiles.Remove(targetPosition);
+        OccupiedTiles.Remove(transform.position);
     }
 
     void Update()
@@ -33,14 +50,11 @@ public class EnemyFollower : MonoBehaviour
 
         if (isMoving)
         {
-            // Smoothly slide to the next grid tile
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
 
             if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
             {
-                transform.position = targetPosition;
-                isMoving = false;
-                nextMoveTime = Time.time + timeBetweenSteps; // Set wait time for next step
+                FinishMovement(); // Call the cleanup function here
             }
         }
         else
@@ -60,38 +74,53 @@ public class EnemyFollower : MonoBehaviour
         Vector3 diff = player.position - transform.position;
         Vector3 moveDir = Vector3.zero;
 
-        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.z))
-            moveDir.x = Mathf.Sign(diff.x);
-        else
-            moveDir.z = Mathf.Sign(diff.z);
+        if (Mathf.Abs(diff.x) > Mathf.Abs(diff.z)) moveDir.x = Mathf.Sign(diff.x);
+        else moveDir.z = Mathf.Sign(diff.z);
 
         Vector3 potentialDest = transform.position + moveDir;
+        potentialDest = new Vector3(Mathf.Round(potentialDest.x), potentialDest.y, Mathf.Round(potentialDest.z));
 
-        // 1. Check if the player is already occupying that specific tile
-        // We use a small distance check (0.1f) to see if the positions match
+        // 1. Attack check
         if (Vector3.Distance(potentialDest, player.position) < 0.1f)
         {
-            // ATTACK: Don't move into the tile, just face the player and deal damage
-            transform.forward = moveDir;
-
-            if (player.TryGetComponent<PlayerController>(out PlayerController pc))
-            {
-                pc.TakeDamage(); // Deal damage without moving
-                StartCoroutine(AttackLunge(moveDir));
-            }
-
-            // Put the movement on cooldown so they don't spam damage every frame
+            // Attack logic... (Lunge/Damage)
+            StartCoroutine(AttackLunge(moveDir));
+            if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
             nextMoveTime = Time.time + timeBetweenSteps;
             return;
         }
 
-        // 2. Only move if the tile is unoccupied and has a floor
-        if (Physics.Raycast(potentialDest + Vector3.up, Vector3.down, 2f, floorLayer))
+        // 2. Movement Logic
+        bool hasFloor = Physics.Raycast(potentialDest + Vector3.up, Vector3.down, 2f, floorLayer);
+        bool isClaimed = OccupiedTiles.Contains(potentialDest);
+
+        // Check if ANYONE (Player or Enemy) is physically there
+        bool isPhysicallyBlocked = Physics.CheckSphere(potentialDest, 0.4f, blockingLayers);
+
+        if (hasFloor && !isClaimed && !isPhysicallyBlocked)
         {
+            // IMPORTANT: Release our current tile so it's free for others
+            Vector3 currentTile = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
+            OccupiedTiles.Remove(currentTile);
+
+            // Claim the new one
+            OccupiedTiles.Add(potentialDest);
+
             targetPosition = potentialDest;
             isMoving = true;
             transform.forward = moveDir;
         }
+    }
+
+    protected virtual void FinishMovement()
+    {
+        transform.position = targetPosition;
+        isMoving = false;
+        nextMoveTime = Time.time + timeBetweenSteps;
+
+        // Double check we are still registered at our stop point
+        Vector3 currentTile = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
+        if (!OccupiedTiles.Contains(currentTile)) OccupiedTiles.Add(currentTile);
     }
 
     protected IEnumerator AttackLunge(Vector3 dir)
@@ -128,13 +157,4 @@ public class EnemyFollower : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
-    protected void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Player"))
-    {
-        PlayerController pc = other.GetComponent<PlayerController>();
-        if (pc != null) pc.TakeDamage(); // Remember: TakeDamage() defaults to false (no reload)
-    }
-}
 }

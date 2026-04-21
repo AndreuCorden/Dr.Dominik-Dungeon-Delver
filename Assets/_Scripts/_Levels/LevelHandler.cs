@@ -91,4 +91,6 @@ public class LevelHandler : MonoBehaviour
                 Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         }
     }
+
+    void Awake() { EnemyFollower.OccupiedTiles.Clear(); }
 }

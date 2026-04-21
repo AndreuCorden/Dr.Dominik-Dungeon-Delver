@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7526525175825539801}
   - component: {fileID: -646668530928807867}
   - component: {fileID: 4092053470955062580}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Patroller
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -160,5 +160,8 @@ MonoBehaviour:
   floorLayer:
     serializedVersion: 2
     m_Bits: 64
+  blockingLayers:
+    serializedVersion: 2
+    m_Bits: 256
   patrolDistance: 4
   moveOnXAxis: 1

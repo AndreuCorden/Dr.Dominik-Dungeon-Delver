@@ -7,7 +7,16 @@ public class PlayerController : MonoBehaviour
 
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
-    public LayerMask floorLayer; // Assign the "Floor" layer in the inspector
+
+    [Header("Attack Settings")]
+    public float attackRange = 1.1f;
+
+    [Header("VFX")]
+    public GameObject shockwavePrefab;
+
+    [Header("Layers")]
+    public LayerMask floorLayer;
+    public LayerMask enemyLayer;
     private Vector3 targetPosition;
     private bool isMoving = false;
 
@@ -20,6 +29,7 @@ public class PlayerController : MonoBehaviour
         targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
         transform.position = targetPosition;
         levelHandler = Object.FindFirstObjectByType<LevelHandler>();
+        EnemyFollower.OccupiedTiles.Add(targetPosition);
     }
 
     void Update()
@@ -32,10 +42,14 @@ public class PlayerController : MonoBehaviour
             else if (Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame) direction = Vector3.back;
             else if (Keyboard.current.aKey.wasPressedThisFrame || Keyboard.current.leftArrowKey.wasPressedThisFrame) direction = Vector3.left;
             else if (Keyboard.current.dKey.wasPressedThisFrame || Keyboard.current.rightArrowKey.wasPressedThisFrame) direction = Vector3.right;
+            else if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                PerformSpaceAttack();
+            }
 
             if (direction != Vector3.zero)
             {
-                // ONLY move if the destination is safe
+                // REMOVED: CheckForEnemyInTile (No more bumping to kill)
                 if (IsDestinationSafe(direction))
                 {
                     Move(direction);
@@ -43,10 +57,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (!isMoving)
-        {
-            CheckForVoid();
-        }
+        if (!isMoving) { CheckForVoid(); }
 
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
 
@@ -54,39 +65,46 @@ public class PlayerController : MonoBehaviour
         {
             transform.position = targetPosition;
             isMoving = false;
+
+            // Check for slime once we land on a new tile
+            ResetSpeedIfNoSlime();
         }
     }
 
     bool IsDestinationSafe(Vector3 direction)
     {
-        // Calculate where the player WANTS to go
         Vector3 dest = targetPosition + direction;
+        // Round to match the HashSet format exactly
+        dest = new Vector3(Mathf.Round(dest.x), dest.y, Mathf.Round(dest.z));
 
-        // We cast a ray from the destination, pointing downwards
-        // Origin is slightly above the floor (y=1), pointing down
+        // 1. Check for Floor
         Ray ray = new Ray(new Vector3(dest.x, 2.0f, dest.z), Vector3.down);
+        if (!Physics.Raycast(ray, out RaycastHit hit, 1.5f, floorLayer)) return false;
 
-        // If the ray hits something on the "Floor" layer within 1.5 units
-        if (Physics.Raycast(ray, out RaycastHit hit, 1.5f, floorLayer))
+        // 2. NEW: Check the Global Occupancy List
+        // This prevents you from walking into a tile an enemy is currently moving toward
+        if (EnemyFollower.OccupiedTiles.Contains(dest))
         {
-            // Destination is safe!
-            return true;
+            Debug.Log("Tile is claimed by an enemy!");
+            return false;
         }
 
-        if (!isMoving && !Physics.Raycast(transform.position, Vector3.down, 1.1f, floorLayer))
-        {
-            // Trigger Lose Heart / Game Over logic here
-            Debug.Log("Player fell into the void!");
-        }
+        // 3. Physical Check (Backup)
+        if (Physics.CheckSphere(dest, 0.3f, enemyLayer)) return false;
 
-        // Nothing was hit (the floor is gone or it's the edge of the world)
-        Debug.Log("Path blocked: No floor at " + dest);
-        return false;
+        return true;
     }
 
     void Move(Vector3 direction)
     {
-        targetPosition = targetPosition + direction; // Move relative to current target
+        // Remove old position from global occupancy
+        EnemyFollower.OccupiedTiles.Remove(targetPosition);
+
+        targetPosition = targetPosition + direction;
+
+        // Claim the new position
+        EnemyFollower.OccupiedTiles.Add(targetPosition);
+
         isMoving = true;
         transform.forward = direction;
     }
@@ -133,7 +151,7 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("Game Over!");
             health = 3;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
         }
         else if (isFall)
         {
@@ -148,6 +166,85 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Hit by enemy! Health is now: " + health);
 
             // OPTIONAL: Add a small knockback or invincibility frames here
+        }
+    }
+
+    void PerformSpaceAttack()
+    {
+        Debug.Log("Performing Area Attack!");
+
+        // 1. Flash the player Cyan
+        StartCoroutine(VisualFlash());
+
+        // 2. Spawn and grow the shockwave
+        if (shockwavePrefab != null)
+        {
+            // Spawn at player feet, starting at scale 0
+            GameObject visual = Instantiate(shockwavePrefab, transform.position, Quaternion.identity);
+            visual.transform.localScale = Vector3.zero;
+
+            Destroy(visual, 0.25f); // Destroy shortly after it expands
+        }
+
+        // 3. Damage Logic
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, attackRange);
+        foreach (var hitCollider in hitColliders)
+        {
+            if (hitCollider.CompareTag("Enemy"))
+            {
+                Destroy(hitCollider.gameObject);
+            }
+        }
+    }
+
+    System.Collections.IEnumerator VisualFlash()
+    {
+        Renderer r = GetComponent<Renderer>();
+        if (r != null)
+        {
+            Color oldColor = r.material.color;
+            float elapsed = 0f;
+            float duration = 0.5f; // Total flash time
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                // Gradually shift from Cyan back to the original color
+                r.material.color = Color.Lerp(Color.cyan, oldColor, elapsed / duration);
+                yield return null;
+            }
+            r.material.color = oldColor;
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+    }
+
+    void ResetSpeedIfNoSlime()
+    {
+        // We only need to check this if we are currently slowed
+        if (currentMoveMultiplier < 1.0f)
+        {
+            // Use a box that covers the floor tile area
+            Collider[] hitColliders = Physics.OverlapBox(transform.position, new Vector3(0.4f, 0.1f, 0.4f));
+            bool foundSlime = false;
+
+            foreach (var col in hitColliders)
+            {
+                if (col.CompareTag("Slime"))
+                {
+                    foundSlime = true;
+                    break;
+                }
+            }
+
+            if (!foundSlime)
+            {
+                currentMoveMultiplier = 1.0f;
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3241987678094117902}
   - component: {fileID: -8078499758361651822}
   - component: {fileID: -1333686828021907896}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -127,10 +127,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   moveSpeed: 5
+  currentMoveMultiplier: 1
+  attackRange: 1.1
+  shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}
   floorLayer:
     serializedVersion: 2
     m_Bits: 64
-  health: 3
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!54 &-1333686828021907896
 Rigidbody:
   m_ObjectHideFlags: 0
