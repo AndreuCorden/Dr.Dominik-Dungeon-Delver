@@ -477,6 +477,8 @@ MonoBehaviour:
   spawnX: 2
   spawnZ: 0
   shouldFloorFall: 1
+  enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
+  enemyCount: 1
 --- !u!114 &566127729
 MonoBehaviour:
   m_ObjectHideFlags: 0

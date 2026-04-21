@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class LevelHandler : MonoBehaviour
 {
@@ -13,17 +14,24 @@ public class LevelHandler : MonoBehaviour
     [Header("Level Settings")]
     public bool shouldFloorFall = true;
 
+    [Header("Enemy Settings")]
+    public GameObject enemyPrefab;
+    public int enemyCount = 1;
+
     private GameObject activePlayer;
 
-    void Start()
+    IEnumerator Start()
     {
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
         // 1. Setup the Grid
         gridGen.GenerateLevel();
 
+        yield return new WaitForEndOfFrame();
+
         // 2. Setup the Player
         SpawnPlayer();
+        SpawnEnemies();
 
         // 3. Start the Falling Floor (If enabled)
         if (shouldFloorFall)
@@ -56,6 +64,24 @@ public class LevelHandler : MonoBehaviour
             // Snap camera to position immediately so it doesn't "slide" from the old spot
             Vector3 targetCamPos = activePlayer.transform.position + follow.offset;
             mainCam.transform.position = targetCamPos;
+        }
+    }
+
+    void SpawnEnemies()
+    {
+        if (enemyPrefab == null) return;
+
+        for (int i = 0; i < enemyCount; i++)
+        {
+            // Pick a random spot on your grid
+            // We use (gridWidth - 2) to keep them away from the very edges
+            int randX = Random.Range(1, gridGen.width - 1);
+            int randZ = Random.Range(5, gridGen.depth - 1); // Start at Z=5 so they don't spawn on the player
+
+            Vector3 spawnPos = gridGen.GetTilePosition(randX, randZ);
+            spawnPos.y = 1.0f;
+
+            Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         }
     }
 }
