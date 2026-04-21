@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     public float moveSpeed = 5f;
+
+    [Header("Status Effects")]
+    public float currentMoveMultiplier = 1.0f;
     public LayerMask floorLayer; // Assign the "Floor" layer in the inspector
     private Vector3 targetPosition;
     private bool isMoving = false;
@@ -45,7 +48,7 @@ public class PlayerController : MonoBehaviour
             CheckForVoid();
         }
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
 
         if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
         {
@@ -121,15 +124,15 @@ public class PlayerController : MonoBehaviour
     // Added a parameter 'isFall' to decide if we reload the scene
     public void TakeDamage(bool isFall = false)
     {
-        health--; 
-        
+        health--;
+
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateHealth(health);
 
         if (health <= 0)
         {
             Debug.Log("Game Over!");
-            health = 3; 
+            health = 3;
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
         else if (isFall)
@@ -143,7 +146,7 @@ public class PlayerController : MonoBehaviour
         {
             // Enemy hit or other damage: No reload, just a small "Ouch"
             Debug.Log("Hit by enemy! Health is now: " + health);
-            
+
             // OPTIONAL: Add a small knockback or invincibility frames here
         }
     }

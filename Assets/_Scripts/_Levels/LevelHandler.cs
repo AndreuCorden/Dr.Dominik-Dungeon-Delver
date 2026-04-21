@@ -16,7 +16,9 @@ public class LevelHandler : MonoBehaviour
 
     [Header("Enemy Settings")]
     public GameObject enemyPrefab;
-    public int enemyCount = 1;
+    public GameObject trailEnemyPrefab;
+    public GameObject patrollerEnemyPrefab;
+    public int enemyCount = 2;
 
     private GameObject activePlayer;
 
@@ -81,7 +83,12 @@ public class LevelHandler : MonoBehaviour
             Vector3 spawnPos = gridGen.GetTilePosition(randX, randZ);
             spawnPos.y = 1.0f;
 
-            Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+            if (Random.value > 0.66f && trailEnemyPrefab != null)
+                Instantiate(trailEnemyPrefab, spawnPos, Quaternion.identity);
+            else if (Random.value > 0.5f && patrollerEnemyPrefab != null)
+                Instantiate(patrollerEnemyPrefab, spawnPos, Quaternion.identity);
+            else
+                Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         }
     }
 }

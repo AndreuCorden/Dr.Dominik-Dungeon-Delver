@@ -8,13 +8,13 @@ public class EnemyFollower : MonoBehaviour
     public float timeBetweenSteps = 1.0f; // Enemy waits 1 second between moves
     public LayerMask floorLayer;
 
-    private Vector3 targetPosition;
-    private bool isMoving = false;
+    protected Vector3 targetPosition;
+    protected bool isMoving = false;
     private bool isFalling = false;
-    private float nextMoveTime;
+    protected float nextMoveTime;
     private Transform player;
 
-    void Start()
+    protected void Start()
     {
         // Find the player in the scene
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -25,7 +25,6 @@ public class EnemyFollower : MonoBehaviour
 
     void Update()
     {
-        Debug.Log("In");
         if (isFalling)
         {
             HandleFalling();
@@ -56,7 +55,7 @@ public class EnemyFollower : MonoBehaviour
         }
     }
 
-    void DetermineNextStep()
+    protected virtual void DetermineNextStep()
     {
         Vector3 diff = player.position - transform.position;
         Vector3 moveDir = Vector3.zero;
@@ -95,7 +94,7 @@ public class EnemyFollower : MonoBehaviour
         }
     }
 
-    IEnumerator AttackLunge(Vector3 dir)
+    protected IEnumerator AttackLunge(Vector3 dir)
     {
         Vector3 originalPos = transform.position;
         Vector3 lungePos = originalPos + (dir * 0.3f); // Move 30% into the gap
@@ -129,4 +128,13 @@ public class EnemyFollower : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    protected void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Player"))
+    {
+        PlayerController pc = other.GetComponent<PlayerController>();
+        if (pc != null) pc.TakeDamage(); // Remember: TakeDamage() defaults to false (no reload)
+    }
+}
 }
