@@ -15,10 +15,11 @@ public class GridGenerator : MonoBehaviour
     // This is now accessible by other scripts
     [HideInInspector] public Vector3 doorPosition;
 
-    public void GenerateLevel()
+    public GameObject GenerateLevel()
     {
         // Pick the random X for the door
         int doorX = Random.Range(0, width);
+        GameObject door = null;
         
         // Set the global doorPosition (at floor height for distance checking)
         doorPosition = new Vector3(doorX, 0, depth);
@@ -38,7 +39,7 @@ public class GridGenerator : MonoBehaviour
                     floorUnderDoor.transform.parent = this.transform;
 
                     // 2. Spawn the Door itself 1 unit up
-                    GameObject door = Instantiate(doorPrefab, spawnPos + Vector3.up, Quaternion.identity);
+                    door = Instantiate(doorPrefab, spawnPos + Vector3.up, Quaternion.identity);
                     door.name = "LevelExitDoor";
                     door.transform.parent = this.transform;
                     
@@ -66,6 +67,7 @@ public class GridGenerator : MonoBehaviour
                 }
             }
         }
+        return door;
     }
 
     public Vector3 GetTilePosition(int x, int z)

@@ -3,17 +3,18 @@ using UnityEngine.SceneManagement;
 
 public class LevelGoal : MonoBehaviour
 {
-    [Header("Progression")]
-    public string nextLevelName;
-    
     private GridGenerator gridGen;
     private Transform player;
 
     void Start()
     {
-        gridGen = Object.FindFirstObjectByType<GridGenerator>();
-        GameObject pObj = GameObject.FindGameObjectWithTag("Player");
-        if (pObj != null) player = pObj.transform;
+    }
+
+    public void Initialize(GridGenerator generator, GameObject playerObj)
+    {
+        gridGen = generator;
+        player = playerObj.transform;
+        Debug.Log("LevelGoal Initialized with Player and Generator.");
     }
 
     void Update()
@@ -23,7 +24,6 @@ public class LevelGoal : MonoBehaviour
         // 1. Check if all enemies are dead
         // We look for objects with the "Enemy" tag
         int enemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
-
         if (enemyCount == 0)
         {
             // 2. Calculate distance to the door
@@ -40,8 +40,19 @@ public class LevelGoal : MonoBehaviour
 
     void CompleteLevel()
     {
-        Debug.Log("Enemies cleared and Door reached!");
-        // Optional: PlayerController.health = 3;
-        SceneManager.LoadScene(nextLevelName);
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentSceneIndex + 1;
+
+        // Check if the next index actually exists in your Build Settings
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            Debug.Log($"Level Complete! Moving to Scene Index: {nextSceneIndex}");
+            SceneManager.LoadScene(nextSceneIndex);
+        }
+        else
+        {
+            Debug.LogWarning("No more levels in Build Settings! Returning to Main Menu or Boss?");
+            // Optional: SceneManager.LoadScene("MainMenu");
+        }
     }
 }

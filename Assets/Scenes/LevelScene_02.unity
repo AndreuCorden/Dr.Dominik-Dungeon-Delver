@@ -460,6 +460,8 @@ MonoBehaviour:
   floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
   wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
+  doorPrefab: {fileID: 8953428749450670648, guid: db163c0f66366b345911be8b040b76b1, type: 3}
+  doorPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &566127728
 MonoBehaviour:
   m_ObjectHideFlags: 0

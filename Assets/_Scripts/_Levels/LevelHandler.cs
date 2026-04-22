@@ -27,13 +27,21 @@ public class LevelHandler : MonoBehaviour
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
         // 1. Setup the Grid
-        gridGen.GenerateLevel();
+        GameObject door = gridGen.GenerateLevel();
 
         yield return new WaitForEndOfFrame();
 
         // 2. Setup the Player
         SpawnPlayer();
         SpawnEnemies();
+
+        if (door != null && activePlayer != null)
+    {
+        if (door.TryGetComponent<LevelGoal>(out LevelGoal goal))
+        {
+            goal.Initialize(gridGen, activePlayer);
+        }
+    }
 
         // 3. Start the Falling Floor (If enabled)
         if (shouldFloorFall)
@@ -56,6 +64,8 @@ public class LevelHandler : MonoBehaviour
 
         activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
         activePlayer.name = "Player";
+
+
 
         // RE-FIND THE CAMERA AND TARGET THE NEW PLAYER
         Camera mainCam = Camera.main;
