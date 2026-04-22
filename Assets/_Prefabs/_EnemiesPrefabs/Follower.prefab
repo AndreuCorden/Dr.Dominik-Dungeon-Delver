@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7654270439967234417}
   - component: {fileID: 9094835156215912286}
   - component: {fileID: 7513011581984336247}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Follower
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -160,3 +160,6 @@ MonoBehaviour:
   floorLayer:
     serializedVersion: 2
     m_Bits: 64
+  blockingLayers:
+    serializedVersion: 2
+    m_Bits: 256

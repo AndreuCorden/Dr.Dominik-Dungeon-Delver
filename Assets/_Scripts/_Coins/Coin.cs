@@ -46,11 +46,8 @@ public class Coin : MonoBehaviour
         // Check if the thing that touched us is the Player
         if (other.CompareTag("Player"))
         {
-            // Tell the UI Manager to add a coin
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.UpdateCoins(1);
-            }
+            // Access the persistent instance
+            PlayerController.Instance.AddCoin(1);
 
             // Play a sound here later if you want!
 
