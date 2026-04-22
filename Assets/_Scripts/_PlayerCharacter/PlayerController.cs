@@ -192,7 +192,14 @@ public class PlayerController : MonoBehaviour
         {
             if (hitCollider.CompareTag("Enemy"))
             {
-                Destroy(hitCollider.gameObject);
+                if (hitCollider.TryGetComponent<BaseEnemy>(out var enemy))
+                {
+                    enemy.Die();
+                }
+                else
+                {
+                    Destroy(hitCollider.gameObject); // Fallback
+                }
             }
         }
     }
