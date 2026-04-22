@@ -21,17 +21,10 @@ public class LevelGoal : MonoBehaviour
     {
         if (player == null) return;
 
-        // 1. Check if all enemies are dead
-        // We look for objects with the "Enemy" tag
-        int enemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
-        if (enemyCount == 0)
+        // Only allow level completion if enemies are gone
+        if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0)
         {
-            // 2. Calculate distance to the door
-            // One tile away on a grid means the distance is roughly 1.0
-            float distToDoor = Vector3.Distance(player.position, gridGen.doorPosition);
-
-            // We use 1.1f to account for small floating point errors
-            if (distToDoor <= 1.1f)
+            if (Vector3.Distance(player.position, gridGen.doorPosition) <= 1.1f)
             {
                 CompleteLevel();
             }
