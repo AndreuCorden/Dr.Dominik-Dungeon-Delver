@@ -1,13 +1,35 @@
 using UnityEngine;
 
-public class TrapDamage : MonoBehaviour 
+public class TrapDamage : MonoBehaviour
 {
+    public float damageCooldown = 2.0f;
+    private float lastDamageTime;
+
     private void OnTriggerEnter(Collider other)
+    {
+        // MANUAL CHECK: OnTriggerEnter fires even if script is disabled!
+        if (!enabled) return;
+
+        HandleDamage(other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (!enabled) return;
+
+        HandleDamage(other);
+    }
+
+    private void HandleDamage(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            // We use our clean event-based system!
-            PlayerController.Instance.TakeDamage(false); 
+            // Only damage if enough time has passed (prevents instant death)
+            if (Time.time >= lastDamageTime + damageCooldown)
+            {
+                PlayerController.Instance.TakeDamage(false);
+                lastDamageTime = Time.time;
+            }
         }
     }
 }

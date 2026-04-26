@@ -11,6 +11,13 @@ public class GridGenerator : MonoBehaviour
     public GameObject wallPrefab;
     public GameObject CoinPrefab;
     public GameObject doorPrefab;
+    public GameObject spikeTrapFloorPrefab;
+    public GameObject gargoylePrefab;
+
+    [Header("Spawn Rates (0.0 to 1.0)")]
+    public float coinSpawnRate = 0.1f;
+    public float spikeSpawnRate = 0.05f;
+    public float gargoyleSpawnRate = 0.02f;
 
     // This is now accessible by other scripts
     [HideInInspector] public Vector3 doorPosition;
@@ -20,7 +27,7 @@ public class GridGenerator : MonoBehaviour
         // Pick the random X for the door
         int doorX = Random.Range(0, width);
         GameObject door = null;
-        
+
         // Set the global doorPosition (at floor height for distance checking)
         doorPosition = new Vector3(doorX, 0, depth);
 
@@ -42,8 +49,8 @@ public class GridGenerator : MonoBehaviour
                     door = Instantiate(doorPrefab, spawnPos + Vector3.up, Quaternion.identity);
                     door.name = "LevelExitDoor";
                     door.transform.parent = this.transform;
-                    
-                    continue; 
+
+                    continue;
                 }
 
                 if (isEdge)
@@ -54,15 +61,31 @@ public class GridGenerator : MonoBehaviour
                 }
                 else
                 {
-                    GameObject tile = Instantiate(floorPrefab, spawnPos, Quaternion.identity);
-                    tile.name = $"Tile_{x}_{z}";
+                    GameObject tileToSpawn = floorPrefab;
+
+                    // Don't spawn traps too close to the player's start (z=0,1,2)
+                    if (z > 2 && Random.value < spikeSpawnRate)
+                    {
+                        tileToSpawn = spikeTrapFloorPrefab;
+                    }
+
+                    GameObject tile = Instantiate(tileToSpawn, spawnPos, Quaternion.identity);
+                    tile.name = tileToSpawn == floorPrefab ? $"Tile_{x}_{z}" : $"SpikeTrap_{x}_{z}";
                     tile.transform.parent = this.transform;
 
-                    if (Random.value < 0.1f)
+                    // Only spawn coins on regular floors, not on traps
+                    if (tileToSpawn == floorPrefab && Random.value < coinSpawnRate)
                     {
                         Vector3 coinPos = new Vector3(spawnPos.x, 1.0f, spawnPos.z);
                         Quaternion coinRotation = Quaternion.Euler(90, 0, 0);
-                        Instantiate(CoinPrefab, coinPos, coinRotation);
+                        GameObject coin = Instantiate(CoinPrefab, coinPos, coinRotation);
+                        coin.transform.parent = tile.transform; // Parent to tile for organization
+                    }
+                    else if (z > 2 && tileToSpawn == floorPrefab && Random.value < gargoyleSpawnRate)
+                    {
+                        Vector3 gargoylePos = new Vector3(spawnPos.x, 1.25f, spawnPos.z);
+                        GameObject gargoyle = Instantiate(gargoylePrefab, gargoylePos, Quaternion.identity);
+                        gargoyle.transform.parent = tile.transform; // Parent to tile for organization
                     }
                 }
             }
