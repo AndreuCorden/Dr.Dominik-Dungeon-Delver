@@ -1,14 +1,15 @@
-using UnityEngine;
-using UnityEngine.InputSystem;
 using System;
-using UnityEngine.Playables;
+using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.InputSystem;
+using UnityEngine.Playables;
 
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance;
     public static event Action<int> OnHealthChanged;
     public static event Action<int> OnCoinsChanged;
+
     public int health = 3;
     public int coins = 0;
     public float moveSpeed = 5f;
@@ -41,12 +42,24 @@ public class PlayerController : MonoBehaviour
     [Header("Layers")]
     public LayerMask floorLayer;
     public LayerMask enemyLayer;
+
     private Vector3 targetPosition;
     private Vector3 moveStartPosition;
     private bool isMoving = false;
     private bool isStepMoving = false;
 
-    private LevelHandler levelHandler;
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -71,11 +84,11 @@ public class PlayerController : MonoBehaviour
         if (characterAnimator == null && visualRoot != null)
             characterAnimator = visualRoot.GetComponentInParent<Animator>();
 
-        targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
+        targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
         transform.position = targetPosition;
-        levelHandler = GameObject.FindFirstObjectByType<LevelHandler>();
-        EnemyFollower.OccupiedTiles.Add(targetPosition);
+
+        BaseEnemy.OccupiedTiles.Add(targetPosition);
     }
 
     void LateUpdate()
@@ -84,53 +97,30 @@ public class PlayerController : MonoBehaviour
             visualRoot.localPosition = visualRootInitialLocalPosition + new Vector3(0f, visualYOffset + movementVisualYOffset, 0f);
     }
 
-    void Awake()
-    {
-        // --- SINGLETON PATTERN ---
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Keep this object alive!
-        }
-        else
-        {
-            Destroy(gameObject); // Kill the duplicate that just spawned
-            return;
-        }
-    }
-
     void Update()
     {
         UpdateEmoteInputAndPlayback();
 
-        if (!isMoving)
+        Keyboard kb = Keyboard.current;
+        if (!isMoving && kb != null)
         {
             Vector3 direction = Vector3.zero;
 
-            if (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.upArrowKey.wasPressedThisFrame) direction = Vector3.forward;
-            else if (Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame) direction = Vector3.back;
-            else if (Keyboard.current.aKey.wasPressedThisFrame || Keyboard.current.leftArrowKey.wasPressedThisFrame) direction = Vector3.left;
-            else if (Keyboard.current.dKey.wasPressedThisFrame || Keyboard.current.rightArrowKey.wasPressedThisFrame) direction = Vector3.right;
-            else if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            {
-                PerformSpaceAttack();
-            }
+            if (kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame) direction = Vector3.forward;
+            else if (kb.sKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame) direction = Vector3.back;
+            else if (kb.aKey.wasPressedThisFrame || kb.leftArrowKey.wasPressedThisFrame) direction = Vector3.left;
+            else if (kb.dKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame) direction = Vector3.right;
+            else if (kb.spaceKey.wasPressedThisFrame) PerformSpaceAttack();
 
-            if (direction != Vector3.zero)
-            {
-                // REMOVED: CheckForEnemyInTile (No more bumping to kill)
-                if (IsDestinationSafe(direction))
-                {
-                    Move(direction);
-                }
-            }
+            if (direction != Vector3.zero && IsDestinationSafe(direction))
+                Move(direction);
         }
 
-        if (!isMoving) { CheckForVoid(); }
+        if (!isMoving)
+            CheckForVoid();
 
-        
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
 
-    transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
         if (isStepMoving)
             UpdateStepJumpOffset();
         else
@@ -142,38 +132,32 @@ public class PlayerController : MonoBehaviour
             isMoving = false;
             isStepMoving = false;
             movementVisualYOffset = 0f;
-        }
-    }
-        if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
-        {
-            transform.position = targetPosition;
-            isMoving = false;
             ResetSpeedIfNoSlime();
         }
-}
-
-void UpdateEmoteInputAndPlayback()
-{
-    if (isEmotePlaying)
-    {
-        emoteTimer += Time.deltaTime;
-        if (emoteTimer >= currentEmoteDuration)
-            StopCurrentEmote();
-        return;
     }
 
-    if (isMoving || Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame)
-        return;
+    void UpdateEmoteInputAndPlayback()
+    {
+        if (isEmotePlaying)
+        {
+            emoteTimer += Time.deltaTime;
+            if (emoteTimer >= currentEmoteDuration)
+                StopCurrentEmote();
+            return;
+        }
 
-    TryPlayRandomEmote();
-}
+        if (isMoving || Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame)
+            return;
 
-void TryPlayRandomEmote()
+        TryPlayRandomEmote();
+    }
+
+    void TryPlayRandomEmote()
     {
         if (characterAnimator == null || emoteClips == null || emoteClips.Length == 0)
             return;
 
-        int index = Random.Range(0, emoteClips.Length);
+        int index = UnityEngine.Random.Range(0, emoteClips.Length);
         AnimationClip clip = emoteClips[index];
         if (clip == null)
             return;
@@ -229,39 +213,31 @@ void TryPlayRandomEmote()
 
     bool IsDestinationSafe(Vector3 direction)
     {
-        Vector3 dest = targetPosition + direction;
-        // Round to match the HashSet format exactly
-        dest = new Vector3(Mathf.Round(dest.x), dest.y, Mathf.Round(dest.z));
-
-        // 1. Check for Floor
+        Vector3 dest = RoundGridPosition(targetPosition + direction);
         Ray ray = new Ray(new Vector3(dest.x, 2.0f, dest.z), Vector3.down);
-        if (!Physics.Raycast(ray, out RaycastHit hit, 1.5f, floorLayer)) return false;
 
-        // 2. NEW: Check the Global Occupancy List
-        // This prevents you from walking into a tile an enemy is currently moving toward
-        if (EnemyFollower.OccupiedTiles.Contains(dest))
-        {
-            Debug.Log("Tile is claimed by an enemy!");
+        if (!Physics.Raycast(ray, out _, 1.5f, floorLayer))
             return false;
-        }
 
-        // 3. Physical Check (Backup)
-        if (Physics.CheckSphere(dest, 0.3f, enemyLayer)) return false;
+        if (BaseEnemy.OccupiedTiles.Contains(dest))
+            return false;
+
+        if (Physics.CheckSphere(dest, 0.3f, enemyLayer))
+            return false;
 
         return true;
     }
 
     void Move(Vector3 direction)
     {
-    // Remove old position from global occupancy
-    EnemyFollower.OccupiedTiles.Remove(targetPosition);
+        StopCurrentEmote();
 
-    targetPosition = targetPosition + direction;
+        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
 
-    // Claim the new position
-    EnemyFollower.OccupiedTiles.Add(targetPosition);
-    StopCurrentEmote();
-    targetPosition = targetPosition + direction; // Move relative to current target
+        moveStartPosition = targetPosition;
+        targetPosition = RoundGridPosition(targetPosition + direction);
+        BaseEnemy.OccupiedTiles.Add(targetPosition);
+
         isMoving = true;
         isStepMoving = true;
         transform.forward = direction;
@@ -269,27 +245,20 @@ void TryPlayRandomEmote()
 
     void CheckForVoid()
     {
-        // Cast a ray straight down from the player's center
-        // We check slightly further than the floor height (1.1f)
         Ray ray = new Ray(transform.position, Vector3.down);
-
-        if (!Physics.Raycast(ray, out RaycastHit hit, 1.1f, floorLayer))
-        {
-            // NO FLOOR FOUND! 
+        if (!Physics.Raycast(ray, out _, 1.1f, floorLayer))
             StartCoroutine(HandleFallingDeath());
-        }
     }
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
         StopCurrentEmote();
-        if (isMoving && transform.position.y < 0) { /* already falling */ }
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
 
-        float fallTimer = 0;
-        while (fallTimer < 1.0f) // Shortened to 1 second for snappier feel
+        float fallTimer = 0f;
+        while (fallTimer < 1.0f)
         {
             transform.Translate(Vector3.down * Time.deltaTime * 10f);
             transform.Rotate(Vector3.up * Time.deltaTime * 500f);
@@ -297,15 +266,8 @@ void TryPlayRandomEmote()
             yield return null;
         }
 
-        // CRITICAL: Set isMoving to false before reloading so the new scene 
-        // doesn't think we are still in the middle of a move.
         isMoving = false;
-
         TakeDamage(true);
-
-        // After TakeDamage(true) loads a scene, this instance persists, 
-        // so we MUST stop this coroutine from continuing.
-        yield break;
     }
 
     public void TakeDamage(bool isFall = false)
@@ -314,10 +276,8 @@ void TryPlayRandomEmote()
 
         if (health <= 0)
         {
-            Debug.Log("Game Over!");
             ChangeHealth(3);
             AddCoin(-coins);
-
             UnityEngine.SceneManagement.SceneManager.LoadScene(1);
             return;
         }
@@ -331,57 +291,46 @@ void TryPlayRandomEmote()
 
     void PerformSpaceAttack()
     {
-        Debug.Log("Performing Area Attack!");
-
-        // 1. Flash the player Cyan
         StartCoroutine(VisualFlash());
 
-        // 2. Spawn and grow the shockwave
         if (shockwavePrefab != null)
         {
-            // Spawn at player feet, starting at scale 0
             GameObject visual = Instantiate(shockwavePrefab, transform.position, Quaternion.identity);
             visual.transform.localScale = Vector3.zero;
-
-            Destroy(visual, 0.25f); // Destroy shortly after it expands
+            Destroy(visual, 0.25f);
         }
 
-        // 3. Damage Logic
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, attackRange);
-        foreach (var hitCollider in hitColliders)
+        foreach (Collider hitCollider in hitColliders)
         {
-            if (hitCollider.CompareTag("Enemy"))
-            {
-                if (hitCollider.TryGetComponent<BaseEnemy>(out var enemy))
-                {
-                    enemy.Die();
-                }
-                else
-                {
-                    Destroy(hitCollider.gameObject); // Fallback
-                }
-            }
+            if (!hitCollider.CompareTag("Enemy"))
+                continue;
+
+            if (hitCollider.TryGetComponent<BaseEnemy>(out var enemy))
+                enemy.Die();
+            else
+                Destroy(hitCollider.gameObject);
         }
     }
 
     System.Collections.IEnumerator VisualFlash()
     {
-        Renderer r = GetComponent<Renderer>();
-        if (r != null)
-        {
-            Color oldColor = r.material.color;
-            float elapsed = 0f;
-            float duration = 0.5f; // Total flash time
+        Renderer renderer = visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
+        if (renderer == null)
+            yield break;
 
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                // Gradually shift from Cyan back to the original color
-                r.material.color = Color.Lerp(Color.cyan, oldColor, elapsed / duration);
-                yield return null;
-            }
-            r.material.color = oldColor;
+        Color oldColor = renderer.material.color;
+        float elapsed = 0f;
+        float duration = 0.5f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            renderer.material.color = Color.Lerp(Color.cyan, oldColor, elapsed / duration);
+            yield return null;
         }
+
+        renderer.material.color = oldColor;
     }
 
     void OnDrawGizmosSelected()
@@ -392,27 +341,23 @@ void TryPlayRandomEmote()
 
     void ResetSpeedIfNoSlime()
     {
-        // We only need to check this if we are currently slowed
-        if (currentMoveMultiplier < 1.0f)
+        if (currentMoveMultiplier >= 1.0f)
+            return;
+
+        Collider[] hitColliders = Physics.OverlapBox(transform.position, new Vector3(0.4f, 0.1f, 0.4f));
+        bool foundSlime = false;
+
+        foreach (Collider col in hitColliders)
         {
-            // Use a box that covers the floor tile area
-            Collider[] hitColliders = Physics.OverlapBox(transform.position, new Vector3(0.4f, 0.1f, 0.4f));
-            bool foundSlime = false;
+            if (!col.CompareTag("Slime"))
+                continue;
 
-            foreach (var col in hitColliders)
-            {
-                if (col.CompareTag("Slime"))
-                {
-                    foundSlime = true;
-                    break;
-                }
-            }
-
-            if (!foundSlime)
-            {
-                currentMoveMultiplier = 1.0f;
-            }
+            foundSlime = true;
+            break;
         }
+
+        if (!foundSlime)
+            currentMoveMultiplier = 1.0f;
     }
 
     public void ChangeHealth(int amount)
@@ -429,31 +374,32 @@ void TryPlayRandomEmote()
 
     public void ResetState(Vector3 newSpawnPos)
     {
-        // 1. Force stop the falling coroutine or any flashes
+        StopCurrentEmote();
         StopAllCoroutines();
 
-        // 2. Clear old occupancy before moving
-        // We use targetPosition because that's what was "claimed" last
-        BaseEnemy.OccupiedTiles.Remove(targetPosition);
+        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
 
-        // 3. Snap to the new position
-        transform.position = newSpawnPos;
-        targetPosition = newSpawnPos;
+        Vector3 snappedSpawn = RoundGridPosition(newSpawnPos);
+        transform.position = snappedSpawn;
+        targetPosition = snappedSpawn;
+        moveStartPosition = snappedSpawn;
         transform.rotation = Quaternion.identity;
 
-        // 4. Reset movement flags
         isMoving = false;
+        isStepMoving = false;
+        movementVisualYOffset = 0f;
         currentMoveMultiplier = 1.0f;
 
-        // 5. Claim the new starting tile
         BaseEnemy.OccupiedTiles.Add(targetPosition);
 
-        Renderer r = GetComponent<Renderer>();
-        if (r != null)
-        {
-            // Change "Color.white" to whatever your player's default color is
-            r.material.color = Color.white;
-        }
+        Renderer renderer = visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
+        if (renderer != null)
+            renderer.material.color = Color.white;
+    }
+
+    Vector3 RoundGridPosition(Vector3 pos)
+    {
+        return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));
     }
 
     void OnDisable()
