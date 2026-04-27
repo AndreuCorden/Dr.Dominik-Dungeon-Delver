@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 2437866973534661781}
   - component: {fileID: 3033557772674847870}
   - component: {fileID: 3467832767370774809}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GargoylePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}

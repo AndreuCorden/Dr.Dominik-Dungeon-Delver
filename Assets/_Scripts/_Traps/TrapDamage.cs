@@ -31,5 +31,13 @@ public class TrapDamage : MonoBehaviour
                 lastDamageTime = Time.time;
             }
         }
+        else if (other.CompareTag("Enemy"))
+        {
+            // Damage enemies immediately without cooldown (they can be sacrificed!)
+            if (other.TryGetComponent<BaseEnemy>(out var enemy))
+            {
+                enemy.Die();
+            }
+        }
     }
 }
