@@ -464,10 +464,12 @@ MonoBehaviour:
   gargoylePrefab: {fileID: 8762466043505509284, guid: 163f9b59d076edb4c80a6c517bad8c81, type: 3}
   arrowWallPrefab: {fileID: 247161348603889154, guid: f66782876c4c1a8499673feec72b851c, type: 3}
   pressurePlatePrefab: {fileID: 69839793034704715, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
+  mimicPrefab: {fileID: 8521622053067295504, guid: f677a0f25a4d9cc4f8923f8fe56c77c9, type: 3}
   coinSpawnRate: 0.1
   spikeSpawnRate: 0.05
   gargoyleSpawnRate: 0.02
   arrowTrapSpawnRate: 0.25
+  mimicSpawnRate: 0.02
   doorPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &566127728
 MonoBehaviour:

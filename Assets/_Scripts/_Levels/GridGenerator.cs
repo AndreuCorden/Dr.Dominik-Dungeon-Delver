@@ -16,6 +16,7 @@ public class GridGenerator : MonoBehaviour
     public GameObject gargoylePrefab;
     public GameObject arrowWallPrefab;
     public GameObject pressurePlatePrefab;
+    public GameObject mimicPrefab;
     private Dictionary<Vector2Int, ArrowTrap> pendingPressurePlates = new Dictionary<Vector2Int, ArrowTrap>();
 
     [Header("Spawn Rates (0.0 to 1.0)")]
@@ -23,6 +24,7 @@ public class GridGenerator : MonoBehaviour
     public float spikeSpawnRate = 0.05f;
     public float gargoyleSpawnRate = 0.02f;
     public float arrowTrapSpawnRate = 0.25f;
+    public float mimicSpawnRate = 0.02f;
 
     // This is now accessible by other scripts
     [HideInInspector] public Vector3 doorPosition;
@@ -31,6 +33,7 @@ public class GridGenerator : MonoBehaviour
     {
         // Important: Clear the dictionary at the start of generation
         pendingPressurePlates.Clear();
+        BaseEnemy.OccupiedTiles.Clear();
 
         int doorX = Random.Range(0, width);
         GameObject door = null;
@@ -77,7 +80,7 @@ public class GridGenerator : MonoBehaviour
 
                         // Pick a tile in the same row (Z) but further in (X)
                         // We pick a random X between 1 and the middle of the room
-                        int triggerX = Random.Range(width * 1/3, width * 2/3);
+                        int triggerX = Random.Range(width * 1 / 3, width * 2 / 3);
                         Vector2Int plateCoord = new Vector2Int(triggerX, z);
 
                         // Store it so the floor loop can find it
@@ -109,11 +112,11 @@ public class GridGenerator : MonoBehaviour
                     tile.transform.parent = this.transform;
 
                     // CHECK FOR PRESSURE PLATE
-                    
+
                     if (pendingPressurePlates.ContainsKey(currentCoord))
                     {
                         // Spawn the plate slightly above floor height
-                        GameObject plate = Instantiate(pressurePlatePrefab,new Vector3(spawnPos.x, 0.55f, spawnPos.z), Quaternion.identity);
+                        GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(spawnPos.x, 0.55f, spawnPos.z), Quaternion.identity);
                         plate.transform.parent = tile.transform;
 
                         // Connect the plate to the specific wall trap instance
@@ -134,6 +137,12 @@ public class GridGenerator : MonoBehaviour
                         GameObject gargoyle = Instantiate(gargoylePrefab, gargoylePos, Quaternion.identity);
                         gargoyle.transform.parent = tile.transform; // Parent to tile for organization
                         tile.layer = LayerMask.NameToLayer("Trap");
+                    }
+                    else if (z > 2 && tileToSpawn == floorPrefab && Random.value < mimicSpawnRate)
+                    {
+                        Vector3 mimicPos = new Vector3(spawnPos.x, 0.6f, spawnPos.z);
+                        GameObject mimic = Instantiate(mimicPrefab, mimicPos, Quaternion.identity);
+                        mimic.transform.parent = tile.transform;
                     }
                 }
             }
