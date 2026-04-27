@@ -5,49 +5,44 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
-
-    [Header("UI Elements")]
-    public TextMeshProUGUI coinText;
-    public TextMeshProUGUI roomText;
-    public Image[] heartImages;
-    public Color heartEmptyColor = Color.black;
-
-    private int coins = 0;
-    private int currentHealth = 3;
+    [SerializeField] private TextMeshProUGUI coinText;
+    [SerializeField] private TextMeshProUGUI roomText;
+    [SerializeField] private Image[] heartImages;
 
     void Awake()
     {
-        Instance = this;
+        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
+        else { Destroy(gameObject); }
     }
 
-    void Start()
+    void OnEnable()
     {
-        coinText.text = $"Coins: {coins}";
-        UpdateHealth(PlayerController.health);
+        PlayerController.OnHealthChanged += UpdateHealth;
+        PlayerController.OnCoinsChanged += UpdateCoins;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    public void UpdateCoins(int amount)
+    void OnDisable()
     {
-        coins += amount;
-        coinText.text = $"Coins: {coins}";
+        PlayerController.OnHealthChanged -= UpdateHealth;
+        PlayerController.OnCoinsChanged -= UpdateCoins;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        if (roomText != null) roomText.text = $"Room: {scene.buildIndex}";
+        if (PlayerController.Instance != null) UpdateHealth(PlayerController.Instance.health);
+    }
+
+    public void UpdateCoins(int amount) => coinText.text = $"Coins: {amount}";
 
     public void UpdateHealth(int health)
     {
-        currentHealth = health;
-        
-        // Loop through hearts and "dim" the ones we lost
         for (int i = 0; i < heartImages.Length; i++)
         {
-            if (i < currentHealth)
-                heartImages[i].color = Color.red;
-            else
-                heartImages[i].color = heartEmptyColor; // Makes lost hearts look empty
+            if (heartImages[i] != null)
+                heartImages[i].color = (i < health) ? Color.red : Color.black;
         }
-    }
-
-    public void UpdateRoom(int roomNumber)
-    {
-        roomText.text = $"Room: {roomNumber}";
     }
 }

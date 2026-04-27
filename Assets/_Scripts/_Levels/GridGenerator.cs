@@ -10,53 +10,68 @@ public class GridGenerator : MonoBehaviour
     public GameObject floorPrefab;
     public GameObject wallPrefab;
     public GameObject CoinPrefab;
+    public GameObject doorPrefab;
 
-    void Start()
-    {
-    }
+    // This is now accessible by other scripts
+    [HideInInspector] public Vector3 doorPosition;
 
-    public void GenerateLevel()
+    public GameObject GenerateLevel()
     {
-        // We iterate from -1 to width/depth to include the walls
+        // Pick the random X for the door
+        int doorX = Random.Range(0, width);
+        GameObject door = null;
+        
+        // Set the global doorPosition (at floor height for distance checking)
+        doorPosition = new Vector3(doorX, 0, depth);
+
         for (int x = -1; x <= width; x++)
         {
             for (int z = -1; z <= depth; z++)
             {
                 Vector3 spawnPos = new Vector3(x, 0, z);
-
-                // Determine if this is a Wall or Floor
                 bool isEdge = (x == -1 || z == depth);
+
+                // --- DOOR LOGIC ---
+                if (x == doorX && z == depth)
+                {
+                    // 1. Spawn a Floor tile underneath the door
+                    GameObject floorUnderDoor = Instantiate(floorPrefab, spawnPos, Quaternion.identity);
+                    floorUnderDoor.transform.parent = this.transform;
+
+                    // 2. Spawn the Door itself 1 unit up
+                    door = Instantiate(doorPrefab, spawnPos + Vector3.up, Quaternion.identity);
+                    door.name = "LevelExitDoor";
+                    door.transform.parent = this.transform;
+                    
+                    continue; 
+                }
 
                 if (isEdge)
                 {
-                    // Create Wall
                     GameObject wall = Instantiate(wallPrefab, spawnPos + Vector3.up, Quaternion.identity);
                     wall.name = $"Wall_{x}_{z}";
                     wall.transform.parent = this.transform;
                 }
                 else
                 {
-                    // Create Floor
                     GameObject tile = Instantiate(floorPrefab, spawnPos, Quaternion.identity);
                     tile.name = $"Tile_{x}_{z}";
                     tile.transform.parent = this.transform;
 
-                    // RANDOM COIN SPAWN (e.g., 10% chance)
                     if (Random.value < 0.1f)
                     {
-                        // Spawn the coin 1 unit above the tile
                         Vector3 coinPos = new Vector3(spawnPos.x, 1.0f, spawnPos.z);
                         Quaternion coinRotation = Quaternion.Euler(90, 0, 0);
-                        GameObject newCoin = Instantiate(CoinPrefab, coinPos, coinRotation);
+                        Instantiate(CoinPrefab, coinPos, coinRotation);
                     }
                 }
             }
         }
+        return door;
     }
 
     public Vector3 GetTilePosition(int x, int z)
     {
-        // Returns the world position of a specific coordinate
-        return new Vector3(x, 0.5f, z); // 0.5f height so the player sits ON the cube
+        return new Vector3(x, 0.5f, z);
     }
 }

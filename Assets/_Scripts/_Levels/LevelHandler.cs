@@ -27,13 +27,21 @@ public class LevelHandler : MonoBehaviour
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
         // 1. Setup the Grid
-        gridGen.GenerateLevel();
+        GameObject door = gridGen.GenerateLevel();
 
         yield return new WaitForEndOfFrame();
 
         // 2. Setup the Player
         SpawnPlayer();
         SpawnEnemies();
+
+        if (door != null && activePlayer != null)
+        {
+            if (door.TryGetComponent<LevelGoal>(out LevelGoal goal))
+            {
+                goal.Initialize(gridGen, activePlayer);
+            }
+        }
 
         // 3. Start the Falling Floor (If enabled)
         if (shouldFloorFall)
@@ -54,18 +62,26 @@ public class LevelHandler : MonoBehaviour
         Vector3 spawnPos = gridGen.GetTilePosition(spawnX, spawnZ);
         spawnPos.y = 1.0f;
 
-        activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
-        activePlayer.name = "Player";
+        // Check if a persistent player already exists
+        if (PlayerController.Instance != null)
+        {
+            activePlayer = PlayerController.Instance.gameObject;
 
-        // RE-FIND THE CAMERA AND TARGET THE NEW PLAYER
+            PlayerController.Instance.ResetState(spawnPos);
+        }
+        else
+        {
+            // First time spawning (Level 0)
+            activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+            activePlayer.name = "Player";
+        }
+
+        // Camera setup remains the same...
         Camera mainCam = Camera.main;
         if (mainCam != null && mainCam.TryGetComponent<CameraFollow>(out CameraFollow follow))
         {
             follow.target = activePlayer.transform;
-
-            // Snap camera to position immediately so it doesn't "slide" from the old spot
-            Vector3 targetCamPos = activePlayer.transform.position + follow.offset;
-            mainCam.transform.position = targetCamPos;
+            mainCam.transform.position = activePlayer.transform.position + follow.offset;
         }
     }
 
@@ -91,4 +107,6 @@ public class LevelHandler : MonoBehaviour
                 Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         }
     }
+
+    void Awake() { BaseEnemy.OccupiedTiles.Clear(); }
 }

@@ -328,7 +328,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Coins: 0'
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -474,7 +474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelHandler
   gridGen: {fileID: 566127727}
-  playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
+  playerPrefab: {fileID: 4971320521847776260, guid: f0f29f82e5bdfa84091fe92dd45469ee, type: 3}
   spawnX: 2
   spawnZ: 0
   shouldFloorFall: 1
@@ -785,7 +785,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Level - 1
+  m_text: Level - 8
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1054,6 +1054,7 @@ MonoBehaviour:
   - {fileID: 1955561982}
   - {fileID: 1055268294}
   - {fileID: 1789833224}
+  heartEmptyColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!4 &1438493188
 Transform:
   m_ObjectHideFlags: 0
