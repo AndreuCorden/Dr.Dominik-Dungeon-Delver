@@ -2534,6 +2534,12 @@ MonoBehaviour:
   moveSpeed: 5
   visualRoot: {fileID: 971137364707156333}
   visualYOffset: -0.5
+  jumpHeight: 0.35
+  emoteClips:
+  - {fileID: 2415735220282309756, guid: 8f0e32dcca81a4e4f87c78bfe2b97005, type: 3}
+  - {fileID: -5006469387719102519, guid: 6f0c27552a65e8a448a4eccc9851277b, type: 3}
+  - {fileID: -2524894954328250246, guid: 94dc1b6b5c7ecbb4382f5a25d5a488f3, type: 3}
+  emoteBlendDuration: 0.08
   currentMoveMultiplier: 1
   floorLayer:
     serializedVersion: 2

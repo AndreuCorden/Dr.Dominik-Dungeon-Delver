@@ -1,2 +1,16 @@
 fileFormatVersion: 2
 guid: 02314afddc441394db9c4741538eaf4e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - gridGen: {instanceID: 0}
+  - playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
+  - enemyPrefab: {instanceID: 0}
+  - trailEnemyPrefab: {instanceID: 0}
+  - patrollerEnemyPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

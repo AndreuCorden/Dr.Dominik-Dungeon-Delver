@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Playables;
+using UnityEngine.Animations;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,13 +10,26 @@ public class PlayerController : MonoBehaviour
     [Header("Visual")]
     [SerializeField] private Transform visualRoot;
     [SerializeField] private float visualYOffset = 0f;
+    [SerializeField] private float jumpHeight = 0.35f;
     private Vector3 visualRootInitialLocalPosition;
+    private float movementVisualYOffset;
+    private Animator characterAnimator;
+
+    [Header("Emotes")]
+    [SerializeField] private AnimationClip[] emoteClips;
+    [SerializeField] private float emoteBlendDuration = 0.08f;
+    private PlayableGraph emoteGraph;
+    private bool isEmotePlaying;
+    private float emoteTimer;
+    private float currentEmoteDuration;
 
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
     public LayerMask floorLayer; // Assign the "Floor" layer in the inspector
     private Vector3 targetPosition;
+    private Vector3 moveStartPosition;
     private bool isMoving = false;
+    private bool isStepMoving = false;
 
     public static int health = 3;
 
@@ -39,7 +54,12 @@ public class PlayerController : MonoBehaviour
         if (visualRoot != null)
             visualRootInitialLocalPosition = visualRoot.localPosition;
 
+        characterAnimator = GetComponentInChildren<Animator>();
+        if (characterAnimator == null && visualRoot != null)
+            characterAnimator = visualRoot.GetComponentInParent<Animator>();
+
         targetPosition = new Vector3(Mathf.Round(transform.position.x), transform.position.y, Mathf.Round(transform.position.z));
+        moveStartPosition = targetPosition;
         transform.position = targetPosition;
         levelHandler = Object.FindFirstObjectByType<LevelHandler>();
     }
@@ -47,11 +67,13 @@ public class PlayerController : MonoBehaviour
     void LateUpdate()
     {
         if (visualRoot != null)
-            visualRoot.localPosition = visualRootInitialLocalPosition + new Vector3(0f, visualYOffset, 0f);
+            visualRoot.localPosition = visualRootInitialLocalPosition + new Vector3(0f, visualYOffset + movementVisualYOffset, 0f);
     }
 
     void Update()
     {
+        UpdateEmoteInputAndPlayback();
+
         if (!isMoving)
         {
             Vector3 direction = Vector3.zero;
@@ -78,11 +100,93 @@ public class PlayerController : MonoBehaviour
 
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
 
-        if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
+        if (isStepMoving)
+            UpdateStepJumpOffset();
+        else
+            movementVisualYOffset = 0f;
+
+            if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
+            {
+                transform.position = targetPosition;
+                isMoving = false;
+                isStepMoving = false;
+                movementVisualYOffset = 0f;
+            }
+    }
+
+    void UpdateEmoteInputAndPlayback()
+    {
+        if (isEmotePlaying)
         {
-            transform.position = targetPosition;
-            isMoving = false;
+            emoteTimer += Time.deltaTime;
+            if (emoteTimer >= currentEmoteDuration)
+                StopCurrentEmote();
+            return;
         }
+
+        if (isMoving || Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame)
+            return;
+
+        TryPlayRandomEmote();
+    }
+
+    void TryPlayRandomEmote()
+    {
+        if (characterAnimator == null || emoteClips == null || emoteClips.Length == 0)
+            return;
+
+        int index = Random.Range(0, emoteClips.Length);
+        AnimationClip clip = emoteClips[index];
+        if (clip == null)
+            return;
+
+        emoteGraph = PlayableGraph.Create("PlayerEmoteGraph");
+        var output = AnimationPlayableOutput.Create(emoteGraph, "PlayerEmoteOutput", characterAnimator);
+        var playable = AnimationClipPlayable.Create(emoteGraph, clip);
+        playable.SetApplyFootIK(false);
+        playable.SetApplyPlayableIK(false);
+        output.SetSourcePlayable(playable);
+        emoteGraph.Play();
+
+        isEmotePlaying = true;
+        emoteTimer = 0f;
+        currentEmoteDuration = Mathf.Max(clip.length, 0.01f);
+    }
+
+    void StopCurrentEmote()
+    {
+        if (!isEmotePlaying)
+            return;
+
+        isEmotePlaying = false;
+        emoteTimer = 0f;
+        currentEmoteDuration = 0f;
+
+        if (emoteGraph.IsValid())
+            emoteGraph.Destroy();
+
+        if (characterAnimator != null)
+        {
+            characterAnimator.Rebind();
+            if (emoteBlendDuration <= 0f)
+                characterAnimator.Update(0f);
+            else
+                characterAnimator.Update(emoteBlendDuration);
+        }
+    }
+
+    void UpdateStepJumpOffset()
+    {
+        float totalDistance = Vector3.Distance(moveStartPosition, targetPosition);
+        if (totalDistance <= Mathf.Epsilon)
+        {
+            movementVisualYOffset = 0f;
+            return;
+        }
+
+        float remainingDistance = Vector3.Distance(transform.position, targetPosition);
+        float progress = Mathf.Clamp01(1f - (remainingDistance / totalDistance));
+        movementVisualYOffset = Mathf.Sin(progress * Mathf.PI) * jumpHeight;
     }
 
     bool IsDestinationSafe(Vector3 direction)
@@ -114,8 +218,12 @@ public class PlayerController : MonoBehaviour
 
     void Move(Vector3 direction)
     {
+        StopCurrentEmote();
+
+        moveStartPosition = targetPosition;
         targetPosition = targetPosition + direction; // Move relative to current target
         isMoving = true;
+        isStepMoving = true;
         transform.forward = direction;
     }
 
@@ -134,7 +242,11 @@ public class PlayerController : MonoBehaviour
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
+        StopCurrentEmote();
+
         isMoving = true;
+        isStepMoving = false;
+        movementVisualYOffset = 0f;
 
         float fallTimer = 0;
         while (fallTimer < 1.5f)
@@ -177,5 +289,10 @@ public class PlayerController : MonoBehaviour
 
             // OPTIONAL: Add a small knockback or invincibility frames here
         }
+    }
+
+    void OnDisable()
+    {
+        StopCurrentEmote();
     }
 }
