@@ -477,7 +477,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelHandler
   gridGen: {fileID: 566127727}
-  playerPrefab: {fileID: 4971320521847776260, guid: f0f29f82e5bdfa84091fe92dd45469ee, type: 3}
+  playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
   spawnX: 2
   spawnZ: 0
   shouldFloorFall: 1
