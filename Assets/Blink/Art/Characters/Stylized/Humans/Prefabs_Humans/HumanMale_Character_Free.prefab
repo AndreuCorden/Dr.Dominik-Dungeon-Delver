@@ -2548,6 +2548,11 @@ MonoBehaviour:
   attackRange: 1.1
   attackClip: {fileID: 2550410822785019017, guid: b38fcdbf88f95f2468be0a4ae7aae7f8, type: 3}
   attackBlendDuration: 0.08
+  damageInvulnerabilityDuration: 0.7
+  damageFlashInterval: 0.08
+  damageFlashColor: {r: 1, g: 0.25, b: 0.25, a: 1}
+  hitReactionClip: {fileID: 7055355079433224739, guid: f75e27afa8373234f85607c745d65beb, type: 3}
+  hitBlendDuration: 0.05
   shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}
   floorLayer:
     serializedVersion: 2

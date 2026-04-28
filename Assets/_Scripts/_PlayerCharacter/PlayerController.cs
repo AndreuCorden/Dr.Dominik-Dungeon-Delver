@@ -29,12 +29,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string movingBoolParameter = "IsMoving";
     [SerializeField] private string speedFloatParameter = "Speed";
     [SerializeField] private string attackTriggerParameter = "Attack";
+    [SerializeField] private string hitTriggerParameter = "Hit";
     private bool hasMovingBoolParameter;
     private bool hasSpeedFloatParameter;
     private bool hasAttackTriggerParameter;
+    private bool hasHitTriggerParameter;
     private int movingBoolHash;
     private int speedFloatHash;
     private int attackTriggerHash;
+    private int hitTriggerHash;
 
     [Header("Emotes")]
     [SerializeField] private AnimationClip[] emoteClips;
@@ -56,6 +59,12 @@ public class PlayerController : MonoBehaviour
     public float attackRange = 1.1f;
     [SerializeField] private AnimationClip attackClip;
     [SerializeField] private float attackBlendDuration = 0.08f;
+    [Header("Damage Feedback")]
+    [SerializeField] private float damageInvulnerabilityDuration = 0.7f;
+    [SerializeField] private float damageFlashInterval = 0.08f;
+    [SerializeField] private Color damageFlashColor = new Color(1f, 0.25f, 0.25f, 1f);
+    [SerializeField] private AnimationClip hitReactionClip;
+    [SerializeField] private float hitBlendDuration = 0.05f;
 
     [Header("VFX")]
     public GameObject shockwavePrefab;
@@ -74,6 +83,12 @@ public class PlayerController : MonoBehaviour
     private bool isAttackClipPlaying;
     private float attackClipTimer;
     private float currentAttackClipDuration;
+    private PlayableGraph hitGraph;
+    private bool isHitClipPlaying;
+    private float hitClipTimer;
+    private float currentHitClipDuration;
+    private float invulnerableUntilTime;
+    private Coroutine damageInvulnerabilityRoutine;
 
     void Awake()
     {
@@ -132,20 +147,21 @@ public class PlayerController : MonoBehaviour
     {
         UpdateEmoteInputAndPlayback();
         UpdateAttackClipPlayback();
+        UpdateHitClipPlayback();
 
         Keyboard kb = Keyboard.current;
         if (!isMoving && kb != null)
         {
-            Vector3 direction = Vector3.zero;
-
-            if (kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame) direction = Vector3.forward;
-            else if (kb.sKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame) direction = Vector3.back;
-            else if (kb.aKey.wasPressedThisFrame || kb.leftArrowKey.wasPressedThisFrame) direction = Vector3.left;
-            else if (kb.dKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame) direction = Vector3.right;
-            else if (kb.spaceKey.wasPressedThisFrame) PerformSpaceAttack();
-
-            if (direction != Vector3.zero && IsDestinationSafe(direction))
-                Move(direction);
+            if (kb.spaceKey.wasPressedThisFrame)
+            {
+                PerformSpaceAttack();
+            }
+            else
+            {
+                Vector3 direction = GetHeldMoveDirection(kb);
+                if (direction != Vector3.zero && IsDestinationSafe(direction))
+                    Move(direction);
+            }
         }
 
         if (!isMoving)
@@ -177,10 +193,12 @@ public class PlayerController : MonoBehaviour
         hasMovingBoolParameter = false;
         hasSpeedFloatParameter = false;
         hasAttackTriggerParameter = false;
+        hasHitTriggerParameter = false;
 
         movingBoolHash = string.IsNullOrWhiteSpace(movingBoolParameter) ? 0 : Animator.StringToHash(movingBoolParameter);
         speedFloatHash = string.IsNullOrWhiteSpace(speedFloatParameter) ? 0 : Animator.StringToHash(speedFloatParameter);
         attackTriggerHash = string.IsNullOrWhiteSpace(attackTriggerParameter) ? 0 : Animator.StringToHash(attackTriggerParameter);
+        hitTriggerHash = string.IsNullOrWhiteSpace(hitTriggerParameter) ? 0 : Animator.StringToHash(hitTriggerParameter);
 
         foreach (AnimatorControllerParameter parameter in characterAnimator.parameters)
         {
@@ -190,7 +208,18 @@ public class PlayerController : MonoBehaviour
                 hasSpeedFloatParameter = true;
             else if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.nameHash == attackTriggerHash)
                 hasAttackTriggerParameter = true;
+            else if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.nameHash == hitTriggerHash)
+                hasHitTriggerParameter = true;
         }
+    }
+
+    Vector3 GetHeldMoveDirection(Keyboard kb)
+    {
+        if (kb.wKey.isPressed || kb.upArrowKey.isPressed) return Vector3.forward;
+        if (kb.sKey.isPressed || kb.downArrowKey.isPressed) return Vector3.back;
+        if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) return Vector3.left;
+        if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) return Vector3.right;
+        return Vector3.zero;
     }
 
     void UpdateAnimatorValues()
@@ -424,7 +453,15 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(bool isFall = false)
     {
+        if (!isFall && Time.time < invulnerableUntilTime)
+            return;
+
+        StopCurrentEmote();
+        PlayHitReaction();
         ChangeHealth(-1);
+
+        if (!isFall)
+            StartDamageInvulnerability();
 
         if (health <= 0)
         {
@@ -439,6 +476,36 @@ public class PlayerController : MonoBehaviour
             string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
         }
+    }
+
+    void StartDamageInvulnerability()
+    {
+        invulnerableUntilTime = Time.time + Mathf.Max(0f, damageInvulnerabilityDuration);
+        if (damageInvulnerabilityRoutine != null)
+            StopCoroutine(damageInvulnerabilityRoutine);
+
+        damageInvulnerabilityRoutine = StartCoroutine(DamageInvulnerabilityFlash());
+    }
+
+    System.Collections.IEnumerator DamageInvulnerabilityFlash()
+    {
+        Renderer renderer = GetMainVisualRenderer();
+        if (renderer == null)
+            yield break;
+
+        Color baseColor = renderer.material.color;
+        float interval = Mathf.Max(0.03f, damageFlashInterval);
+        bool useFlashColor = false;
+
+        while (Time.time < invulnerableUntilTime)
+        {
+            useFlashColor = !useFlashColor;
+            renderer.material.color = useFlashColor ? damageFlashColor : baseColor;
+            yield return new WaitForSeconds(interval);
+        }
+
+        renderer.material.color = baseColor;
+        damageInvulnerabilityRoutine = null;
     }
 
     void PerformSpaceAttack()
@@ -526,6 +593,33 @@ public class PlayerController : MonoBehaviour
         currentAttackClipDuration = Mathf.Max(attackClip.length, 0.01f);
     }
 
+    void PlayHitReaction()
+    {
+        if (characterAnimator == null)
+            return;
+
+        if (hasHitTriggerParameter)
+            characterAnimator.SetTrigger(hitTriggerHash);
+
+        if (hitReactionClip == null)
+            return;
+
+        if (hitGraph.IsValid())
+            hitGraph.Destroy();
+
+        hitGraph = PlayableGraph.Create("PlayerHitGraph");
+        var output = AnimationPlayableOutput.Create(hitGraph, "PlayerHitOutput", characterAnimator);
+        var playable = AnimationClipPlayable.Create(hitGraph, hitReactionClip);
+        playable.SetApplyFootIK(false);
+        playable.SetApplyPlayableIK(false);
+        output.SetSourcePlayable(playable);
+        hitGraph.Play();
+
+        isHitClipPlaying = true;
+        hitClipTimer = 0f;
+        currentHitClipDuration = Mathf.Max(hitReactionClip.length, 0.01f);
+    }
+
     void UpdateAttackClipPlayback()
     {
         if (!isAttackClipPlaying)
@@ -534,6 +628,16 @@ public class PlayerController : MonoBehaviour
         attackClipTimer += Time.deltaTime;
         if (attackClipTimer >= currentAttackClipDuration)
             StopAttackClipPlayback();
+    }
+
+    void UpdateHitClipPlayback()
+    {
+        if (!isHitClipPlaying)
+            return;
+
+        hitClipTimer += Time.deltaTime;
+        if (hitClipTimer >= currentHitClipDuration)
+            StopHitReactionPlayback();
     }
 
     void StopAttackClipPlayback()
@@ -555,9 +659,28 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void StopHitReactionPlayback()
+    {
+        if (!isHitClipPlaying)
+            return;
+
+        isHitClipPlaying = false;
+        hitClipTimer = 0f;
+        currentHitClipDuration = 0f;
+
+        if (hitGraph.IsValid())
+            hitGraph.Destroy();
+
+        if (characterAnimator != null)
+        {
+            characterAnimator.Rebind();
+            characterAnimator.Update(Mathf.Max(hitBlendDuration, 0f));
+        }
+    }
+
     System.Collections.IEnumerator VisualFlash()
     {
-        Renderer renderer = visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
+        Renderer renderer = GetMainVisualRenderer();
         if (renderer == null)
             yield break;
 
@@ -618,7 +741,10 @@ public class PlayerController : MonoBehaviour
     {
         StopCurrentEmote();
         StopAttackClipPlayback();
+        StopHitReactionPlayback();
         StopAllCoroutines();
+        damageInvulnerabilityRoutine = null;
+        invulnerableUntilTime = 0f;
 
         BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
 
@@ -638,9 +764,14 @@ public class PlayerController : MonoBehaviour
 
         BaseEnemy.OccupiedTiles.Add(targetPosition);
 
-        Renderer renderer = visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
+        Renderer renderer = GetMainVisualRenderer();
         if (renderer != null)
             renderer.material.color = Color.white;
+    }
+
+    Renderer GetMainVisualRenderer()
+    {
+        return visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
     }
 
     Vector3 RoundGridPosition(Vector3 pos)
@@ -652,5 +783,6 @@ public class PlayerController : MonoBehaviour
     {
         StopCurrentEmote();
         StopAttackClipPlayback();
+        StopHitReactionPlayback();
     }
 }
