@@ -18,23 +18,44 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform visualRoot;
     [SerializeField] private float visualYOffset = 0f;
     [SerializeField] private float jumpHeight = 0.35f;
+    [SerializeField] private float turnSpeed = 720f;
+    [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     private Vector3 visualRootInitialLocalPosition;
     private float movementVisualYOffset;
     private Animator characterAnimator;
+    private Quaternion targetRotation;
+
+    [Header("Animation Parameters")]
+    [SerializeField] private string movingBoolParameter = "IsMoving";
+    [SerializeField] private string speedFloatParameter = "Speed";
+    [SerializeField] private string attackTriggerParameter = "Attack";
+    private bool hasMovingBoolParameter;
+    private bool hasSpeedFloatParameter;
+    private bool hasAttackTriggerParameter;
+    private int movingBoolHash;
+    private int speedFloatHash;
+    private int attackTriggerHash;
 
     [Header("Emotes")]
     [SerializeField] private AnimationClip[] emoteClips;
     [SerializeField] private float emoteBlendDuration = 0.08f;
+    [Header("Idle Variation")]
+    [SerializeField] private AnimationClip[] idleVariationClips;
+    [SerializeField] private Vector2 idleVariationIntervalRange = new Vector2(4f, 7f);
     private PlayableGraph emoteGraph;
     private bool isEmotePlaying;
     private float emoteTimer;
     private float currentEmoteDuration;
+    private float idleVariationTimer;
+    private float nextIdleVariationDelay;
 
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
 
     [Header("Attack Settings")]
     public float attackRange = 1.1f;
+    [SerializeField] private AnimationClip attackClip;
+    [SerializeField] private float attackBlendDuration = 0.08f;
 
     [Header("VFX")]
     public GameObject shockwavePrefab;
@@ -45,8 +66,14 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 targetPosition;
     private Vector3 moveStartPosition;
+    private float moveTimer;
+    private float moveDuration;
     private bool isMoving = false;
     private bool isStepMoving = false;
+    private PlayableGraph attackGraph;
+    private bool isAttackClipPlaying;
+    private float attackClipTimer;
+    private float currentAttackClipDuration;
 
     void Awake()
     {
@@ -84,9 +111,13 @@ public class PlayerController : MonoBehaviour
         if (characterAnimator == null && visualRoot != null)
             characterAnimator = visualRoot.GetComponentInParent<Animator>();
 
+        CacheAnimatorParameters();
+        ScheduleNextIdleVariation();
+
         targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
         transform.position = targetPosition;
+        targetRotation = transform.rotation;
 
         BaseEnemy.OccupiedTiles.Add(targetPosition);
     }
@@ -100,6 +131,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         UpdateEmoteInputAndPlayback();
+        UpdateAttackClipPlayback();
 
         Keyboard kb = Keyboard.current;
         if (!isMoving && kb != null)
@@ -118,8 +150,9 @@ public class PlayerController : MonoBehaviour
 
         if (!isMoving)
             CheckForVoid();
-
-        transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * currentMoveMultiplier * Time.deltaTime);
+        UpdateMovementPosition();
+        UpdateRotation();
+        UpdateAnimatorValues();
 
         if (isStepMoving)
             UpdateStepJumpOffset();
@@ -136,6 +169,61 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void CacheAnimatorParameters()
+    {
+        if (characterAnimator == null)
+            return;
+
+        hasMovingBoolParameter = false;
+        hasSpeedFloatParameter = false;
+        hasAttackTriggerParameter = false;
+
+        movingBoolHash = string.IsNullOrWhiteSpace(movingBoolParameter) ? 0 : Animator.StringToHash(movingBoolParameter);
+        speedFloatHash = string.IsNullOrWhiteSpace(speedFloatParameter) ? 0 : Animator.StringToHash(speedFloatParameter);
+        attackTriggerHash = string.IsNullOrWhiteSpace(attackTriggerParameter) ? 0 : Animator.StringToHash(attackTriggerParameter);
+
+        foreach (AnimatorControllerParameter parameter in characterAnimator.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Bool && parameter.nameHash == movingBoolHash)
+                hasMovingBoolParameter = true;
+            else if (parameter.type == AnimatorControllerParameterType.Float && parameter.nameHash == speedFloatHash)
+                hasSpeedFloatParameter = true;
+            else if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.nameHash == attackTriggerHash)
+                hasAttackTriggerParameter = true;
+        }
+    }
+
+    void UpdateAnimatorValues()
+    {
+        if (characterAnimator == null)
+            return;
+
+        if (hasMovingBoolParameter)
+            characterAnimator.SetBool(movingBoolHash, isMoving);
+
+        if (hasSpeedFloatParameter)
+            characterAnimator.SetFloat(speedFloatHash, isMoving ? currentMoveMultiplier : 0f);
+    }
+
+    void UpdateMovementPosition()
+    {
+        if (!isMoving)
+        {
+            transform.position = targetPosition;
+            return;
+        }
+
+        moveTimer += Time.deltaTime;
+        float normalizedTime = moveDuration <= Mathf.Epsilon ? 1f : Mathf.Clamp01(moveTimer / moveDuration);
+        float curvedTime = moveCurve != null ? moveCurve.Evaluate(normalizedTime) : normalizedTime;
+        transform.position = Vector3.LerpUnclamped(moveStartPosition, targetPosition, curvedTime);
+    }
+
+    void UpdateRotation()
+    {
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
+    }
+
     void UpdateEmoteInputAndPlayback()
     {
         if (isEmotePlaying)
@@ -146,21 +234,81 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (isMoving || Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame)
+        if (isMoving || Keyboard.current == null)
+        {
+            idleVariationTimer = 0f;
             return;
+        }
 
-        TryPlayRandomEmote();
+        if (Keyboard.current.gKey.wasPressedThisFrame)
+        {
+            if (TryPlayRandomEmote())
+                idleVariationTimer = 0f;
+            return;
+        }
+
+        if (HasGameplayInput(Keyboard.current))
+        {
+            idleVariationTimer = 0f;
+            return;
+        }
+
+        TryPlayIdleVariation();
     }
 
-    void TryPlayRandomEmote()
+    bool TryPlayRandomEmote()
     {
-        if (characterAnimator == null || emoteClips == null || emoteClips.Length == 0)
+        return TryPlayRandomClip(emoteClips);
+    }
+
+    void TryPlayIdleVariation()
+    {
+        if (idleVariationClips == null || idleVariationClips.Length == 0)
             return;
 
-        int index = UnityEngine.Random.Range(0, emoteClips.Length);
-        AnimationClip clip = emoteClips[index];
-        if (clip == null)
+        idleVariationTimer += Time.deltaTime;
+        if (idleVariationTimer < nextIdleVariationDelay)
             return;
+
+        if (TryPlayRandomClip(idleVariationClips))
+            ScheduleNextIdleVariation();
+        else
+            idleVariationTimer = 0f;
+    }
+
+    void ScheduleNextIdleVariation()
+    {
+        idleVariationTimer = 0f;
+        float minDelay = Mathf.Max(0.5f, Mathf.Min(idleVariationIntervalRange.x, idleVariationIntervalRange.y));
+        float maxDelay = Mathf.Max(minDelay, Mathf.Max(idleVariationIntervalRange.x, idleVariationIntervalRange.y));
+        nextIdleVariationDelay = UnityEngine.Random.Range(minDelay, maxDelay);
+    }
+
+    bool HasGameplayInput(Keyboard kb)
+    {
+        return kb.wKey.wasPressedThisFrame
+               || kb.aKey.wasPressedThisFrame
+               || kb.sKey.wasPressedThisFrame
+               || kb.dKey.wasPressedThisFrame
+               || kb.upArrowKey.wasPressedThisFrame
+               || kb.downArrowKey.wasPressedThisFrame
+               || kb.leftArrowKey.wasPressedThisFrame
+               || kb.rightArrowKey.wasPressedThisFrame
+               || kb.spaceKey.wasPressedThisFrame;
+    }
+
+    bool TryPlayRandomClip(AnimationClip[] clips)
+    {
+        if (characterAnimator == null || clips == null || clips.Length == 0)
+            return false;
+
+        int index = UnityEngine.Random.Range(0, clips.Length);
+        AnimationClip clip = clips[index];
+        if (clip == null)
+            return false;
+
+        if (emoteGraph.IsValid())
+            emoteGraph.Destroy();
 
         emoteGraph = PlayableGraph.Create("PlayerEmoteGraph");
         var output = AnimationPlayableOutput.Create(emoteGraph, "PlayerEmoteOutput", characterAnimator);
@@ -173,6 +321,7 @@ public class PlayerController : MonoBehaviour
         isEmotePlaying = true;
         emoteTimer = 0f;
         currentEmoteDuration = Mathf.Max(clip.length, 0.01f);
+        return true;
     }
 
     void StopCurrentEmote()
@@ -240,7 +389,10 @@ public class PlayerController : MonoBehaviour
 
         isMoving = true;
         isStepMoving = true;
-        transform.forward = direction;
+        moveTimer = 0f;
+        float movementSpeed = Mathf.Max(moveSpeed * currentMoveMultiplier, 0.01f);
+        moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / movementSpeed;
+        targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
 
     void CheckForVoid()
@@ -291,12 +443,16 @@ public class PlayerController : MonoBehaviour
 
     void PerformSpaceAttack()
     {
+        StopCurrentEmote();
+        PlayAttackAnimation();
         StartCoroutine(VisualFlash());
 
         if (shockwavePrefab != null)
         {
-            GameObject visual = Instantiate(shockwavePrefab, transform.position, Quaternion.identity);
+            Vector3 shockwavePosition = GetShockwaveSpawnPosition();
+            GameObject visual = Instantiate(shockwavePrefab, shockwavePosition, Quaternion.identity);
             visual.transform.localScale = Vector3.zero;
+            ApplyShockwaveFireTint(visual);
             Destroy(visual, 0.25f);
         }
 
@@ -310,6 +466,92 @@ public class PlayerController : MonoBehaviour
                 enemy.Die();
             else
                 Destroy(hitCollider.gameObject);
+        }
+    }
+
+    Vector3 GetShockwaveSpawnPosition()
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.5f;
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 3f, floorLayer))
+            return hit.point + Vector3.up * 0.03f;
+
+        return new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
+    }
+
+    void ApplyShockwaveFireTint(GameObject shockwaveVisual)
+    {
+        Renderer[] renderers = shockwaveVisual.GetComponentsInChildren<Renderer>();
+        Color fireCore = new Color(1f, 0.35f, 0.05f, 1f);
+        Color fireGlow = new Color(1f, 0.12f, 0.02f, 1f) * 2f;
+
+        foreach (Renderer rend in renderers)
+        {
+            Material material = rend.material;
+            if (material.HasProperty("_Color"))
+                material.color = fireCore;
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", fireCore);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", fireGlow);
+            }
+        }
+    }
+
+    void PlayAttackAnimation()
+    {
+        if (characterAnimator == null)
+            return;
+
+        if (hasAttackTriggerParameter)
+            characterAnimator.SetTrigger(attackTriggerHash);
+
+        if (attackClip == null)
+            return;
+
+        if (attackGraph.IsValid())
+            attackGraph.Destroy();
+
+        attackGraph = PlayableGraph.Create("PlayerAttackGraph");
+        var output = AnimationPlayableOutput.Create(attackGraph, "PlayerAttackOutput", characterAnimator);
+        var playable = AnimationClipPlayable.Create(attackGraph, attackClip);
+        playable.SetApplyFootIK(false);
+        playable.SetApplyPlayableIK(false);
+        output.SetSourcePlayable(playable);
+        attackGraph.Play();
+
+        isAttackClipPlaying = true;
+        attackClipTimer = 0f;
+        currentAttackClipDuration = Mathf.Max(attackClip.length, 0.01f);
+    }
+
+    void UpdateAttackClipPlayback()
+    {
+        if (!isAttackClipPlaying)
+            return;
+
+        attackClipTimer += Time.deltaTime;
+        if (attackClipTimer >= currentAttackClipDuration)
+            StopAttackClipPlayback();
+    }
+
+    void StopAttackClipPlayback()
+    {
+        if (!isAttackClipPlaying)
+            return;
+
+        isAttackClipPlaying = false;
+        attackClipTimer = 0f;
+        currentAttackClipDuration = 0f;
+
+        if (attackGraph.IsValid())
+            attackGraph.Destroy();
+
+        if (characterAnimator != null)
+        {
+            characterAnimator.Rebind();
+            characterAnimator.Update(Mathf.Max(attackBlendDuration, 0f));
         }
     }
 
@@ -375,6 +617,7 @@ public class PlayerController : MonoBehaviour
     public void ResetState(Vector3 newSpawnPos)
     {
         StopCurrentEmote();
+        StopAttackClipPlayback();
         StopAllCoroutines();
 
         BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
@@ -383,7 +626,10 @@ public class PlayerController : MonoBehaviour
         transform.position = snappedSpawn;
         targetPosition = snappedSpawn;
         moveStartPosition = snappedSpawn;
+        moveTimer = 0f;
+        moveDuration = 0f;
         transform.rotation = Quaternion.identity;
+        targetRotation = transform.rotation;
 
         isMoving = false;
         isStepMoving = false;
@@ -405,5 +651,6 @@ public class PlayerController : MonoBehaviour
     void OnDisable()
     {
         StopCurrentEmote();
+        StopAttackClipPlayback();
     }
 }
