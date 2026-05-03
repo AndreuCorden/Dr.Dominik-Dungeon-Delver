@@ -66,8 +66,17 @@ public class LevelHandler : MonoBehaviour
         if (PlayerController.Instance != null)
         {
             activePlayer = PlayerController.Instance.gameObject;
-
-            PlayerController.Instance.ResetState(spawnPos);
+            if (activePlayer.GetComponentInChildren<Animator>() == null)
+            {
+                PlayerController.Instance = null;
+                Destroy(activePlayer);
+                activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+                activePlayer.name = "Player";
+            }
+            else
+            {
+                PlayerController.Instance.ResetState(spawnPos);
+            }
         }
         else
         {

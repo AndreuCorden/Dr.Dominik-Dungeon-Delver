@@ -2534,7 +2534,7 @@ MonoBehaviour:
   moveSpeed: 5
   visualRoot: {fileID: 971137364707156333}
   visualYOffset: -0.5
-  jumpHeight: 0.35
+  jumpHeight: 0.5
   emoteClips:
   - {fileID: 2415735220282309756, guid: 8f0e32dcca81a4e4f87c78bfe2b97005, type: 3}
   - {fileID: -5006469387719102519, guid: 6f0c27552a65e8a448a4eccc9851277b, type: 3}
@@ -2546,7 +2546,10 @@ MonoBehaviour:
   idleVariationIntervalRange: {x: 4, y: 7}
   currentMoveMultiplier: 1
   attackRange: 1.1
+  useMovementClip: 0
+  movementClip: {fileID: 3898671758408027237, guid: b09d851b76d92f144abcea300e30fa58, type: 3}
   attackClip: {fileID: 2550410822785019017, guid: b38fcdbf88f95f2468be0a4ae7aae7f8, type: 3}
+  movementBlendDuration: 0.08
   attackBlendDuration: 0.08
   damageInvulnerabilityDuration: 0.7
   damageFlashInterval: 0.08

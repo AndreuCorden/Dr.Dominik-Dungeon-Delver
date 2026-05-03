@@ -57,7 +57,10 @@ public class PlayerController : MonoBehaviour
 
     [Header("Attack Settings")]
     public float attackRange = 1.1f;
+    [SerializeField] private bool useMovementClip = false;
+    [SerializeField] private AnimationClip movementClip;
     [SerializeField] private AnimationClip attackClip;
+    [SerializeField] private float movementBlendDuration = 0.08f;
     [SerializeField] private float attackBlendDuration = 0.08f;
     [Header("Damage Feedback")]
     [SerializeField] private float damageInvulnerabilityDuration = 0.7f;
@@ -80,6 +83,8 @@ public class PlayerController : MonoBehaviour
     private bool isMoving = false;
     private bool isStepMoving = false;
     private PlayableGraph attackGraph;
+    private PlayableGraph movementGraph;
+    private bool isMovementClipPlaying;
     private bool isAttackClipPlaying;
     private float attackClipTimer;
     private float currentAttackClipDuration;
@@ -183,6 +188,8 @@ public class PlayerController : MonoBehaviour
             movementVisualYOffset = 0f;
             ResetSpeedIfNoSlime();
         }
+
+        SyncMovementAnimationState();
     }
 
     void CacheAnimatorParameters()
@@ -377,16 +384,15 @@ public class PlayerController : MonoBehaviour
 
     void UpdateStepJumpOffset()
     {
-        float totalDistance = Vector3.Distance(moveStartPosition, targetPosition);
-        if (totalDistance <= Mathf.Epsilon)
+        if (moveDuration <= Mathf.Epsilon)
         {
             movementVisualYOffset = 0f;
             return;
         }
 
-        float remainingDistance = Vector3.Distance(transform.position, targetPosition);
-        float progress = Mathf.Clamp01(1f - (remainingDistance / totalDistance));
-        movementVisualYOffset = Mathf.Sin(progress * Mathf.PI) * jumpHeight;
+        float progress = Mathf.Clamp01(moveTimer / moveDuration);
+        float parabola = 4f * progress * (1f - progress);
+        movementVisualYOffset = parabola * jumpHeight;
     }
 
     bool IsDestinationSafe(Vector3 direction)
@@ -548,8 +554,8 @@ public class PlayerController : MonoBehaviour
     void ApplyShockwaveFireTint(GameObject shockwaveVisual)
     {
         Renderer[] renderers = shockwaveVisual.GetComponentsInChildren<Renderer>();
-        Color fireCore = new Color(1f, 0.35f, 0.05f, 1f);
-        Color fireGlow = new Color(1f, 0.12f, 0.02f, 1f) * 2f;
+        Color fireCore = new Color(1f, 0.12f, 0.02f, 1f);
+        Color fireGlow = new Color(1f, 0.22f, 0.04f, 1f) * 2.4f;
 
         foreach (Renderer rend in renderers)
         {
@@ -591,6 +597,59 @@ public class PlayerController : MonoBehaviour
         isAttackClipPlaying = true;
         attackClipTimer = 0f;
         currentAttackClipDuration = Mathf.Max(attackClip.length, 0.01f);
+    }
+
+    void SyncMovementAnimationState()
+    {
+        if (!useMovementClip || characterAnimator == null || movementClip == null)
+        {
+            StopMovementAnimation();
+            return;
+        }
+
+        bool shouldPlayMovement = isMoving && !isEmotePlaying && !isAttackClipPlaying && !isHitClipPlaying;
+
+        if (shouldPlayMovement)
+        {
+            if (!isMovementClipPlaying)
+                PlayMovementAnimation();
+            return;
+        }
+
+        StopMovementAnimation();
+    }
+
+    void PlayMovementAnimation()
+    {
+        if (movementGraph.IsValid())
+            movementGraph.Destroy();
+
+        movementGraph = PlayableGraph.Create("PlayerMovementGraph");
+        var output = AnimationPlayableOutput.Create(movementGraph, "PlayerMovementOutput", characterAnimator);
+        var playable = AnimationClipPlayable.Create(movementGraph, movementClip);
+        playable.SetApplyFootIK(true);
+        playable.SetApplyPlayableIK(false);
+        output.SetSourcePlayable(playable);
+        movementGraph.Play();
+
+        isMovementClipPlaying = true;
+    }
+
+    void StopMovementAnimation()
+    {
+        if (!isMovementClipPlaying)
+            return;
+
+        isMovementClipPlaying = false;
+
+        if (movementGraph.IsValid())
+            movementGraph.Destroy();
+
+        if (characterAnimator != null)
+        {
+            characterAnimator.Rebind();
+            characterAnimator.Update(Mathf.Max(movementBlendDuration, 0f));
+        }
     }
 
     void PlayHitReaction()
@@ -691,7 +750,7 @@ public class PlayerController : MonoBehaviour
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            renderer.material.color = Color.Lerp(Color.cyan, oldColor, elapsed / duration);
+            renderer.material.color = Color.Lerp(new Color(1f, 0.25f, 0.08f, 1f), oldColor, elapsed / duration);
             yield return null;
         }
 
@@ -700,7 +759,7 @@ public class PlayerController : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.cyan;
+        Gizmos.color = new Color(1f, 0.25f, 0.08f, 1f);
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 
@@ -740,6 +799,7 @@ public class PlayerController : MonoBehaviour
     public void ResetState(Vector3 newSpawnPos)
     {
         StopCurrentEmote();
+        StopMovementAnimation();
         StopAttackClipPlayback();
         StopHitReactionPlayback();
         StopAllCoroutines();
@@ -782,7 +842,14 @@ public class PlayerController : MonoBehaviour
     void OnDisable()
     {
         StopCurrentEmote();
+        StopMovementAnimation();
         StopAttackClipPlayback();
         StopHitReactionPlayback();
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 }
