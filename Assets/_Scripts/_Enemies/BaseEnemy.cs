@@ -1,12 +1,14 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public abstract class BaseEnemy : MonoBehaviour
 {
+    // The shared map for ALL enemies and the player
+    public static HashSet<Vector2> OccupiedTiles = new HashSet<Vector2>();
+
     [Header("Base Settings")]
     public float moveSpeed = 5f;
-    public float timeBetweenSteps = 1.0f;
+    public float timeBetweenSteps = 1f;
     public LayerMask floorLayer;
     public LayerMask blockingLayers;
 
@@ -16,24 +18,14 @@ public abstract class BaseEnemy : MonoBehaviour
     protected float nextMoveTime;
     protected Transform player;
 
-    public static HashSet<Vector3> OccupiedTiles = new HashSet<Vector3>();
-
-    protected Vector3 GetRoundedPos(Vector3 pos)
-    {
-        // Preserve original Y height, round X and Z for the grid
-        return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));
-    }
-
     protected virtual void Start()
     {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null) player = playerObj.transform;
-
-        transform.position = GetRoundedPos(transform.position);
-        targetPosition = transform.position;
-
-        Vector3 currentTile = GetRoundedPos(transform.position);
-        if (!OccupiedTiles.Contains(currentTile)) OccupiedTiles.Add(currentTile);
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        
+        // Initial Grid Placement
+        targetPosition = RoundToGrid(transform.position);
+        transform.position = targetPosition;
+        OccupiedTiles.Add(GetGridKey(transform.position));
     }
 
     protected virtual void Update()
@@ -47,48 +39,51 @@ public abstract class BaseEnemy : MonoBehaviour
         }
         else
         {
-            CheckForVoid();
-            if (Time.time >= nextMoveTime) DetermineNextStep();
+            CheckForVoid(); // Always check if floor exists beneath feet
+            if (!isFalling && Time.time >= nextMoveTime) DetermineNextStep();
         }
     }
 
     protected abstract void DetermineNextStep();
 
-    protected virtual void FinishMovement()
-    {
-        transform.position = targetPosition;
-        isMoving = false;
-        nextMoveTime = Time.time + timeBetweenSteps;
+    // --- SHARED LOGIC ---
 
-        Vector3 currentTile = GetRoundedPos(transform.position);
-        if (!OccupiedTiles.Contains(currentTile)) OccupiedTiles.Add(currentTile);
+    protected void CheckForVoid()
+    {
+        // If no floor is hit by a raycast downward, trigger falling
+        if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
+        {
+            isFalling = true;
+            OccupiedTiles.Remove(GetGridKey(transform.position));
+        }
+    }
+
+    protected void HandleFalling()
+    {
+        transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
+        transform.Rotate(Vector3.up * Time.deltaTime * 200f);
+        if (transform.position.y < -10f) Destroy(gameObject);
     }
 
     protected bool TryMove(Vector3 direction)
     {
-        Vector3 potentialDest = GetRoundedPos(transform.position + direction);
+        Vector3 dest3D = RoundToGrid(transform.position + direction);
 
-        bool hasFloor = Physics.Raycast(potentialDest + Vector3.up, Vector3.down, 2f, floorLayer);
-        bool isClaimed = OccupiedTiles.Contains(potentialDest);
-        bool isPhysicallyBlocked = Physics.CheckSphere(potentialDest + (Vector3.up * 0.5f), 0.3f, blockingLayers);
-
-        bool isPlayerInWay = false;
-        if (player != null)
+        // Check if player is standing exactly where we want to go (Attack Range)
+        if (GetGridKey(player.position) == GetGridKey(dest3D))
         {
-            Vector3 roundedPlayerPos = GetRoundedPos(player.position);
-            if (Mathf.Abs(potentialDest.x - roundedPlayerPos.x) < 0.1f &&
-                Mathf.Abs(potentialDest.z - roundedPlayerPos.z) < 0.1f)
-            {
-                isPlayerInWay = true;
-            }
+            PerformAttack(direction);
+            return true; 
         }
 
-        if (hasFloor && !isClaimed && !isPhysicallyBlocked && !isPlayerInWay)
-        {
-            OccupiedTiles.Remove(GetRoundedPos(transform.position));
-            OccupiedTiles.Add(potentialDest);
+        bool hasFloor = Physics.Raycast(dest3D + Vector3.up, Vector3.down, 2f, floorLayer);
+        bool isOccupied = OccupiedTiles.Contains(GetGridKey(dest3D));
 
-            targetPosition = potentialDest;
+        if (hasFloor && !isOccupied)
+        {
+            OccupiedTiles.Remove(GetGridKey(transform.position));
+            OccupiedTiles.Add(GetGridKey(dest3D));
+            targetPosition = dest3D;
             isMoving = true;
             transform.forward = direction;
             return true;
@@ -96,46 +91,28 @@ public abstract class BaseEnemy : MonoBehaviour
         return false;
     }
 
-    protected IEnumerator AttackLunge(Vector3 dir)
+    protected void PerformAttack(Vector3 dir)
     {
-        Vector3 originalPos = transform.position;
-        Vector3 lungePos = originalPos + (dir * 0.3f);
-        float t = 0;
-        while (t < 1)
-        {
-            t += Time.deltaTime * 15f;
-            transform.position = Vector3.Lerp(originalPos, lungePos, Mathf.PingPong(t, 1));
-            yield return null;
-        }
-        transform.position = originalPos;
+        transform.forward = dir;
+        // Trigger Damage to Player and visual lunge here
+        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
+        nextMoveTime = Time.time + timeBetweenSteps;
     }
 
-    protected void CheckForVoid()
+    protected virtual void FinishMovement()
     {
-        if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer)) isFalling = true;
+        transform.position = targetPosition;
+        isMoving = false;
+        nextMoveTime = Time.time + timeBetweenSteps;
     }
 
-    protected void HandleFalling()
+    // Utility
+    protected Vector2 GetGridKey(Vector3 pos) => new Vector2(Mathf.Round(pos.x), Mathf.Round(pos.z));
+    protected Vector3 RoundToGrid(Vector3 pos) => new Vector3(Mathf.Round(pos.x), transform.position.y, Mathf.Round(pos.z));
+
+    public virtual void Die()
     {
-        transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
-        transform.Rotate(Vector3.up * Time.deltaTime * 200f);
-        if (transform.position.y < -10f) Die();
-    }
-
-    public void Die()
-{
-    // 1. Clear Grid logic
-    Vector3 gridPos = GetRoundedPos(transform.position);
-    OccupiedTiles.Remove(gridPos);
-
-    // 2. Destroy
-    // The PressurePlate.Update() will see this object is null and reset itself.
-    Destroy(gameObject);
-}
-
-    protected virtual void OnDestroy()
-    {
-        OccupiedTiles.Remove(GetRoundedPos(transform.position));
-        OccupiedTiles.Remove(GetRoundedPos(targetPosition));
+        OccupiedTiles.Remove(GetGridKey(transform.position));
+        Destroy(gameObject);
     }
 }
