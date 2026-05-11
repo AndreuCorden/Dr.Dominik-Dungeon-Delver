@@ -186,6 +186,8 @@ public class PlayerController : MonoBehaviour
             isMoving = false;
             isStepMoving = false;
             movementVisualYOffset = 0f;
+
+            // This is now safe because the player is physically at the targetPosition
             ResetSpeedIfNoSlime();
         }
 
@@ -422,17 +424,29 @@ public class PlayerController : MonoBehaviour
     {
         StopCurrentEmote();
 
-        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(new Vector2(targetPosition.x, targetPosition.z)));
+        // 1. Determine destination
+        Vector3 dest = RoundGridPosition(targetPosition + direction);
 
+        // 2. Check for slime AT THE DESTINATION
+        // If the tile we are moving INTO is slime, we should be slow
+        currentMoveMultiplier = CheckForSlimeAt(dest) ? 0.5f : 1.0f;
+
+        // 3. Clear occupancy
+        BaseEnemy.OccupiedTiles.Remove(new Vector2(targetPosition.x, targetPosition.z));
+
+        // 4. Set positions
         moveStartPosition = targetPosition;
-        targetPosition = RoundGridPosition(targetPosition + direction);
+        targetPosition = dest;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
 
         isMoving = true;
         isStepMoving = true;
         moveTimer = 0f;
-        float movementSpeed = Mathf.Max(moveSpeed * currentMoveMultiplier, 0.01f);
-        moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / movementSpeed;
+
+        // 5. CALCULATE DURATION (Crucial: uses the multiplier set in step 2)
+        float effectiveSpeed = moveSpeed * currentMoveMultiplier;
+        moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
+
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
 
@@ -771,23 +785,12 @@ public class PlayerController : MonoBehaviour
 
     void ResetSpeedIfNoSlime()
     {
-        if (currentMoveMultiplier >= 1.0f)
-            return;
-
-        Collider[] hitColliders = Physics.OverlapBox(transform.position, new Vector3(0.4f, 0.1f, 0.4f));
-        bool foundSlime = false;
-
-        foreach (Collider col in hitColliders)
+        // If we just landed on a tile, check if it's slimey
+        // If not, return to full speed
+        if (!CheckForSlimeAt(transform.position))
         {
-            if (!col.CompareTag("Slime"))
-                continue;
-
-            foundSlime = true;
-            break;
-        }
-
-        if (!foundSlime)
             currentMoveMultiplier = 1.0f;
+        }
     }
 
     public void ChangeHealth(int amount)
@@ -857,5 +860,21 @@ public class PlayerController : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    bool CheckForSlimeAt(Vector3 position)
+    {
+        // Shoot a small overlap box at the floor level
+        // Center it at Y=0 where the floor is
+        Collider[] hitColliders = Physics.OverlapBox(new Vector3(position.x, 0, position.z), new Vector3(0.45f, 1f, 0.45f));
+
+        foreach (var col in hitColliders)
+        {
+            if (col.CompareTag("Slime"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

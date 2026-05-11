@@ -458,7 +458,7 @@ MonoBehaviour:
   - levelName: Room 1
     width: 15
     depth: 20
-    layout: "WWWDWWWWWW \nW..............\nW..............\nW..............\nW....M.........\nW..............\nW........S.....\nW..  
+    layout: "WWWDWWWWWW \nW..............\nW....M.M.......\nW.....T....T...\nW....M.........\nW..............\nW........S.....\nW..  
       ....   ..\nA..   L...   ..\nA..   ...L   ..\nA..   .L..   ..\nW...G......G...\nW...T..........\nW...C..........\nW..............\nW..S...........\nW...........F..\nW.....III......\nW..............\nW...P.........."
   floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
   wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}

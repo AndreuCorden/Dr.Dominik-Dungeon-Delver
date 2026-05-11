@@ -21,7 +21,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
-        
+
         // Initial Grid Placement
         targetPosition = RoundToGrid(transform.position);
         transform.position = targetPosition;
@@ -73,7 +73,7 @@ public abstract class BaseEnemy : MonoBehaviour
         if (GetGridKey(player.position) == GetGridKey(dest3D))
         {
             PerformAttack(direction);
-            return true; 
+            return true;
         }
 
         bool hasFloor = Physics.Raycast(dest3D + Vector3.up, Vector3.down, 2f, floorLayer);
@@ -112,7 +112,22 @@ public abstract class BaseEnemy : MonoBehaviour
 
     public virtual void Die()
     {
+        // 1. Remove the current position
         OccupiedTiles.Remove(GetGridKey(transform.position));
+
+        // 2. IMPORTANT: Remove the target position if we were moving toward it
+        if (isMoving)
+        {
+            OccupiedTiles.Remove(GetGridKey(targetPosition));
+        }
+
         Destroy(gameObject);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        // Final safety check to ensure this enemy NEVER leaves a ghost tile
+        OccupiedTiles.Remove(GetGridKey(transform.position));
+        if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
     }
 }

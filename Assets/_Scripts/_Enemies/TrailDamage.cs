@@ -38,13 +38,4 @@ public class TrailDamage : MonoBehaviour
             if (pc != null) pc.currentMoveMultiplier = slowAmount;
         }
     }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            PlayerController pc = other.GetComponent<PlayerController>();
-            if (pc != null) pc.currentMoveMultiplier = 1.0f; // Return to normal
-        }
-    }
 }
