@@ -3,9 +3,12 @@ using System.Collections.Generic;
 
 public class PressurePlate : MonoBehaviour
 {
-    public ArrowTrap wallTrap; 
-    private bool isPressed = false;
+    public ArrowTrap wallTrap;
     
+    [Header("Visuals")]
+    public Transform movingPart; 
+    private bool isPressed = false;
+
     // Track objects currently on the plate
     private List<Collider> occupants = new List<Collider>();
 
@@ -35,7 +38,7 @@ public class PressurePlate : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Enemy"))
         {
             if (!occupants.Contains(other)) occupants.Add(other);
-            
+
             if (!isPressed) Press();
         }
     }
@@ -43,7 +46,7 @@ public class PressurePlate : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         if (occupants.Contains(other)) occupants.Remove(other);
-        
+
         if (isPressed && occupants.Count == 0) Release();
     }
 
@@ -51,13 +54,22 @@ public class PressurePlate : MonoBehaviour
     {
         isPressed = true;
         if (wallTrap != null) wallTrap.FireArrows();
-        transform.localPosition -= new Vector3(0, 0.05f, 0);
+
+        // Move the visual part, NOT the whole object with the collider
+        if (movingPart != null)
+            movingPart.localPosition = new Vector3(0, -0.02f, 0);
+        else
+            transform.localPosition -= new Vector3(0, 0.02f, 0); // Fallback
     }
 
     private void Release()
     {
         isPressed = false;
-        transform.localPosition += new Vector3(0, 0.05f, 0);
+
+        if (movingPart != null)
+            movingPart.localPosition = Vector3.zero;
+        else
+            transform.localPosition += new Vector3(0, 0.02f, 0); // Fallback
     }
 
     // Keep this for manual calls if needed, but Update() now handles the logic automatically

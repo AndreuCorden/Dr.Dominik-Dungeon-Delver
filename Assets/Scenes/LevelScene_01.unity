@@ -460,14 +460,14 @@ MonoBehaviour:
     depth: 20
     layout: "WWWDWWWWWW \nW..............\nW....M.M.......\nW.....T....T...\nW....M.........\nW..............\nW........S.....\nW..  
       ....   ..\nA..   L...   ..\nA..   ...L   ..\nA..   .L..   ..\nW...G......G...\nW...T..........\nW...C..........\nW..............\nW..S...........\nW...........F..\nW.....III......\nW..............\nW...P.........."
-  floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
+  floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
   wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
-  doorPrefab: {fileID: 8953428749450670648, guid: db163c0f66366b345911be8b040b76b1, type: 3}
+  doorPrefab: {fileID: 2813886024194416350, guid: d5374257240c65f4abc675315f45d6c7, type: 3}
   spikeTrapFloorPrefab: {fileID: 247161348603889154, guid: 5f52e4ef07525934c8d7925376591ed1, type: 3}
   gargoylePrefab: {fileID: 8762466043505509284, guid: 163f9b59d076edb4c80a6c517bad8c81, type: 3}
   arrowWallPrefab: {fileID: 247161348603889154, guid: f66782876c4c1a8499673feec72b851c, type: 3}
-  pressurePlatePrefab: {fileID: 69839793034704715, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
+  pressurePlatePrefab: {fileID: 5704463378671115150, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
   mimicPrefab: {fileID: 8521622053067295504, guid: f677a0f25a4d9cc4f8923f8fe56c77c9, type: 3}
   enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
   trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
@@ -502,7 +502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorManager
-  timeBetweenRows: 99999
+  timeBetweenRows: 1e+9
 --- !u!1 &759838014
 GameObject:
   m_ObjectHideFlags: 0

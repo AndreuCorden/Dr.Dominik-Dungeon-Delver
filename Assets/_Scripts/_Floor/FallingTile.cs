@@ -5,21 +5,44 @@ public class FallingTile : MonoBehaviour
 {
     public void StartFalling(float delay)
     {
-        StartCoroutine(FallSequence(delay));
+        // Safety check to ensure we don't start a coroutine on an object being destroyed
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(FallSequence(delay));
+        }
     }
 
     IEnumerator FallSequence(float delay)
     {
         yield return new WaitForSeconds(delay);
 
-        // Optional: Change color to warn the player
-        GetComponent<Renderer>().material.color = Color.red;
-        yield return new WaitForSeconds(0.5f);
+        // Only floors should change color and disable their collider
+        if (gameObject.CompareTag("Floor"))
+        {
+            // Defensive check for Renderer (checks children too)
+            Renderer rend = GetComponentInChildren<Renderer>();
+            if (rend != null)
+            {
+                rend.material.color = Color.red;
+            }
 
-        // Disable collider so the player's Raycast sees a "hole"
-        GetComponent<Collider>().enabled = false;
+            yield return new WaitForSeconds(0.5f);
 
-        // Simple falling physics
+            // Defensive check for Collider
+            Collider col = GetComponent<Collider>();
+            if (col != null)
+            {
+                col.enabled = false;
+            }
+        }
+        else
+        {
+            // If it's not a floor (Trap, Gargoyle, etc.), just wait the same 
+            // warning duration so everything starts moving at the same time.
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        // Standard falling physics for everyone
         float timer = 0;
         while (timer < 2f)
         {

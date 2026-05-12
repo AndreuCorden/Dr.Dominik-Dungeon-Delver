@@ -66,7 +66,7 @@ public class GridGenerator : MonoBehaviour
                         break;
 
                     case 'D':
-                        doorInstance = Instantiate(doorPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        doorInstance = Instantiate(doorPrefab, pos, Quaternion.identity, transform);
                         doorInstance.name = "LevelExitDoor";
                         doorPosition = pos;
                         break;
@@ -80,7 +80,7 @@ public class GridGenerator : MonoBehaviour
                     case 'L': // --- RESTORED: PARENTING & ASSIGNMENT ---
                         if (currentFloor != null)
                         {
-                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.55f, pos.z), Quaternion.identity, currentFloor.transform);
+                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.55f, pos.z), Quaternion.identity, transform);
                             if (lastSpawnedShooter != null)
                                 plate.GetComponent<PressurePlate>().wallTrap = lastSpawnedShooter;
                         }
@@ -90,14 +90,14 @@ public class GridGenerator : MonoBehaviour
                         if (currentFloor != null)
                         {
                             Quaternion coinRot = Quaternion.Euler(90, 0, 0);
-                            Instantiate(CoinPrefab, pos + Vector3.up, coinRot, currentFloor.transform);
+                            Instantiate(CoinPrefab, pos + Vector3.up, coinRot, transform);
                         }
                         break;
 
                     case 'G': // --- RESTORED: LAYER ASSIGNMENT ---
                         if (currentFloor != null)
                         {
-                            Instantiate(gargoylePrefab, pos + Vector3.up * 1.25f, Quaternion.identity, currentFloor.transform);
+                            Instantiate(gargoylePrefab, pos + Vector3.up * 1.25f, Quaternion.identity, transform);
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
                         }
                         break;
@@ -105,7 +105,7 @@ public class GridGenerator : MonoBehaviour
                     case 'M': // --- RESTORED: PARENTING ---
                         if (currentFloor != null)
                         {
-                            Instantiate(mimicPrefab, pos + Vector3.up * 0.6f, Quaternion.identity, currentFloor.transform);
+                            Instantiate(mimicPrefab, pos + Vector3.up * 0.6f, Quaternion.identity, transform);
                         }
                         break;
 
