@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 public class GridGenerator : MonoBehaviour
 {
-    [Header("Grid Dimensions")]
-    public int width = 10;
-    public int depth = 15;
+    public List<LevelBlueprint> levels; // Design your levels in the Inspector!
 
     [Header("Prefabs")]
     public GameObject floorPrefab;
@@ -17,141 +15,118 @@ public class GridGenerator : MonoBehaviour
     public GameObject arrowWallPrefab;
     public GameObject pressurePlatePrefab;
     public GameObject mimicPrefab;
-    private Dictionary<Vector2Int, ArrowTrap> pendingPressurePlates = new Dictionary<Vector2Int, ArrowTrap>();
 
-    [Header("Spawn Rates (0.0 to 1.0)")]
-    public float coinSpawnRate = 0.1f;
-    public float spikeSpawnRate = 0.05f;
-    public float gargoyleSpawnRate = 0.02f;
-    public float arrowTrapSpawnRate = 0.25f;
-    public float mimicSpawnRate = 0.02f;
+    [Header("Enemy Settings")]
+    public GameObject enemyPrefab;
+    public GameObject trailEnemyPrefab;
+    public GameObject patrollerEnemyPrefab;
 
-    // This is now accessible by other scripts
     [HideInInspector] public Vector3 doorPosition;
+    [HideInInspector] public Vector3 playerSpawnPos = Vector3.up;
 
-    public GameObject GenerateLevel()
+    public GameObject GenerateDesignedLevel(int index)
     {
-        // Important: Clear the dictionary at the start of generation
-        pendingPressurePlates.Clear();
+        if (index >= levels.Count) return null;
+
+        // --- MISSING FUNCTIONALITY: CLEAN SLATE ---
         BaseEnemy.OccupiedTiles.Clear();
 
-        int doorX = Random.Range(0, width);
-        GameObject door = null;
-        doorPosition = new Vector3(doorX, 0, depth);
+        string[] rows = levels[index].layout.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
+        System.Array.Reverse(rows);
 
-        for (int x = -1; x <= width; x++)
+        GameObject doorInstance = null;
+
+        // Helper for Arrow Trap pairing (used for 'A' and 'L')
+        // This allows multiple arrow shooters in one level if needed
+        ArrowTrap lastSpawnedShooter = null;
+
+        for (int z = 0; z < rows.Length; z++)
         {
-            for (int z = -1; z <= depth; z++)
+            for (int x = 0; x < rows[z].Length; x++)
             {
-                Vector3 spawnPos = new Vector3(x, 0, z);
+                char c = rows[z][x];
+                Vector3 pos = new Vector3(x, 0, z);
+                GameObject currentFloor = null;
 
-                // Define exactly what counts as the "Left Wall"
-                bool isLeftWall = (x == -1 && z >= 0 && z < depth);
-                bool isEdge = (x == -1 || z == depth);
-
-                // --- DOOR LOGIC ---
-                if (x == doorX && z == depth)
+                // 1. Spawn Floor (Restored logic: Wall 'W' and Arrow 'A' provide their own collision)
+                if (c != ' ' && c != 'W' && c != 'A')
                 {
-                    // 1. Spawn a Floor tile underneath the door
-                    GameObject floorUnderDoor = Instantiate(floorPrefab, spawnPos, Quaternion.identity);
-                    floorUnderDoor.transform.parent = this.transform;
-
-                    // 2. Spawn the Door itself 1 unit up
-                    door = Instantiate(doorPrefab, spawnPos + Vector3.up, Quaternion.identity);
-                    door.name = "LevelExitDoor";
-                    door.transform.parent = this.transform;
-
-                    continue;
+                    currentFloor = Instantiate(floorPrefab, pos, Quaternion.identity, transform);
                 }
 
-                if (isEdge)
+                // 2. Spawn Specific Objects
+                switch (c)
                 {
-                    // Only spawn Arrow Traps on the Left Wall
-                    if (isLeftWall && z > 2 && Random.value < arrowTrapSpawnRate)
-                    {
-                        // Position at wall height, rotated 90 degrees to face Right
-                        Vector3 wallPos = spawnPos + Vector3.up;
-                        Quaternion wallRot = Quaternion.Euler(0, 90, 0);
+                    case 'W':
+                        Instantiate(wallPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
 
-                        GameObject wall = Instantiate(arrowWallPrefab, wallPos, wallRot);
-                        wall.transform.parent = this.transform;
+                    case 'P':
+                        playerSpawnPos = pos + Vector3.up;
+                        break;
 
-                        ArrowTrap trap = wall.GetComponent<ArrowTrap>();
+                    case 'D':
+                        doorInstance = Instantiate(doorPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        doorInstance.name = "LevelExitDoor";
+                        doorPosition = pos;
+                        break;
 
-                        // Pick a tile in the same row (Z) but further in (X)
-                        // We pick a random X between 1 and the middle of the room
-                        int triggerX = Random.Range(width * 1 / 3, width * 2 / 3);
-                        Vector2Int plateCoord = new Vector2Int(triggerX, z);
+                    case 'A': // --- RESTORED: ROTATION ---
+                              // Rotate 90 degrees to face Right (as in your old code)
+                        GameObject arrowWall = Instantiate(arrowWallPrefab, pos + Vector3.up, Quaternion.Euler(0, 90, 0), transform);
+                        lastSpawnedShooter = arrowWall.GetComponent<ArrowTrap>();
+                        break;
 
-                        // Store it so the floor loop can find it
-                        if (!pendingPressurePlates.ContainsKey(plateCoord))
+                    case 'L': // --- RESTORED: PARENTING & ASSIGNMENT ---
+                        if (currentFloor != null)
                         {
-                            pendingPressurePlates.Add(plateCoord, trap);
+                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.55f, pos.z), Quaternion.identity, currentFloor.transform);
+                            if (lastSpawnedShooter != null)
+                                plate.GetComponent<PressurePlate>().wallTrap = lastSpawnedShooter;
                         }
-                    }
-                    else
-                    {
-                        // Spawn a normal wall for all other edges
-                        GameObject wall = Instantiate(wallPrefab, spawnPos + Vector3.up, Quaternion.identity);
-                        wall.name = $"Wall_{x}_{z}";
-                        wall.transform.parent = this.transform;
-                    }
-                }
-                else
-                {
-                    // --- FLOOR / TRAP / COIN LOGIC ---
-                    GameObject tileToSpawn = floorPrefab;
-                    Vector2Int currentCoord = new Vector2Int(x, z);
+                        break;
 
-                    if (z > 2 && Random.value < spikeSpawnRate && !pendingPressurePlates.ContainsKey(currentCoord))
-                    {
-                        tileToSpawn = spikeTrapFloorPrefab;
-                    }
+                    case 'C': // --- RESTORED: ROTATION & PARENTING ---
+                        if (currentFloor != null)
+                        {
+                            Quaternion coinRot = Quaternion.Euler(90, 0, 0);
+                            Instantiate(CoinPrefab, pos + Vector3.up, coinRot, currentFloor.transform);
+                        }
+                        break;
 
-                    GameObject tile = Instantiate(tileToSpawn, spawnPos, Quaternion.identity);
-                    tile.transform.parent = this.transform;
+                    case 'G': // --- RESTORED: LAYER ASSIGNMENT ---
+                        if (currentFloor != null)
+                        {
+                            Instantiate(gargoylePrefab, pos + Vector3.up * 1.25f, Quaternion.identity, currentFloor.transform);
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                        }
+                        break;
 
-                    // CHECK FOR PRESSURE PLATE
+                    case 'M': // --- RESTORED: PARENTING ---
+                        if (currentFloor != null)
+                        {
+                            Instantiate(mimicPrefab, pos + Vector3.up * 0.6f, Quaternion.identity, currentFloor.transform);
+                        }
+                        break;
 
-                    if (pendingPressurePlates.ContainsKey(currentCoord))
-                    {
-                        // Spawn the plate slightly above floor height
-                        GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(spawnPos.x, 0.55f, spawnPos.z), Quaternion.identity);
-                        plate.transform.parent = tile.transform;
+                    case 'I': // Spike Trap
+                        Instantiate(spikeTrapFloorPrefab, pos, Quaternion.identity, transform);
+                        break;
 
-                        // Connect the plate to the specific wall trap instance
-                        plate.GetComponent<PressurePlate>().wallTrap = pendingPressurePlates[currentCoord];
-                    }
+                    case 'F': // Basic Enemy
+                        Instantiate(enemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
 
-                    // Only spawn coins on regular floors, not on traps
-                    if (tileToSpawn == floorPrefab && Random.value < coinSpawnRate)
-                    {
-                        Vector3 coinPos = new Vector3(spawnPos.x, 1.0f, spawnPos.z);
-                        Quaternion coinRotation = Quaternion.Euler(90, 0, 0);
-                        GameObject coin = Instantiate(CoinPrefab, coinPos, coinRotation);
-                        coin.transform.parent = tile.transform; // Parent to tile for organization
-                    }
-                    else if (z > 2 && tileToSpawn == floorPrefab && Random.value < gargoyleSpawnRate)
-                    {
-                        Vector3 gargoylePos = new Vector3(spawnPos.x, 1.25f, spawnPos.z);
-                        GameObject gargoyle = Instantiate(gargoylePrefab, gargoylePos, Quaternion.identity);
-                        gargoyle.transform.parent = tile.transform; // Parent to tile for organization
-                        tile.layer = LayerMask.NameToLayer("Trap");
-                    }
-                    else if (z > 2 && tileToSpawn == floorPrefab && Random.value < mimicSpawnRate)
-                    {
-                        Vector3 mimicPos = new Vector3(spawnPos.x, 0.6f, spawnPos.z);
-                        GameObject mimic = Instantiate(mimicPrefab, mimicPos, Quaternion.identity);
-                        mimic.transform.parent = tile.transform;
-                    }
+                    case 'T': // Patroller
+                        Instantiate(patrollerEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
+
+                    case 'S': // Trail Enemy
+                        Instantiate(trailEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
                 }
             }
         }
-        return door;
-    }
-
-    public Vector3 GetTilePosition(int x, int z)
-    {
-        return new Vector3(x, 0.5f, z);
+        return doorInstance;
     }
 }
