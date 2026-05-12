@@ -1,2 +1,23 @@
 fileFormatVersion: 2
 guid: cc6ebfdcf79a8fa47908cdb98e79444c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
+  - wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
+  - CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
+  - doorPrefab: {fileID: 8953428749450670648, guid: db163c0f66366b345911be8b040b76b1, type: 3}
+  - spikeTrapFloorPrefab: {instanceID: 0}
+  - gargoylePrefab: {instanceID: 0}
+  - arrowWallPrefab: {instanceID: 0}
+  - pressurePlatePrefab: {instanceID: 0}
+  - mimicPrefab: {instanceID: 0}
+  - enemyPrefab: {instanceID: 0}
+  - trailEnemyPrefab: {instanceID: 0}
+  - patrollerEnemyPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -136,7 +136,7 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
-  trailPrefab: {fileID: 2917023547777624576, guid: 80eb539bd18b7c9429648b55767dc908, type: 3}
+  slimePrefab: {fileID: 2917023547777624576, guid: 80eb539bd18b7c9429648b55767dc908, type: 3}
 --- !u!54 &1958715321976630921
 Rigidbody:
   m_ObjectHideFlags: 0

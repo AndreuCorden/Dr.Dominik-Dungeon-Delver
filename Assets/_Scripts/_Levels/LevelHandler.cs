@@ -7,18 +7,9 @@ public class LevelHandler : MonoBehaviour
     public GridGenerator gridGen;
     public GameObject playerPrefab; // Drag your Player Prefab here
 
-    [Header("Spawn Settings")]
-    public int spawnX = 0;
-    public int spawnZ = 2;
-
     [Header("Level Settings")]
     public bool shouldFloorFall = true;
-
-    [Header("Enemy Settings")]
-    public GameObject enemyPrefab;
-    public GameObject trailEnemyPrefab;
-    public GameObject patrollerEnemyPrefab;
-    public int enemyCount = 2;
+    public int levelIndex = 0;
 
     private GameObject activePlayer;
 
@@ -27,13 +18,10 @@ public class LevelHandler : MonoBehaviour
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
         // 1. Setup the Grid
-        GameObject door = gridGen.GenerateLevel();
+        GameObject door = gridGen.GenerateDesignedLevel(levelIndex);
+        SpawnPlayer(gridGen.playerSpawnPos);
 
         yield return new WaitForEndOfFrame();
-
-        // 2. Setup the Player
-        SpawnPlayer();
-        SpawnEnemies();
 
         if (door != null && activePlayer != null)
         {
@@ -57,30 +45,16 @@ public class LevelHandler : MonoBehaviour
         }
     }
 
-    void SpawnPlayer()
+    void SpawnPlayer(Vector3 spawnPos)
     {
-        Vector3 spawnPos = gridGen.GetTilePosition(spawnX, spawnZ);
-        spawnPos.y = 1.0f;
-
         // Check if a persistent player already exists
         if (PlayerController.Instance != null)
         {
             activePlayer = PlayerController.Instance.gameObject;
-            if (activePlayer.GetComponentInChildren<Animator>() == null)
-            {
-                PlayerController.Instance = null;
-                Destroy(activePlayer);
-                activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
-                activePlayer.name = "Player";
-            }
-            else
-            {
-                PlayerController.Instance.ResetState(spawnPos);
-            }
+            PlayerController.Instance.ResetState(spawnPos);
         }
         else
         {
-            // First time spawning (Level 0)
             activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
             activePlayer.name = "Player";
         }
@@ -91,29 +65,6 @@ public class LevelHandler : MonoBehaviour
         {
             follow.target = activePlayer.transform;
             mainCam.transform.position = activePlayer.transform.position + follow.offset;
-        }
-    }
-
-    void SpawnEnemies()
-    {
-        if (enemyPrefab == null) return;
-
-        for (int i = 0; i < enemyCount; i++)
-        {
-            // Pick a random spot on your grid
-            // We use (gridWidth - 2) to keep them away from the very edges
-            int randX = Random.Range(1, gridGen.width - 1);
-            int randZ = Random.Range(5, gridGen.depth - 1); // Start at Z=5 so they don't spawn on the player
-
-            Vector3 spawnPos = gridGen.GetTilePosition(randX, randZ);
-            spawnPos.y = 1.0f;
-
-            if (Random.value > 0.66f && trailEnemyPrefab != null)
-                Instantiate(trailEnemyPrefab, spawnPos, Quaternion.identity);
-            else if (Random.value > 0.5f && patrollerEnemyPrefab != null)
-                Instantiate(patrollerEnemyPrefab, spawnPos, Quaternion.identity);
-            else
-                Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         }
     }
 

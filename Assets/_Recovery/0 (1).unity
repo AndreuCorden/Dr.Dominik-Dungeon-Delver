@@ -454,12 +454,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc6ebfdcf79a8fa47908cdb98e79444c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridGenerator
-  levels:
-  - levelName: Room 1
-    width: 15
-    depth: 20
-    layout: "WWWDWWWWWW \nW..............\nW....M.M.......\nW.....T....T...\nW....M.........\nW..............\nW........S.....\nW..  
-      ....   ..\nA..   L...   ..\nA..   ...L   ..\nA..   .L..   ..\nW...G......G...\nW...T..........\nW...C..........\nW..............\nW..S...........\nW...........F..\nW.....III......\nW..............\nW...P.........."
+  width: 10
+  depth: 15
   floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
   wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
@@ -469,11 +465,12 @@ MonoBehaviour:
   arrowWallPrefab: {fileID: 247161348603889154, guid: f66782876c4c1a8499673feec72b851c, type: 3}
   pressurePlatePrefab: {fileID: 69839793034704715, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
   mimicPrefab: {fileID: 8521622053067295504, guid: f677a0f25a4d9cc4f8923f8fe56c77c9, type: 3}
-  enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
-  trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
-  patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}
+  coinSpawnRate: 0.1
+  spikeSpawnRate: 0
+  gargoyleSpawnRate: 0
+  arrowTrapSpawnRate: 0
+  mimicSpawnRate: 0.02
   doorPosition: {x: 0, y: 0, z: 0}
-  playerSpawnPos: {x: 0, y: 1, z: 0}
 --- !u!114 &566127728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -488,8 +485,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelHandler
   gridGen: {fileID: 566127727}
   playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
+  spawnX: 2
+  spawnZ: 0
   shouldFloorFall: 1
-  levelIndex: 0
+  enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
+  trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
+  patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}
+  enemyCount: 3
 --- !u!114 &566127729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -502,7 +504,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorManager
-  timeBetweenRows: 99999
+  timeBetweenRows: 2
 --- !u!1 &759838014
 GameObject:
   m_ObjectHideFlags: 0
