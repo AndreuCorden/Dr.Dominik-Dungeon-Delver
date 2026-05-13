@@ -32,6 +32,9 @@ public class FloorManager : MonoBehaviour
 
             foreach (var tile in row)
             {
+                // --- THE FIX: CHECK IF THE TILE STILL EXISTS ---
+                if (tile == null) continue;
+
                 if (tile.TryGetComponent<FallingTile>(out FallingTile ft))
                 {
                     ft.StartFalling(0.2f);

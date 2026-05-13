@@ -18,18 +18,10 @@ public class LevelHandler : MonoBehaviour
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
 
         // 1. Setup the Grid
-        GameObject door = gridGen.GenerateDesignedLevel(levelIndex);
+        gridGen.GenerateDesignedLevel(levelIndex);
         SpawnPlayer(gridGen.playerSpawnPos);
 
         yield return new WaitForEndOfFrame();
-
-        if (door != null && activePlayer != null)
-        {
-            if (door.TryGetComponent<LevelGoal>(out LevelGoal goal))
-            {
-                goal.Initialize(gridGen, activePlayer);
-            }
-        }
 
         // 3. Start the Falling Floor (If enabled)
         if (shouldFloorFall)

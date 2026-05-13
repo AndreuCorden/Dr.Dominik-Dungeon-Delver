@@ -466,9 +466,9 @@ MonoBehaviour:
 
       W.....T....T...
 
-      W....M.........
+      W....M....4....
 
-      W..............
+      3..............
 
       W........S.....
 
@@ -486,17 +486,17 @@ MonoBehaviour:
 
       W...T..........
 
-      W...C..........
+      W...C.....2....
 
       W..............
 
-      W..S...........
+      W..S.....1.....
 
       W...........F..
 
       W.....III......
 
-      W..............
+      W...........0..
 
       W...P..........'
   floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
@@ -511,6 +511,13 @@ MonoBehaviour:
   enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
   trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
   patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}
+  decorPrefabs:
+  - {fileID: 3377260559590378100, guid: 1497dec1e526a4f41b4e8c758e8fb91f, type: 3}
+  - {fileID: 2393161040516350848, guid: 8674b3b1f7247a54dbdb47eb1d9700c6, type: 3}
+  - {fileID: 8017994772880146370, guid: ef2c6af1960cbe543be65d862483069d, type: 3}
+  - {fileID: 3787465495826125525, guid: 298e82da751d1234f9d926b74a25ccd0, type: 3}
+  - {fileID: 3883959030815111554, guid: ca76131b9b9496e468c1619b9e9ab33b, type: 3}
+  - {fileID: 834352594404270550, guid: 252fc8490174b734baf5abfec3374dd7, type: 3}
   doorPosition: {x: 0, y: 0, z: 0}
   playerSpawnPos: {x: 0, y: 1, z: 0}
 --- !u!114 &566127728
@@ -541,7 +548,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorManager
-  timeBetweenRows: 1e+9
+  timeBetweenRows: 1
 --- !u!1 &759838014
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,11 +3,13 @@ using System.Collections;
 
 public class FallingTile : MonoBehaviour
 {
+    private bool isFallingStarted = false;
+
     public void StartFalling(float delay)
     {
-        // Safety check to ensure we don't start a coroutine on an object being destroyed
-        if (gameObject.activeInHierarchy)
+        if (!isFallingStarted && gameObject.activeInHierarchy)
         {
+            isFallingStarted = true;
             StartCoroutine(FallSequence(delay));
         }
     }

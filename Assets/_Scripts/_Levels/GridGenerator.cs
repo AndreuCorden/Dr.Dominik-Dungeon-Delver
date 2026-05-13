@@ -21,20 +21,21 @@ public class GridGenerator : MonoBehaviour
     public GameObject trailEnemyPrefab;
     public GameObject patrollerEnemyPrefab;
 
+    [Header("Decor Settings")]
+    public GameObject[] decorPrefabs;
+
     [HideInInspector] public Vector3 doorPosition;
     [HideInInspector] public Vector3 playerSpawnPos = Vector3.up;
 
-    public GameObject GenerateDesignedLevel(int index)
+    public void GenerateDesignedLevel(int index)
     {
-        if (index >= levels.Count) return null;
+        if (index >= levels.Count) return;
 
         // --- MISSING FUNCTIONALITY: CLEAN SLATE ---
         BaseEnemy.OccupiedTiles.Clear();
 
         string[] rows = levels[index].layout.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
         System.Array.Reverse(rows);
-
-        GameObject doorInstance = null;
 
         // Helper for Arrow Trap pairing (used for 'A' and 'L')
         // This allows multiple arrow shooters in one level if needed
@@ -49,7 +50,7 @@ public class GridGenerator : MonoBehaviour
                 GameObject currentFloor = null;
 
                 // 1. Spawn Floor (Restored logic: Wall 'W' and Arrow 'A' provide their own collision)
-                if (c != ' ' && c != 'W' && c != 'A')
+                if (c != ' ' && c != 'W' && c != 'A' && c != '3')
                 {
                     currentFloor = Instantiate(floorPrefab, pos, Quaternion.identity, transform);
                 }
@@ -58,20 +59,7 @@ public class GridGenerator : MonoBehaviour
                 switch (c)
                 {
                     case 'W':
-                        // SIDE WALLS (Left side of the room)
-                        if (x == 0 && z != rows.Length - 1)
-                        {
-                            // Offset: Move slightly Right (X+) and forward (Z+) to close the back gap
-                            Vector3 wallOffset = new Vector3(0.3f, 0.25f, 0.2f);
-                            Instantiate(wallPrefab, pos + wallOffset, Quaternion.Euler(0, -90, 0), transform);
-                        }
-                        // BACK WALLS (Top of the room)
-                        else
-                        {
-                            // Offset: Move slightly Down (Z-) so it sits ON the floor, not on the line
-                            Vector3 wallOffset = new Vector3(-0.07f, 0.3f, -0.3f);
-                            Instantiate(wallPrefab, pos  + wallOffset, Quaternion.identity, transform);
-                        }
+                        PlaceWall(pos, x, z, rows.Length);
                         break;
 
                     case 'P':
@@ -80,9 +68,19 @@ public class GridGenerator : MonoBehaviour
 
                     case 'D':
                         Vector3 doorOffset = new Vector3(-0.07f, 0.32f, -0.42f);
-                        doorInstance = Instantiate(doorPrefab, pos + doorOffset, Quaternion.identity, transform);
+                        GameObject doorInstance = Instantiate(doorPrefab, pos + doorOffset, Quaternion.identity, transform);
                         doorInstance.name = "LevelExitDoor";
                         doorPosition = pos;
+
+                        if (currentFloor != null)
+                        {
+                            // 1. Remove falling logic
+                            FallingTile ft = currentFloor.GetComponent<FallingTile>();
+                            if (ft != null) Destroy(ft);
+
+                            // 2. Add the Goal logic (It will find the player on its own in Start)
+                            currentFloor.AddComponent<LevelGoal>();
+                        }
                         break;
 
                     case 'A': // --- RESTORED: ROTATION ---
@@ -138,9 +136,94 @@ public class GridGenerator : MonoBehaviour
                     case 'S': // Trail Enemy
                         Instantiate(trailEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
                         break;
+
+                    case '0':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[0], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+
+                    case '1':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[1], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+
+                    case '2':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[2], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+
+                    case '3':
+                        // 1. Place the wall first using the helper
+                        PlaceWall(pos, x, z, rows.Length);
+
+                        // 2. Determine lantern position/rotation based on which wall it's on
+                        Vector3 lanternOffset;
+                        Quaternion lanternRotation;
+
+                        if (x == 0 && z != rows.Length - 1) // Side wall (Facing Right)
+                        {
+                            // Push it slightly further out than the wall (0.7f) and up to eye level
+                            lanternOffset = new Vector3(0.7f, 1f, 0);
+                            lanternRotation = Quaternion.Euler(0, -90, 0);
+                        }
+                        else // Back wall (Facing Forward/Down)
+                        {
+                            // Push it slightly forward from the back wall (-0.7f)
+                            lanternOffset = new Vector3(0, 1f, -0.7f);
+                            lanternRotation = Quaternion.identity;
+                        }
+
+                        // 3. Spawn the lantern (Assuming lanternPrefabs[3] is your lantern)
+                        GameObject lantern = Instantiate(decorPrefabs[3], pos + Vector3.up + lanternOffset, lanternRotation, transform);
+                        break;
+
+                    case '4':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[4], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
                 }
             }
         }
-        return doorInstance;
+    }
+
+    private void PlaceWall(Vector3 pos, int x, int z, int rowCount)
+    {
+        if (x == 0 && z != rowCount - 1)
+        {
+            // Offset: Move slightly Right (X+) and forward (Z+) to close the back gap
+            Vector3 wallOffset = new Vector3(0.3f, 0.25f, 0.2f);
+            Instantiate(wallPrefab, pos + wallOffset, Quaternion.Euler(0, -90, 0), transform);
+        }
+        // BACK WALLS (Top of the room)
+        else
+        {
+            // Offset: Move slightly Down (Z-) so it sits ON the floor, not on the line
+            Vector3 wallOffset = new Vector3(-0.07f, 0.3f, -0.3f);
+            Instantiate(wallPrefab, pos + wallOffset, Quaternion.identity, transform);
+        }
     }
 }

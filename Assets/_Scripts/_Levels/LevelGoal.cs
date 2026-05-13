@@ -3,49 +3,72 @@ using UnityEngine.SceneManagement;
 
 public class LevelGoal : MonoBehaviour
 {
-    private GridGenerator gridGen;
     private Transform player;
+    private bool isUnlocked = false;
+
+    [Header("Settings")]
+    public string lockedLayer = "Default";
+    public string unlockedLayer = "Floor";
 
     void Start()
     {
-    }
+        // Automatically find the player by their tag
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+        }
 
-    public void Initialize(GridGenerator generator, GameObject playerObj)
-    {
-        gridGen = generator;
-        player = playerObj.transform;
-        Debug.Log("LevelGoal Initialized with Player and Generator.");
+        // Start state: Locked physics
+        gameObject.layer = LayerMask.NameToLayer(lockedLayer);
+        gameObject.tag = "Untagged";
     }
 
     void Update()
     {
         if (player == null) return;
 
-        // Only allow level completion if enemies are gone
-        if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0)
+        // 1. Logic to Unlock
+        if (!isUnlocked && GameObject.FindGameObjectsWithTag("Enemy").Length == 0)
         {
-            if (Vector3.Distance(player.position, gridGen.doorPosition) <= 1.1f)
+            UnlockPath();
+        }
+
+        // 2. Logic to Complete Level
+        if (isUnlocked)
+        {
+            // Check if player is standing on this specific tile
+            float distance = Vector2.Distance(
+                new Vector2(player.position.x, player.position.z),
+                new Vector2(transform.position.x, transform.position.z)
+            );
+
+            if (distance < 0.1f)
             {
                 CompleteLevel();
             }
         }
     }
 
+    void UnlockPath()
+    {
+        isUnlocked = true;
+        gameObject.tag = "Floor";
+        gameObject.layer = LayerMask.NameToLayer(unlockedLayer);
+
+        // Optional visual cue
+        Renderer rend = GetComponentInChildren<Renderer>();
+        // if (rend != null) rend.material.color = Color.green;
+
+        Debug.Log("Path to next level is now walkable!");
+    }
+
     void CompleteLevel()
     {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1;
-
-        // Check if the next index actually exists in your Build Settings
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
         if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
         {
-            Debug.Log($"Level Complete! Moving to Scene Index: {nextSceneIndex}");
             SceneManager.LoadScene(nextSceneIndex);
-        }
-        else
-        {
-            Debug.LogWarning("No more levels in Build Settings! Returning to Main Menu or Boss?");
-            // Optional: SceneManager.LoadScene("MainMenu");
         }
     }
 }
