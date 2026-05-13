@@ -178,7 +178,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: -10
+  near clip plane: -100
   far clip plane: 1000
   field of view: 60
   orthographic: 1
@@ -206,13 +206,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 86264391}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.23911764, y: 0.369644, z: -0.09904582, w: -0.892399}
+  m_LocalRotation: {x: -0.25488704, y: 0.16773152, z: -0.044943534, w: -0.9512512}
   m_LocalPosition: {x: 10, y: 10, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 30, y: 315, z: 0}
+  m_LocalEulerAnglesHint: {x: 30, y: 340, z: 0}
 --- !u!114 &86264395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,10 +458,49 @@ MonoBehaviour:
   - levelName: Room 1
     width: 15
     depth: 20
-    layout: "WWWDWWWWWW \nW..............\nW....M.M.......\nW.....T....T...\nW....M.........\nW..............\nW........S.....\nW..  
-      ....   ..\nA..   L...   ..\nA..   ...L   ..\nA..   .L..   ..\nW...G......G...\nW...T..........\nW...C..........\nW..............\nW..S...........\nW...........F..\nW.....III......\nW..............\nW...P.........."
+    layout: ' WWDWWWWWWWWWWW
+
+      W..............
+
+      W....M.M.......
+
+      W.....T....T...
+
+      W....M.........
+
+      W..............
+
+      W........S.....
+
+      W..  
+      ....   ..
+
+      A..   L...   ..
+
+      A..   ...L   ..
+
+      A..   .L..  
+      ..
+
+      W...G......G...
+
+      W...T..........
+
+      W...C..........
+
+      W..............
+
+      W..S...........
+
+      W...........F..
+
+      W.....III......
+
+      W..............
+
+      W...P..........'
   floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
-  wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
+  wallPrefab: {fileID: 807191524193933985, guid: 5f175d56be4069f4d9c77fd0972583f5, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
   doorPrefab: {fileID: 2813886024194416350, guid: d5374257240c65f4abc675315f45d6c7, type: 3}
   spikeTrapFloorPrefab: {fileID: 247161348603889154, guid: 5f52e4ef07525934c8d7925376591ed1, type: 3}

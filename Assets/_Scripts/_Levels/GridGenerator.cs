@@ -58,7 +58,20 @@ public class GridGenerator : MonoBehaviour
                 switch (c)
                 {
                     case 'W':
-                        Instantiate(wallPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        // SIDE WALLS (Left side of the room)
+                        if (x == 0 && z != rows.Length - 1)
+                        {
+                            // Offset: Move slightly Right (X+) and forward (Z+) to close the back gap
+                            Vector3 wallOffset = new Vector3(0.3f, 0.25f, 0.2f);
+                            Instantiate(wallPrefab, pos + wallOffset, Quaternion.Euler(0, -90, 0), transform);
+                        }
+                        // BACK WALLS (Top of the room)
+                        else
+                        {
+                            // Offset: Move slightly Down (Z-) so it sits ON the floor, not on the line
+                            Vector3 wallOffset = new Vector3(-0.07f, 0.3f, -0.3f);
+                            Instantiate(wallPrefab, pos  + wallOffset, Quaternion.identity, transform);
+                        }
                         break;
 
                     case 'P':
@@ -66,7 +79,8 @@ public class GridGenerator : MonoBehaviour
                         break;
 
                     case 'D':
-                        doorInstance = Instantiate(doorPrefab, pos, Quaternion.identity, transform);
+                        Vector3 doorOffset = new Vector3(-0.07f, 0.32f, -0.42f);
+                        doorInstance = Instantiate(doorPrefab, pos + doorOffset, Quaternion.identity, transform);
                         doorInstance.name = "LevelExitDoor";
                         doorPosition = pos;
                         break;
