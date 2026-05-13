@@ -56,6 +56,13 @@ public class LevelGoal : MonoBehaviour
         gameObject.tag = "Floor";
         gameObject.layer = LayerMask.NameToLayer(unlockedLayer);
 
+        GameObject door = GameObject.Find("LevelExitDoor");
+        if (door != null)
+        {
+            DoorOpener opener = door.GetComponent<DoorOpener>();
+            if (opener != null) opener.OpenDoor();
+        }
+
         // Optional visual cue
         Renderer rend = GetComponentInChildren<Renderer>();
         // if (rend != null) rend.material.color = Color.green;
