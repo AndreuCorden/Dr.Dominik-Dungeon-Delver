@@ -136,7 +136,20 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
-  trailPrefab: {fileID: 2917023547777624576, guid: 80eb539bd18b7c9429648b55767dc908, type: 3}
+  visualPrefab: {fileID: 100100000, guid: bc600cce01eb57a409f4e69025868a2c, type: 3}
+  visualLocalPosition: {x: 0, y: 0, z: 0}
+  visualLocalEulerAngles: {x: 0, y: 180, z: 0}
+  visualLocalScale: {x: 1, y: 1, z: 1}
+  disablePrimitiveBody: 1
+  visualOverrideMaterial: {fileID: 2100000, guid: 25e72564b0065b440bfa603b45508246, type: 2}
+  idleClip: {fileID: 7400010, guid: bc600cce01eb57a409f4e69025868a2c, type: 3}
+  moveClip: {fileID: 7400004, guid: bc600cce01eb57a409f4e69025868a2c, type: 3}
+  attackClip: {fileID: 7400006, guid: bc600cce01eb57a409f4e69025868a2c, type: 3}
+  animationBlendDuration: 0.08
+  trailPrefab: {fileID: 4020804978756500240, guid: 306b03ed97254604cbfd416e87f010af, type: 3}
+  trailYOffset: 0.02
+  trailSlowAmount: 0.5
+  trailLifetime: 5
 --- !u!54 &1958715321976630921
 Rigidbody:
   m_ObjectHideFlags: 0

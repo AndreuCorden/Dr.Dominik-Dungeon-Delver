@@ -71,6 +71,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("VFX")]
     public GameObject shockwavePrefab;
+    [SerializeField] private GameObject slowDebuffVisualPrefab;
+    [SerializeField] private Vector3 slowDebuffVisualLocalOffset = new Vector3(0f, 0.35f, 0f);
+    [SerializeField] private Vector3 slowDebuffVisualLocalScale = new Vector3(0.8f, 0.8f, 0.8f);
 
     [Header("Layers")]
     public LayerMask floorLayer;
@@ -94,6 +97,7 @@ public class PlayerController : MonoBehaviour
     private float currentHitClipDuration;
     private float invulnerableUntilTime;
     private Coroutine damageInvulnerabilityRoutine;
+    private GameObject slowDebuffVisualInstance;
 
     void Awake()
     {
@@ -190,6 +194,7 @@ public class PlayerController : MonoBehaviour
         }
 
         SyncMovementAnimationState();
+        UpdateSlowDebuffVisual();
     }
 
     void CacheAnimatorParameters()
@@ -773,7 +778,7 @@ public class PlayerController : MonoBehaviour
 
         foreach (Collider col in hitColliders)
         {
-            if (!col.CompareTag("Slime"))
+            if (!col.TryGetComponent<TrailDamage>(out _))
                 continue;
 
             foundSlime = true;
@@ -802,6 +807,7 @@ public class PlayerController : MonoBehaviour
         StopMovementAnimation();
         StopAttackClipPlayback();
         StopHitReactionPlayback();
+        HideSlowDebuffVisual();
         StopAllCoroutines();
         damageInvulnerabilityRoutine = null;
         invulnerableUntilTime = 0f;
@@ -845,11 +851,45 @@ public class PlayerController : MonoBehaviour
         StopMovementAnimation();
         StopAttackClipPlayback();
         StopHitReactionPlayback();
+        HideSlowDebuffVisual();
     }
 
     void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
+        HideSlowDebuffVisual();
+    }
+
+    void UpdateSlowDebuffVisual()
+    {
+        bool shouldShow = currentMoveMultiplier < 0.99f && slowDebuffVisualPrefab != null;
+
+        if (!shouldShow)
+        {
+            HideSlowDebuffVisual();
+            return;
+        }
+
+        if (slowDebuffVisualInstance == null)
+        {
+            slowDebuffVisualInstance = Instantiate(slowDebuffVisualPrefab, transform);
+            slowDebuffVisualInstance.transform.localPosition = slowDebuffVisualLocalOffset;
+            slowDebuffVisualInstance.transform.localRotation = Quaternion.identity;
+            slowDebuffVisualInstance.transform.localScale = slowDebuffVisualLocalScale;
+            return;
+        }
+
+        slowDebuffVisualInstance.transform.localPosition = slowDebuffVisualLocalOffset;
+        slowDebuffVisualInstance.transform.localScale = slowDebuffVisualLocalScale;
+    }
+
+    void HideSlowDebuffVisual()
+    {
+        if (slowDebuffVisualInstance == null)
+            return;
+
+        Destroy(slowDebuffVisualInstance);
+        slowDebuffVisualInstance = null;
     }
 }

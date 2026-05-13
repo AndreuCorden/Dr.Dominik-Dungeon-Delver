@@ -2557,6 +2557,9 @@ MonoBehaviour:
   hitReactionClip: {fileID: 7055355079433224739, guid: f75e27afa8373234f85607c745d65beb, type: 3}
   hitBlendDuration: 0.05
   shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}
+  slowDebuffVisualPrefab: {fileID: 4020804978756500240, guid: 306b03ed97254604cbfd416e87f010af, type: 3}
+  slowDebuffVisualLocalOffset: {x: 0, y: 0.45, z: 0}
+  slowDebuffVisualLocalScale: {x: 0.9, y: 0.9, z: 0.9}
   floorLayer:
     serializedVersion: 2
     m_Bits: 64

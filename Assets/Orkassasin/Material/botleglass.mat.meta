@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 2b65bd0b29dec2448a616d85d17f7e3d
+timeCreated: 1524333596
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 117169
+  packageName: orks assasin
+  packageVersion: 1.0
+  assetPath: Assets/Orkassasin/Material/botleglass.mat
+  uploadId: 241905

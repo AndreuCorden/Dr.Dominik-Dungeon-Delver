@@ -163,3 +163,13 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  visualPrefab: {fileID: 1637584495559616, guid: ba2926d80e1466444936c24a1fa5aec7, type: 3}
+  visualLocalPosition: {x: 0, y: 0, z: 0}
+  visualLocalEulerAngles: {x: 0, y: 180, z: 0}
+  visualLocalScale: {x: 0.9, y: 0.9, z: 0.9}
+  disablePrimitiveBody: 1
+  visualOverrideMaterial: {fileID: 2100000, guid: 44ccdc8ebd1f82d4bb294ac905698e54, type: 2}
+  idleClip: {fileID: 7400000, guid: c0ddf13242263074597669d22d2384a1, type: 3}
+  moveClip: {fileID: 7400000, guid: 5c3b416d3198e354c9f9f5ebffb1b005, type: 3}
+  attackClip: {fileID: 7400000, guid: 4936ec6c2e19c69409826ded546bd7f9, type: 3}
+  animationBlendDuration: 0.08
