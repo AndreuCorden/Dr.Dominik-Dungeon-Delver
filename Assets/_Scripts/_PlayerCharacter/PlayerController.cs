@@ -143,7 +143,7 @@ public class PlayerController : MonoBehaviour
         transform.position = targetPosition;
         targetRotation = transform.rotation;
 
-        BaseEnemy.OccupiedTiles.Add(targetPosition);
+        BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
     }
 
     void LateUpdate()
@@ -190,6 +190,8 @@ public class PlayerController : MonoBehaviour
             isMoving = false;
             isStepMoving = false;
             movementVisualYOffset = 0f;
+
+            // This is now safe because the player is physically at the targetPosition
             ResetSpeedIfNoSlime();
         }
 
@@ -227,10 +229,14 @@ public class PlayerController : MonoBehaviour
 
     Vector3 GetHeldMoveDirection(Keyboard kb)
     {
+        // Check Forward/Back (Vertical on Grid)
         if (kb.wKey.isPressed || kb.upArrowKey.isPressed) return Vector3.forward;
         if (kb.sKey.isPressed || kb.downArrowKey.isPressed) return Vector3.back;
+
+        // Check Left/Right (Horizontal on Grid)
         if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) return Vector3.left;
         if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) return Vector3.right;
+
         return Vector3.zero;
     }
 
@@ -403,15 +409,17 @@ public class PlayerController : MonoBehaviour
     bool IsDestinationSafe(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
-        Ray ray = new Ray(new Vector3(dest.x, 2.0f, dest.z), Vector3.down);
+        // Start higher and shoot lower to ensure we hit the floor at Y=0
+        Ray ray = new Ray(new Vector3(dest.x, 5.0f, dest.z), Vector3.down);
 
-        if (!Physics.Raycast(ray, out _, 1.5f, floorLayer))
+        // Increase distance to 6.0f to make sure we pass through Y=0
+        if (!Physics.Raycast(ray, out _, 6.0f, floorLayer))
+        {
+            Debug.Log($"Movement Blocked: No floor detected at {dest}");
             return false;
+        }
 
-        if (BaseEnemy.OccupiedTiles.Contains(dest))
-            return false;
-
-        if (Physics.CheckSphere(dest, 0.3f, enemyLayer))
+        if (BaseEnemy.OccupiedTiles.Contains(new Vector2(dest.x, dest.z)))
             return false;
 
         return true;
@@ -421,17 +429,29 @@ public class PlayerController : MonoBehaviour
     {
         StopCurrentEmote();
 
-        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
+        // 1. Determine destination
+        Vector3 dest = RoundGridPosition(targetPosition + direction);
 
+        // 2. Check for slime AT THE DESTINATION
+        // If the tile we are moving INTO is slime, we should be slow
+        currentMoveMultiplier = CheckForSlimeAt(dest) ? 0.5f : 1.0f;
+
+        // 3. Clear occupancy
+        BaseEnemy.OccupiedTiles.Remove(new Vector2(targetPosition.x, targetPosition.z));
+
+        // 4. Set positions
         moveStartPosition = targetPosition;
-        targetPosition = RoundGridPosition(targetPosition + direction);
-        BaseEnemy.OccupiedTiles.Add(targetPosition);
+        targetPosition = dest;
+        BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
 
         isMoving = true;
         isStepMoving = true;
         moveTimer = 0f;
-        float movementSpeed = Mathf.Max(moveSpeed * currentMoveMultiplier, 0.01f);
-        moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / movementSpeed;
+
+        // 5. CALCULATE DURATION (Crucial: uses the multiplier set in step 2)
+        float effectiveSpeed = moveSpeed * currentMoveMultiplier;
+        moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
+
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
 
@@ -770,22 +790,7 @@ public class PlayerController : MonoBehaviour
 
     void ResetSpeedIfNoSlime()
     {
-        if (currentMoveMultiplier >= 1.0f)
-            return;
-
-        Collider[] hitColliders = Physics.OverlapBox(transform.position, new Vector3(0.4f, 0.1f, 0.4f));
-        bool foundSlime = false;
-
-        foreach (Collider col in hitColliders)
-        {
-            if (!col.TryGetComponent<TrailDamage>(out _))
-                continue;
-
-            foundSlime = true;
-            break;
-        }
-
-        if (!foundSlime)
+        if (!CheckForSlimeAt(transform.position))
             currentMoveMultiplier = 1.0f;
     }
 
@@ -812,7 +817,7 @@ public class PlayerController : MonoBehaviour
         damageInvulnerabilityRoutine = null;
         invulnerableUntilTime = 0f;
 
-        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(targetPosition));
+        BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(new Vector2(targetPosition.x, targetPosition.z)));
 
         Vector3 snappedSpawn = RoundGridPosition(newSpawnPos);
         transform.position = snappedSpawn;
@@ -828,7 +833,7 @@ public class PlayerController : MonoBehaviour
         movementVisualYOffset = 0f;
         currentMoveMultiplier = 1.0f;
 
-        BaseEnemy.OccupiedTiles.Add(targetPosition);
+        BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
 
         Renderer renderer = GetMainVisualRenderer();
         if (renderer != null)
@@ -891,5 +896,21 @@ public class PlayerController : MonoBehaviour
 
         Destroy(slowDebuffVisualInstance);
         slowDebuffVisualInstance = null;
+    }
+
+    bool CheckForSlimeAt(Vector3 position)
+    {
+        // Shoot a small overlap box at the floor level
+        // Center it at Y=0 where the floor is
+        Collider[] hitColliders = Physics.OverlapBox(new Vector3(position.x, 0, position.z), new Vector3(0.45f, 1f, 0.45f));
+
+        foreach (var col in hitColliders)
+        {
+            if (col.CompareTag("Slime"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

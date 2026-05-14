@@ -2474,7 +2474,7 @@ GameObject:
   - component: {fileID: 153134845581487021}
   - component: {fileID: 9149329269693827821}
   - component: {fileID: 4937756273203856029}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: HumanMale_Character_Free
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -2531,10 +2531,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 858b6b283c83f5741b84702925442ea2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  health: 3
+  coins: 0
   moveSpeed: 5
   visualRoot: {fileID: 971137364707156333}
   visualYOffset: -0.5
   jumpHeight: 0.5
+  turnSpeed: 720
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  movingBoolParameter: IsMoving
+  speedFloatParameter: Speed
+  attackTriggerParameter: Attack
+  hitTriggerParameter: Hit
   emoteClips:
   - {fileID: 2415735220282309756, guid: 8f0e32dcca81a4e4f87c78bfe2b97005, type: 3}
   - {fileID: -5006469387719102519, guid: 6f0c27552a65e8a448a4eccc9851277b, type: 3}
@@ -2612,8 +2643,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.6565373, y: 2.513188, z: 1}
+  m_Center: {x: -0.008344889, y: 0.5498793, z: 0}
 --- !u!1 &4957605393584318338
 GameObject:
   m_ObjectHideFlags: 0

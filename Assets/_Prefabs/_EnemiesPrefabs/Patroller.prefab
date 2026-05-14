@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 3295438851446805185}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -173,5 +173,35 @@ MonoBehaviour:
   moveClip: {fileID: 7400000, guid: 8e15e99fbaa2efe469d00f7c9a7aeac0, type: 3}
   attackClip: {fileID: 7400000, guid: f79914c57a551874ea2cd694cfc58c72, type: 3}
   animationBlendDuration: 0.08
-  patrolDistance: 4
-  moveOnXAxis: 1
+  turnSpeed: 720
+  turnBeforeMoveAngle: 6
+  stepJumpHeight: 0.35
+  moveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  facingYawOffset: 180
+  visualGroundOffset: 0.5
+  autoLowerFloatingVisual: 1
+  autoLowerStrength: 1
+  autoLowerTolerance: 0.01
