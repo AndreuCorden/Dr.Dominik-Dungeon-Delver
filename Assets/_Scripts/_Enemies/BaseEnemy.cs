@@ -27,6 +27,7 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] private AnimationClip idleClip;
     [SerializeField] private AnimationClip moveClip;
     [SerializeField] private AnimationClip attackClip;
+    [SerializeField] private AnimationClip deathClip;
     [SerializeField] private float animationBlendDuration = 0.08f;
 
     [Header("Movement Feel")]
@@ -38,6 +39,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     [Header("Grounding Tuning")]
     [SerializeField] private float visualGroundOffset = 0f;
+    [SerializeField] private bool autoCenterVisualOnTile = false;
     [SerializeField] private bool autoLowerFloatingVisual = true;
     [SerializeField, Range(0f, 1f)] private float autoLowerStrength = 1f;
     [SerializeField] private float autoLowerTolerance = 0.01f;
@@ -64,10 +66,16 @@ public abstract class BaseEnemy : MonoBehaviour
     private bool isPlayingOneShot;
     private float oneShotTimer;
     private float oneShotDuration;
+    private bool isDying;
+    [Header("Death Animation")]
+    [SerializeField] private float deathDuration = 0.45f;
+    [SerializeField] private float deathSinkDistance = 0.55f;
+    [SerializeField] private float deathSpinSpeed = 540f;
+    [SerializeField] private float deathScaleMultiplier = 0.7f;
 
     protected virtual void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        TryResolvePlayer();
 
         SetupVisuals();
         NormalizeRendererMaterialsForUrp();
@@ -92,6 +100,12 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void Update()
     {
+        if (isDying)
+            return;
+
+        if (!TryResolvePlayer())
+            return;
+
         if (isFalling) { HandleFalling(); return; }
 
         if (isMoving)
@@ -136,6 +150,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected bool TryMove(Vector3 direction)
     {
+        if (!TryResolvePlayer())
+            return false;
+
         Vector3 dest3D = RoundToGrid(transform.position + direction);
 
         // Check if player is standing exactly where we want to go (Attack Range)
@@ -167,8 +184,30 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.rotation = GetFacingRotation(dir);
         // Trigger Damage to Player and visual lunge here
-        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
+        if (player != null && player.TryGetComponent<PlayerController>(out var pc))
+            pc.TakeDamage();
+        else if (PlayerController.Instance != null)
+            PlayerController.Instance.TakeDamage();
         nextMoveTime = Time.time + timeBetweenSteps;
+    }
+
+    private bool TryResolvePlayer()
+    {
+        if (player != null && player.gameObject.activeInHierarchy)
+            return true;
+
+        if (PlayerController.Instance != null)
+        {
+            player = PlayerController.Instance.transform;
+            return true;
+        }
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject == null)
+            return false;
+
+        player = playerObject.transform;
+        return true;
     }
 
     protected IEnumerator AttackLunge(Vector3 dir)
@@ -204,9 +243,68 @@ public abstract class BaseEnemy : MonoBehaviour
 
     public virtual void Die()
     {
+        if (isDying)
+            return;
+
+        if (this is MimicEnemy)
+        {
+            OccupiedTiles.Remove(GetGridKey(transform.position));
+            if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+            StopAllAnimationPlayback(false);
+            Destroy(gameObject);
+            return;
+        }
+
+        StartCoroutine(PlayDeathAndDestroy());
+    }
+
+    private IEnumerator PlayDeathAndDestroy()
+    {
+        isDying = true;
         OccupiedTiles.Remove(GetGridKey(transform.position));
         if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
-        StopAllAnimationPlayback(false);
+
+        isMoving = false;
+        isFalling = false;
+        moveTimer = 0f;
+        moveDuration = 0f;
+        movementVisualYOffset = 0f;
+
+        Collider ownCollider = GetComponent<Collider>();
+        if (ownCollider != null)
+            ownCollider.enabled = false;
+
+        Rigidbody ownRigidbody = GetComponent<Rigidbody>();
+        if (ownRigidbody != null)
+        {
+            ownRigidbody.linearVelocity = Vector3.zero;
+            ownRigidbody.angularVelocity = Vector3.zero;
+            ownRigidbody.isKinematic = true;
+            ownRigidbody.useGravity = false;
+        }
+
+        if (deathClip != null)
+            PlayOneShotAnimation(deathClip);
+        else
+            StopAllAnimationPlayback(false);
+
+        Vector3 startPosition = transform.position;
+        Vector3 startScale = transform.localScale;
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.01f, deathDuration);
+        float targetScaleFactor = Mathf.Clamp(deathScaleMultiplier, 0.05f, 1f);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / duration);
+
+            transform.Rotate(0f, deathSpinSpeed * Time.deltaTime, 0f, Space.World);
+            transform.position = startPosition + Vector3.down * (deathSinkDistance * progress);
+            transform.localScale = Vector3.Lerp(startScale, startScale * targetScaleFactor, progress);
+            yield return null;
+        }
+
         Destroy(gameObject);
     }
 
@@ -217,13 +315,20 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private void SetupVisuals()
     {
-        if (visualPrefab == null)
-            return;
+        if (visualPrefab != null)
+        {
+            spawnedVisual = Instantiate(visualPrefab, transform);
+            spawnedVisual.transform.localPosition = visualLocalPosition;
+            spawnedVisual.transform.localRotation = Quaternion.Euler(visualLocalEulerAngles);
+            spawnedVisual.transform.localScale = visualLocalScale;
+        }
+        else
+        {
+            spawnedVisual = TryCreateVisualProxyFromRootMesh();
+        }
 
-        spawnedVisual = Instantiate(visualPrefab, transform);
-        spawnedVisual.transform.localPosition = visualLocalPosition;
-        spawnedVisual.transform.localRotation = Quaternion.Euler(visualLocalEulerAngles);
-        spawnedVisual.transform.localScale = visualLocalScale;
+        if (spawnedVisual == null)
+            return;
 
         if (CanApplyVisualOverrideMaterial())
         {
@@ -244,8 +349,35 @@ public abstract class BaseEnemy : MonoBehaviour
             primitiveRenderer.enabled = false;
 
         MeshFilter primitiveFilter = GetComponent<MeshFilter>();
-        if (primitiveFilter != null)
+        if (primitiveFilter != null && visualPrefab != null)
             primitiveFilter.sharedMesh = null;
+    }
+
+    private GameObject TryCreateVisualProxyFromRootMesh()
+    {
+        MeshFilter primitiveFilter = GetComponent<MeshFilter>();
+        MeshRenderer primitiveRenderer = GetComponent<MeshRenderer>();
+
+        if (primitiveFilter == null || primitiveRenderer == null || primitiveFilter.sharedMesh == null)
+            return null;
+
+        GameObject visualProxy = new GameObject("VisualProxy");
+        visualProxy.transform.SetParent(transform, false);
+        visualProxy.transform.localPosition = visualLocalPosition;
+        visualProxy.transform.localRotation = Quaternion.Euler(visualLocalEulerAngles);
+        visualProxy.transform.localScale = visualLocalScale;
+
+        MeshFilter proxyFilter = visualProxy.AddComponent<MeshFilter>();
+        proxyFilter.sharedMesh = primitiveFilter.sharedMesh;
+
+        MeshRenderer proxyRenderer = visualProxy.AddComponent<MeshRenderer>();
+        proxyRenderer.sharedMaterials = primitiveRenderer.sharedMaterials;
+        proxyRenderer.shadowCastingMode = primitiveRenderer.shadowCastingMode;
+        proxyRenderer.receiveShadows = primitiveRenderer.receiveShadows;
+        proxyRenderer.lightProbeUsage = primitiveRenderer.lightProbeUsage;
+        proxyRenderer.reflectionProbeUsage = primitiveRenderer.reflectionProbeUsage;
+
+        return visualProxy;
     }
 
     protected void CacheAnimationComponents()
@@ -444,18 +576,21 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private void LowerVisualIfFloating()
     {
-        if (!autoLowerFloatingVisual)
-            return;
-
         if (movementVisualRoot == null)
-            return;
-
-        Collider bodyCollider = GetComponent<Collider>();
-        if (bodyCollider == null)
             return;
 
         Renderer[] renderers = movementVisualRoot.GetComponentsInChildren<Renderer>(true);
         if (renderers == null || renderers.Length == 0)
+            return;
+
+        if (autoCenterVisualOnTile)
+            CenterVisualOnTile(renderers);
+
+        if (!autoLowerFloatingVisual)
+            return;
+
+        Collider bodyCollider = GetComponent<Collider>();
+        if (bodyCollider == null)
             return;
 
         float visualMinY = float.PositiveInfinity;
@@ -472,6 +607,22 @@ public abstract class BaseEnemy : MonoBehaviour
             return;
 
         movementVisualRoot.localPosition -= new Vector3(0f, correction, 0f);
+        movementVisualRootInitialLocalPosition = movementVisualRoot.localPosition;
+    }
+
+    private void CenterVisualOnTile(Renderer[] renderers)
+    {
+        Bounds combinedBounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            combinedBounds.Encapsulate(renderers[i].bounds);
+
+        Vector3 worldCenterOffset = combinedBounds.center - transform.position;
+        Vector3 planarOffset = new Vector3(worldCenterOffset.x, 0f, worldCenterOffset.z);
+
+        if (planarOffset.sqrMagnitude <= 0.0001f)
+            return;
+
+        movementVisualRoot.localPosition -= transform.InverseTransformVector(planarOffset);
         movementVisualRootInitialLocalPosition = movementVisualRoot.localPosition;
     }
 

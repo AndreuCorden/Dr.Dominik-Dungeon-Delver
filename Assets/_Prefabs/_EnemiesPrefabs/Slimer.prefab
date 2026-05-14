@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.5, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -173,8 +173,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  facingEulerOffset: {x: -90, y: 180, z: 0}
-  visualGroundOffset: -0.04
+  facingEulerOffset: {x: 90, y: 180, z: 0}
+  visualGroundOffset: -0.2
+  autoCenterVisualOnTile: 1
   autoLowerFloatingVisual: 1
   autoLowerStrength: 1
   autoLowerTolerance: 0.01
@@ -183,8 +184,8 @@ MonoBehaviour:
   trailYOffset: 0.02
   trailSlowAmount: 0.5
   trailLifetime: 5
-  slimeYOffset: -0.5
-  slimeRotationEuler: {x: 90, y: 0, z: 0}
+  slimeYOffset: 0.02
+  slimeRotationEuler: {x: 0, y: 0, z: 0}
   randomizeSlimeYaw: 1
 --- !u!54 &1958715321976630921
 Rigidbody:

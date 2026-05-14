@@ -54,6 +54,10 @@ public class PlayerController : MonoBehaviour
 
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
+    [SerializeField] private float slimeMoveMultiplier = 0.5f;
+    [SerializeField] private float defaultTimedSlowDuration = 2.5f;
+    private float timedSlowUntilTime;
+    private float timedSlowMultiplier = 1f;
 
     [Header("Attack Settings")]
     public float attackRange = 1.1f;
@@ -174,7 +178,11 @@ public class PlayerController : MonoBehaviour
         }
 
         if (!isMoving)
+        {
+            ConsumeSlimeAt(transform.position, true);
+            RecalculateMoveMultiplier(CheckForSlimeAt(transform.position));
             CheckForVoid();
+        }
         UpdateMovementPosition();
         UpdateRotation();
         UpdateAnimatorValues();
@@ -432,9 +440,8 @@ public class PlayerController : MonoBehaviour
         // 1. Determine destination
         Vector3 dest = RoundGridPosition(targetPosition + direction);
 
-        // 2. Check for slime AT THE DESTINATION
-        // If the tile we are moving INTO is slime, we should be slow
-        currentMoveMultiplier = CheckForSlimeAt(dest) ? 0.5f : 1.0f;
+        // 2. Check status effects that impact this move
+        RecalculateMoveMultiplier(CheckForSlimeAt(dest));
 
         // 3. Clear occupancy
         BaseEnemy.OccupiedTiles.Remove(new Vector2(targetPosition.x, targetPosition.z));
@@ -790,8 +797,36 @@ public class PlayerController : MonoBehaviour
 
     void ResetSpeedIfNoSlime()
     {
-        if (!CheckForSlimeAt(transform.position))
-            currentMoveMultiplier = 1.0f;
+        RecalculateMoveMultiplier(CheckForSlimeAt(transform.position));
+    }
+
+    public void ApplyTimedSlow(float multiplier, float duration)
+    {
+        float clampedMultiplier = Mathf.Clamp(multiplier, 0.05f, 1f);
+        float clampedDuration = Mathf.Max(0f, duration);
+        float newUntilTime = Time.time + (clampedDuration > 0f ? clampedDuration : defaultTimedSlowDuration);
+
+        if (newUntilTime >= timedSlowUntilTime)
+            timedSlowMultiplier = clampedMultiplier;
+        else
+            timedSlowMultiplier = Mathf.Min(timedSlowMultiplier, clampedMultiplier);
+
+        timedSlowUntilTime = Mathf.Max(timedSlowUntilTime, newUntilTime);
+        RecalculateMoveMultiplier(CheckForSlimeAt(transform.position));
+    }
+
+    float GetActiveTimedSlowMultiplier()
+    {
+        if (Time.time >= timedSlowUntilTime)
+            return 1f;
+
+        return timedSlowMultiplier;
+    }
+
+    void RecalculateMoveMultiplier(bool isOnSlime)
+    {
+        float environmentalMultiplier = isOnSlime ? slimeMoveMultiplier : 1f;
+        currentMoveMultiplier = Mathf.Min(environmentalMultiplier, GetActiveTimedSlowMultiplier());
     }
 
     public void ChangeHealth(int amount)
@@ -831,6 +866,8 @@ public class PlayerController : MonoBehaviour
         isMoving = false;
         isStepMoving = false;
         movementVisualYOffset = 0f;
+        timedSlowUntilTime = 0f;
+        timedSlowMultiplier = 1f;
         currentMoveMultiplier = 1.0f;
 
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
@@ -900,17 +937,64 @@ public class PlayerController : MonoBehaviour
 
     bool CheckForSlimeAt(Vector3 position)
     {
-        // Shoot a small overlap box at the floor level
-        // Center it at Y=0 where the floor is
-        Collider[] hitColliders = Physics.OverlapBox(new Vector3(position.x, 0, position.z), new Vector3(0.45f, 1f, 0.45f));
+        Collider[] hitColliders = GetSlimeCollidersAt(position);
+        return hitColliders.Length > 0;
+    }
+
+    bool ConsumeSlimeAt(Vector3 position, bool applySlow)
+    {
+        Collider[] hitColliders = GetSlimeCollidersAt(position);
+        bool consumed = false;
+        float appliedSlowAmount = slimeMoveMultiplier;
+        float appliedSlowDuration = defaultTimedSlowDuration;
 
         foreach (var col in hitColliders)
         {
-            if (col.CompareTag("Slime"))
+            consumed = true;
+            TrailDamage trailDamage = col.GetComponentInParent<TrailDamage>();
+            if (trailDamage != null)
             {
-                return true;
+                appliedSlowAmount = trailDamage.slowAmount;
+                appliedSlowDuration = trailDamage.slowDuration;
+                Destroy(trailDamage.gameObject);
+            }
+            else
+            {
+                Destroy(col.transform.root.gameObject);
             }
         }
-        return false;
+
+        if (consumed && applySlow)
+            ApplyTimedSlow(appliedSlowAmount, appliedSlowDuration);
+
+        return consumed;
+    }
+
+    Collider[] GetSlimeCollidersAt(Vector3 position)
+    {
+        Vector3 center = new Vector3(position.x, transform.position.y, position.z);
+        Collider[] nearby = Physics.OverlapBox(center, new Vector3(0.49f, 2f, 0.49f), Quaternion.identity, ~0, QueryTriggerInteraction.Collide);
+
+        int slimeCount = 0;
+        for (int i = 0; i < nearby.Length; i++)
+        {
+            if (nearby[i].CompareTag("Slime"))
+                slimeCount++;
+        }
+
+        if (slimeCount == 0)
+            return System.Array.Empty<Collider>();
+
+        Collider[] slimes = new Collider[slimeCount];
+        int index = 0;
+        for (int i = 0; i < nearby.Length; i++)
+        {
+            if (!nearby[i].CompareTag("Slime"))
+                continue;
+
+            slimes[index++] = nearby[i];
+        }
+
+        return slimes;
     }
 }

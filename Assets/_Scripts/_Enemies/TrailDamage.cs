@@ -3,6 +3,7 @@ using UnityEngine;
 public class TrailDamage : MonoBehaviour
 {
     public float slowAmount = 0.5f;
+    public float slowDuration = 2.5f;
     public float lifetime = 5.0f; // Trail disappears after 3 seconds
     
     public LayerMask floorLayer;
@@ -32,10 +33,23 @@ public class TrailDamage : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        TryApplySlow(other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        TryApplySlow(other);
+    }
+
+    private void TryApplySlow(Collider other)
+    {
         if (other.CompareTag("Player"))
         {
             PlayerController pc = other.GetComponent<PlayerController>();
-            if (pc != null) pc.currentMoveMultiplier = slowAmount;
+            if (pc == null)
+                pc = other.GetComponentInParent<PlayerController>();
+            if (pc != null)
+                pc.ApplyTimedSlow(slowAmount, slowDuration);
         }
     }
 }
