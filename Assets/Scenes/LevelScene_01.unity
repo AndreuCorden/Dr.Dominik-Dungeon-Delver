@@ -498,7 +498,7 @@ MonoBehaviour:
 
       W...........0..
 
-      W...P..........'
+      W...P.CCCCCC...'
   floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
   wallPrefab: {fileID: 807191524193933985, guid: 5f175d56be4069f4d9c77fd0972583f5, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
