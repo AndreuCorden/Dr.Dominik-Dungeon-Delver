@@ -1,0 +1,238 @@
+fileFormatVersion: 2
+guid: 3bbef0cb5df9e704f825bb0ffb66b0de
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Handle
+    second: {fileID: 2100000, guid: e1b6d7af7058a0f4d8cc89ff0cf5a87a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Base
+    second: {fileID: 2100000, guid: bc2cb070ef2ad3f449789ff9a44f5a9a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Bolts
+    second: {fileID: 2100000, guid: 33abd9f26ac85b24aa1bb35eb5fb5298, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Back
+    second: {fileID: 2100000, guid: 7283b73126d42df4b88b564fcc715d3d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Front
+    second: {fileID: 2100000, guid: d3bd51c101e81e24b9df81e5b0e5c1cc, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Handle_BaseColor
+    second: {fileID: 2800000, guid: 6407231afb5aea54e8fbb587c47b5ae0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Handle_Metallic
+    second: {fileID: 2800000, guid: 1806f211fc666c847b6ae1cdd71328df, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Handle_Normal
+    second: {fileID: 2800000, guid: dd64de872fd68da41b023602e53b5488, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Handle_Roughness
+    second: {fileID: 2800000, guid: 8f0af6f1da134444a94fc610a668cf8c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Base_BaseColor
+    second: {fileID: 2800000, guid: aa47b925c3cc7c541b769a4fd649602f, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Base_Metallic
+    second: {fileID: 2800000, guid: db44fb9e4e6cce94c81219ecff1d8b27, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Base_Normal
+    second: {fileID: 2800000, guid: 3912f7f69e307774091370d6a5541bf1, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Base_Roughness
+    second: {fileID: 2800000, guid: 80de0ec7492ae2a46beddd4d68c403b4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Bolts_BaseColor
+    second: {fileID: 2800000, guid: 99027c5991ac8ca48ad770518f1d5211, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Bolts_Metallic
+    second: {fileID: 2800000, guid: 59f51763c6ac7e341822b6b5a74b9f1d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Bolts_Normal
+    second: {fileID: 2800000, guid: df1767dfdcf3582418bb446376146f36, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Steel Bolts_Roughness
+    second: {fileID: 2800000, guid: d511c5bd98535fe44908c7f61d51118c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Back_BaseColor
+    second: {fileID: 2800000, guid: d0cdaa71cb45e24499c949eac7e5ae28, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Back_Metallic
+    second: {fileID: 2800000, guid: 543f5492077e0b646a4f219c2346aed9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Back_Normal
+    second: {fileID: 2800000, guid: b3a80e82e163c5c4c93252d9de715133, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Back_Roughness
+    second: {fileID: 2800000, guid: 1ba03c8eae01f5b4e8515096ccdb0ca9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Front_BaseColor
+    second: {fileID: 2800000, guid: b78f314476472fc438d53a83e3dba4d3, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Front_Metallic
+    second: {fileID: 2800000, guid: 5afbda78722ba8448807b9ff420ce91b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Front_Normal
+    second: {fileID: 2800000, guid: 5ac34c5301f456d4ab08c2e27df3c701, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_03 Wood Front_Roughness
+    second: {fileID: 2800000, guid: 50a4567881c98384ab5407507774636b, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 1
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 308065
+  packageName: 3D Medieval Weaponry
+  packageVersion: 1.0
+  assetPath: Assets/AdobeMano/Medieval Weaponry/Built-In/Prefabs/Shield_03.fbx
+  uploadId: 724344

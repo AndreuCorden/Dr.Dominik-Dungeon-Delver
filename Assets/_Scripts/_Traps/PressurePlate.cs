@@ -57,9 +57,9 @@ public class PressurePlate : MonoBehaviour
 
         // Move the visual part, NOT the whole object with the collider
         if (movingPart != null)
-            movingPart.localPosition = new Vector3(0, -0.02f, 0);
+            movingPart.localPosition = new Vector3(0, -0.03f, 0);
         else
-            transform.localPosition -= new Vector3(0, 0.02f, 0); // Fallback
+            transform.localPosition -= new Vector3(0, 0.03f, 0); // Fallback
     }
 
     private void Release()

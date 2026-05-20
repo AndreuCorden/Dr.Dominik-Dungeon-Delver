@@ -92,7 +92,7 @@ public class GridGenerator : MonoBehaviour
                     case 'L': // --- RESTORED: PARENTING & ASSIGNMENT ---
                         if (currentFloor != null)
                         {
-                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.55f, pos.z), Quaternion.identity, transform);
+                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.5f, pos.z), Quaternion.identity, transform);
                             if (lastSpawnedShooter != null)
                                 plate.GetComponent<PressurePlate>().wallTrap = lastSpawnedShooter;
                         }

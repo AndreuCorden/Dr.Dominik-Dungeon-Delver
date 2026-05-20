@@ -1,0 +1,263 @@
+fileFormatVersion: 2
+guid: 077432212731a7447a02c9e01c3c78f0
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Blade
+    second: {fileID: 2100000, guid: 9d98878fbc0799045b320097e70748b1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Bottom Handle
+    second: {fileID: 2100000, guid: da293d7276c4a2343a30f4d96822cfc4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Handle
+    second: {fileID: 2100000, guid: 4ab4f820eb64a4646b4f9850263c2fe7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 OnUnderBlade
+    second: {fileID: 2100000, guid: 14a1f9958dae8714a89f4d81bc11bc76, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Steel Ring On Handle
+    second: {fileID: 2100000, guid: 45ce6ae880223d444b36d75dffe67e7b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 UnderBlade
+    second: {fileID: 2100000, guid: 7ed34eafaa4e3a443a29c1b47e4f1944, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Blade_BaseColor
+    second: {fileID: 2800000, guid: dd448db742c9b8449aa506d0199fa58d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Blade_Metallic
+    second: {fileID: 2800000, guid: 4716e7428038cb040b9d236db30e70b5, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Blade_Normal
+    second: {fileID: 2800000, guid: 393197ab54e0ff6488f074241aba0d3d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Blade_Roughness
+    second: {fileID: 2800000, guid: f9f79cd08c454ee4481cc0b4faf53a92, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Bottom Handle_BaseColor
+    second: {fileID: 2800000, guid: b51162fba8c6b4d4380fa59c7c76f0a4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Bottom Handle_Metallic
+    second: {fileID: 2800000, guid: 9be2f8c153f095b4a9381ee616246715, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Bottom Handle_Normal
+    second: {fileID: 2800000, guid: 8d11a16d7930113498c89bd7d85b40b4, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Bottom Handle_Roughness
+    second: {fileID: 2800000, guid: 91879a53e5bfe774da51fd5c48c048ec, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Handle_BaseColor
+    second: {fileID: 2800000, guid: 4d2108ce1ac046f40ade24a336f83b08, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Handle_Metallic
+    second: {fileID: 2800000, guid: 1f183da9b765dd54daaf22c61c1d2f67, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Handle_Normal
+    second: {fileID: 2800000, guid: b9f3fd1a4bfe9ab4db5da5261514cef6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Handle_Roughness
+    second: {fileID: 2800000, guid: ba95e24a5b7d26e4496be86803e21c01, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 OnUnderBlade_BaseColor
+    second: {fileID: 2800000, guid: 5363075e058da3a4a87a099806e0bf0b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 OnUnderBlade_Metallic
+    second: {fileID: 2800000, guid: ae2e65a26a0859240ab5f8d7c2306dff, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 OnUnderBlade_Normal
+    second: {fileID: 2800000, guid: 801d7cf419ac9f9408c2f38cb926b0ad, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 OnUnderBlade_Roughness
+    second: {fileID: 2800000, guid: daa350cc86f615f41ba6cae041e93ea6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Steel Ring On Handle_BaseColor
+    second: {fileID: 2800000, guid: e1565cc410e93d243a5b11d9beaa2c08, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Steel Ring On Handle_Metallic
+    second: {fileID: 2800000, guid: fff97a535381e8c4abf6c60f6d4a5f5d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Steel Ring On Handle_Normal
+    second: {fileID: 2800000, guid: b4685da4d755875448fea28121b03110, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 Steel Ring On Handle_Roughness
+    second: {fileID: 2800000, guid: 1c5db5fbfd7888044b712cf2f12d4b6b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 UnderBlade_BaseColor
+    second: {fileID: 2800000, guid: 15dced1954b72b74b8902fb0e7563124, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 UnderBlade_Metallic
+    second: {fileID: 2800000, guid: 3b90a96d889508b4ba399fcde145906c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 UnderBlade_Normal
+    second: {fileID: 2800000, guid: 3d3d1bafe17a5ac429f0595809112ddc, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Sword_02 UnderBlade_Roughness
+    second: {fileID: 2800000, guid: aa21a99120f0c304298fd8c53877fadc, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 1
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 308065
+  packageName: 3D Medieval Weaponry
+  packageVersion: 1.0
+  assetPath: Assets/AdobeMano/Medieval Weaponry/Built-In/Prefabs/Sword_02.fbx
+  uploadId: 724344
