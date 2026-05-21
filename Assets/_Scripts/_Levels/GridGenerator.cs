@@ -87,6 +87,7 @@ public class GridGenerator : MonoBehaviour
                               // Rotate 90 degrees to face Right (as in your old code)
                         GameObject arrowWall = Instantiate(arrowWallPrefab, pos + Vector3.up, Quaternion.Euler(0, 90, 0), transform);
                         lastSpawnedShooter = arrowWall.GetComponent<ArrowTrap>();
+                        PlaceWall(pos, x, z, rows.Length);
                         break;
 
                     case 'L': // --- RESTORED: PARENTING & ASSIGNMENT ---
@@ -198,6 +199,26 @@ public class GridGenerator : MonoBehaviour
                     case '4':
                         {
                             GameObject decor = Instantiate(decorPrefabs[4], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                    case '5':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[5], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                    case '6':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[6], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
