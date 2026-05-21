@@ -72,6 +72,7 @@ public abstract class BaseEnemy : MonoBehaviour
         // Check if player is standing exactly where we want to go (Attack Range)
         if (GetGridKey(player.position) == GetGridKey(dest3D))
         {
+            StartMovement();
             PerformAttack(direction);
             return true;
         }
@@ -86,6 +87,7 @@ public abstract class BaseEnemy : MonoBehaviour
             targetPosition = dest3D;
             isMoving = true;
             transform.forward = direction;
+            StartMovement();
             return true;
         }
         return false;
@@ -97,6 +99,11 @@ public abstract class BaseEnemy : MonoBehaviour
         // Trigger Damage to Player and visual lunge here
         if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
         nextMoveTime = Time.time + timeBetweenSteps;
+    }
+
+    protected virtual void StartMovement()
+    {
+        isMoving = true;
     }
 
     protected virtual void FinishMovement()

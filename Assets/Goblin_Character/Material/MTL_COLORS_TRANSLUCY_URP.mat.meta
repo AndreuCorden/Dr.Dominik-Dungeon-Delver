@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 89faeaf2ff5ff6841b3c1160595ae0f9
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311643
+  packageName: Goblin LowPoly - Animation
+  packageVersion: 1.0
+  assetPath: Assets/Goblin_Character/Material/MTL_COLORS_TRANSLUCY_URP.mat
+  uploadId: 734482
