@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 26f25a232d1fef34eade9c950655e004
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311643
+  packageName: Goblin LowPoly - Animation
+  packageVersion: 1.0
+  assetPath: Assets/Goblin_Character/Animation/Goblin_Anim/rig_T_POSE.anim
+  uploadId: 734482

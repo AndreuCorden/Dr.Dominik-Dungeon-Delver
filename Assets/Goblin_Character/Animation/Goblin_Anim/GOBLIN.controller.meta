@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: be94599944fb18b4ea870787648aa418
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311643
+  packageName: Goblin LowPoly - Animation
+  packageVersion: 1.0
+  assetPath: Assets/Goblin_Character/Animation/Goblin_Anim/GOBLIN.controller
+  uploadId: 734482
