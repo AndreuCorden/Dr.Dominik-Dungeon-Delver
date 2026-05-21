@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class GridGenerator : MonoBehaviour
 {
-    public List<LevelBlueprint> levels; // Design your levels in the Inspector!
+    public List<LevelBlueprint> levels = new List<LevelBlueprint>(); // Design your levels in the Inspector!
 
     [Header("Prefabs")]
     public GameObject floorPrefab;
