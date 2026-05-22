@@ -5,10 +5,7 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - gridGen: {instanceID: 0}
-  - playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
-  - enemyPrefab: {instanceID: 0}
-  - trailEnemyPrefab: {instanceID: 0}
-  - patrollerEnemyPrefab: {instanceID: 0}
+  - playerPrefab: {fileID: 4971320521847776260, guid: f0f29f82e5bdfa84091fe92dd45469ee, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

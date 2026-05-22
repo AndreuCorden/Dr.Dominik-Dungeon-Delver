@@ -1,8 +1,6 @@
 using System;
 using UnityEngine;
-using UnityEngine.Animations;
 using UnityEngine.InputSystem;
-using UnityEngine.Playables;
 
 public class PlayerController : MonoBehaviour
 {
@@ -22,59 +20,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     private Vector3 visualRootInitialLocalPosition;
     private float movementVisualYOffset;
-    private Animator characterAnimator;
     private Quaternion targetRotation;
-
-    [Header("Animation Parameters")]
-    [SerializeField] private string movingBoolParameter = "IsMoving";
-    [SerializeField] private string speedFloatParameter = "Speed";
-    [SerializeField] private string attackTriggerParameter = "Attack";
-    [SerializeField] private string hitTriggerParameter = "Hit";
-    private bool hasMovingBoolParameter;
-    private bool hasSpeedFloatParameter;
-    private bool hasAttackTriggerParameter;
-    private bool hasHitTriggerParameter;
-    private int movingBoolHash;
-    private int speedFloatHash;
-    private int attackTriggerHash;
-    private int hitTriggerHash;
-
-    [Header("Emotes")]
-    [SerializeField] private AnimationClip[] emoteClips;
-    [SerializeField] private float emoteBlendDuration = 0.08f;
-    [Header("Idle Variation")]
-    [SerializeField] private AnimationClip[] idleVariationClips;
-    [SerializeField] private Vector2 idleVariationIntervalRange = new Vector2(4f, 7f);
-    private PlayableGraph emoteGraph;
-    private bool isEmotePlaying;
-    private float emoteTimer;
-    private float currentEmoteDuration;
-    private float idleVariationTimer;
-    private float nextIdleVariationDelay;
 
     [Header("Status Effects")]
     public float currentMoveMultiplier = 1.0f;
 
     [Header("Attack Settings")]
     public float attackRange = 1.1f;
-    [SerializeField] private bool useMovementClip = false;
-    [SerializeField] private AnimationClip movementClip;
-    [SerializeField] private AnimationClip attackClip;
-    [SerializeField] private float movementBlendDuration = 0.08f;
-    [SerializeField] private float attackBlendDuration = 0.08f;
+
     [Header("Damage Feedback")]
     [SerializeField] private float damageInvulnerabilityDuration = 0.7f;
     [SerializeField] private float damageFlashInterval = 0.08f;
     [SerializeField] private Color damageFlashColor = new Color(1f, 0.25f, 0.25f, 1f);
-    [SerializeField] private AnimationClip hitReactionClip;
-    [SerializeField] private float hitBlendDuration = 0.05f;
 
     [Header("VFX")]
     public GameObject shockwavePrefab;
 
     [Header("Layers")]
     public LayerMask floorLayer;
-    public LayerMask enemyLayer;
 
     private Vector3 targetPosition;
     private Vector3 moveStartPosition;
@@ -82,16 +45,6 @@ public class PlayerController : MonoBehaviour
     private float moveDuration;
     private bool isMoving = false;
     private bool isStepMoving = false;
-    private PlayableGraph attackGraph;
-    private PlayableGraph movementGraph;
-    private bool isMovementClipPlaying;
-    private bool isAttackClipPlaying;
-    private float attackClipTimer;
-    private float currentAttackClipDuration;
-    private PlayableGraph hitGraph;
-    private bool isHitClipPlaying;
-    private float hitClipTimer;
-    private float currentHitClipDuration;
     private float invulnerableUntilTime;
     private Coroutine damageInvulnerabilityRoutine;
 
@@ -127,13 +80,6 @@ public class PlayerController : MonoBehaviour
         if (visualRoot != null)
             visualRootInitialLocalPosition = visualRoot.localPosition;
 
-        characterAnimator = GetComponentInChildren<Animator>();
-        if (characterAnimator == null && visualRoot != null)
-            characterAnimator = visualRoot.GetComponentInParent<Animator>();
-
-        CacheAnimatorParameters();
-        ScheduleNextIdleVariation();
-
         targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
         transform.position = targetPosition;
@@ -150,10 +96,6 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        UpdateEmoteInputAndPlayback();
-        UpdateAttackClipPlayback();
-        UpdateHitClipPlayback();
-
         Keyboard kb = Keyboard.current;
         if (!isMoving && kb != null)
         {
@@ -173,7 +115,6 @@ public class PlayerController : MonoBehaviour
             CheckForVoid();
         UpdateMovementPosition();
         UpdateRotation();
-        UpdateAnimatorValues();
 
         if (isStepMoving)
             UpdateStepJumpOffset();
@@ -187,64 +128,17 @@ public class PlayerController : MonoBehaviour
             isStepMoving = false;
             movementVisualYOffset = 0f;
 
-            // This is now safe because the player is physically at the targetPosition
             ResetSpeedIfNoSlime();
-        }
-
-        SyncMovementAnimationState();
-    }
-
-    void CacheAnimatorParameters()
-    {
-        if (characterAnimator == null)
-            return;
-
-        hasMovingBoolParameter = false;
-        hasSpeedFloatParameter = false;
-        hasAttackTriggerParameter = false;
-        hasHitTriggerParameter = false;
-
-        movingBoolHash = string.IsNullOrWhiteSpace(movingBoolParameter) ? 0 : Animator.StringToHash(movingBoolParameter);
-        speedFloatHash = string.IsNullOrWhiteSpace(speedFloatParameter) ? 0 : Animator.StringToHash(speedFloatParameter);
-        attackTriggerHash = string.IsNullOrWhiteSpace(attackTriggerParameter) ? 0 : Animator.StringToHash(attackTriggerParameter);
-        hitTriggerHash = string.IsNullOrWhiteSpace(hitTriggerParameter) ? 0 : Animator.StringToHash(hitTriggerParameter);
-
-        foreach (AnimatorControllerParameter parameter in characterAnimator.parameters)
-        {
-            if (parameter.type == AnimatorControllerParameterType.Bool && parameter.nameHash == movingBoolHash)
-                hasMovingBoolParameter = true;
-            else if (parameter.type == AnimatorControllerParameterType.Float && parameter.nameHash == speedFloatHash)
-                hasSpeedFloatParameter = true;
-            else if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.nameHash == attackTriggerHash)
-                hasAttackTriggerParameter = true;
-            else if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.nameHash == hitTriggerHash)
-                hasHitTriggerParameter = true;
         }
     }
 
     Vector3 GetHeldMoveDirection(Keyboard kb)
     {
-        // Check Forward/Back (Vertical on Grid)
         if (kb.wKey.isPressed || kb.upArrowKey.isPressed) return Vector3.forward;
         if (kb.sKey.isPressed || kb.downArrowKey.isPressed) return Vector3.back;
-
-        // Check Left/Right (Horizontal on Grid)
         if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) return Vector3.left;
         if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) return Vector3.right;
-
         return Vector3.zero;
-    }
-
-    void UpdateAnimatorValues()
-    {
-        if (characterAnimator == null)
-            return;
-
-        if (hasMovingBoolParameter)
-            characterAnimator.SetBool(movingBoolHash, isMoving);
-
-        if (hasSpeedFloatParameter)
-            characterAnimator.SetFloat(speedFloatHash, isMoving ? currentMoveMultiplier : 0f);
     }
 
     void UpdateMovementPosition()
@@ -266,128 +160,6 @@ public class PlayerController : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
     }
 
-    void UpdateEmoteInputAndPlayback()
-    {
-        if (isEmotePlaying)
-        {
-            emoteTimer += Time.deltaTime;
-            if (emoteTimer >= currentEmoteDuration)
-                StopCurrentEmote();
-            return;
-        }
-
-        if (isMoving || Keyboard.current == null)
-        {
-            idleVariationTimer = 0f;
-            return;
-        }
-
-        if (Keyboard.current.gKey.wasPressedThisFrame)
-        {
-            if (TryPlayRandomEmote())
-                idleVariationTimer = 0f;
-            return;
-        }
-
-        if (HasGameplayInput(Keyboard.current))
-        {
-            idleVariationTimer = 0f;
-            return;
-        }
-
-        TryPlayIdleVariation();
-    }
-
-    bool TryPlayRandomEmote()
-    {
-        return TryPlayRandomClip(emoteClips);
-    }
-
-    void TryPlayIdleVariation()
-    {
-        if (idleVariationClips == null || idleVariationClips.Length == 0)
-            return;
-
-        idleVariationTimer += Time.deltaTime;
-        if (idleVariationTimer < nextIdleVariationDelay)
-            return;
-
-        if (TryPlayRandomClip(idleVariationClips))
-            ScheduleNextIdleVariation();
-        else
-            idleVariationTimer = 0f;
-    }
-
-    void ScheduleNextIdleVariation()
-    {
-        idleVariationTimer = 0f;
-        float minDelay = Mathf.Max(0.5f, Mathf.Min(idleVariationIntervalRange.x, idleVariationIntervalRange.y));
-        float maxDelay = Mathf.Max(minDelay, Mathf.Max(idleVariationIntervalRange.x, idleVariationIntervalRange.y));
-        nextIdleVariationDelay = UnityEngine.Random.Range(minDelay, maxDelay);
-    }
-
-    bool HasGameplayInput(Keyboard kb)
-    {
-        return kb.wKey.wasPressedThisFrame
-               || kb.aKey.wasPressedThisFrame
-               || kb.sKey.wasPressedThisFrame
-               || kb.dKey.wasPressedThisFrame
-               || kb.upArrowKey.wasPressedThisFrame
-               || kb.downArrowKey.wasPressedThisFrame
-               || kb.leftArrowKey.wasPressedThisFrame
-               || kb.rightArrowKey.wasPressedThisFrame
-               || kb.spaceKey.wasPressedThisFrame;
-    }
-
-    bool TryPlayRandomClip(AnimationClip[] clips)
-    {
-        if (characterAnimator == null || clips == null || clips.Length == 0)
-            return false;
-
-        int index = UnityEngine.Random.Range(0, clips.Length);
-        AnimationClip clip = clips[index];
-        if (clip == null)
-            return false;
-
-        if (emoteGraph.IsValid())
-            emoteGraph.Destroy();
-
-        emoteGraph = PlayableGraph.Create("PlayerEmoteGraph");
-        var output = AnimationPlayableOutput.Create(emoteGraph, "PlayerEmoteOutput", characterAnimator);
-        var playable = AnimationClipPlayable.Create(emoteGraph, clip);
-        playable.SetApplyFootIK(false);
-        playable.SetApplyPlayableIK(false);
-        output.SetSourcePlayable(playable);
-        emoteGraph.Play();
-
-        isEmotePlaying = true;
-        emoteTimer = 0f;
-        currentEmoteDuration = Mathf.Max(clip.length, 0.01f);
-        return true;
-    }
-
-    void StopCurrentEmote()
-    {
-        if (!isEmotePlaying)
-            return;
-
-        isEmotePlaying = false;
-        emoteTimer = 0f;
-        currentEmoteDuration = 0f;
-
-        if (emoteGraph.IsValid())
-            emoteGraph.Destroy();
-
-        if (characterAnimator != null)
-        {
-            characterAnimator.Rebind();
-            if (emoteBlendDuration <= 0f)
-                characterAnimator.Update(0f);
-            else
-                characterAnimator.Update(emoteBlendDuration);
-        }
-    }
-
     void UpdateStepJumpOffset()
     {
         if (moveDuration <= Mathf.Epsilon)
@@ -404,10 +176,8 @@ public class PlayerController : MonoBehaviour
     bool IsDestinationSafe(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
-        // Start higher and shoot lower to ensure we hit the floor at Y=0
         Ray ray = new Ray(new Vector3(dest.x, 5.0f, dest.z), Vector3.down);
 
-        // Increase distance to 6.0f to make sure we pass through Y=0
         if (!Physics.Raycast(ray, out _, 6.0f, floorLayer))
         {
             Debug.Log($"Movement Blocked: No floor detected at {dest}");
@@ -422,19 +192,12 @@ public class PlayerController : MonoBehaviour
 
     void Move(Vector3 direction)
     {
-        StopCurrentEmote();
-
-        // 1. Determine destination
         Vector3 dest = RoundGridPosition(targetPosition + direction);
 
-        // 2. Check for slime AT THE DESTINATION
-        // If the tile we are moving INTO is slime, we should be slow
         currentMoveMultiplier = CheckForSlimeAt(dest) ? 0.5f : 1.0f;
 
-        // 3. Clear occupancy
         BaseEnemy.OccupiedTiles.Remove(new Vector2(targetPosition.x, targetPosition.z));
 
-        // 4. Set positions
         moveStartPosition = targetPosition;
         targetPosition = dest;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
@@ -443,7 +206,6 @@ public class PlayerController : MonoBehaviour
         isStepMoving = true;
         moveTimer = 0f;
 
-        // 5. CALCULATE DURATION (Crucial: uses the multiplier set in step 2)
         float effectiveSpeed = moveSpeed * currentMoveMultiplier;
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
 
@@ -459,7 +221,6 @@ public class PlayerController : MonoBehaviour
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
-        StopCurrentEmote();
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
@@ -482,8 +243,6 @@ public class PlayerController : MonoBehaviour
         if (!isFall && Time.time < invulnerableUntilTime)
             return;
 
-        StopCurrentEmote();
-        PlayHitReaction();
         ChangeHealth(-1);
 
         if (!isFall)
@@ -536,8 +295,6 @@ public class PlayerController : MonoBehaviour
 
     void PerformSpaceAttack()
     {
-        StopCurrentEmote();
-        PlayAttackAnimation();
         StartCoroutine(VisualFlash());
 
         if (shockwavePrefab != null)
@@ -592,171 +349,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void PlayAttackAnimation()
-    {
-        if (characterAnimator == null)
-            return;
-
-        if (hasAttackTriggerParameter)
-            characterAnimator.SetTrigger(attackTriggerHash);
-
-        if (attackClip == null)
-            return;
-
-        if (attackGraph.IsValid())
-            attackGraph.Destroy();
-
-        attackGraph = PlayableGraph.Create("PlayerAttackGraph");
-        var output = AnimationPlayableOutput.Create(attackGraph, "PlayerAttackOutput", characterAnimator);
-        var playable = AnimationClipPlayable.Create(attackGraph, attackClip);
-        playable.SetApplyFootIK(false);
-        playable.SetApplyPlayableIK(false);
-        output.SetSourcePlayable(playable);
-        attackGraph.Play();
-
-        isAttackClipPlaying = true;
-        attackClipTimer = 0f;
-        currentAttackClipDuration = Mathf.Max(attackClip.length, 0.01f);
-    }
-
-    void SyncMovementAnimationState()
-    {
-        if (!useMovementClip || characterAnimator == null || movementClip == null)
-        {
-            StopMovementAnimation();
-            return;
-        }
-
-        bool shouldPlayMovement = isMoving && !isEmotePlaying && !isAttackClipPlaying && !isHitClipPlaying;
-
-        if (shouldPlayMovement)
-        {
-            if (!isMovementClipPlaying)
-                PlayMovementAnimation();
-            return;
-        }
-
-        StopMovementAnimation();
-    }
-
-    void PlayMovementAnimation()
-    {
-        if (movementGraph.IsValid())
-            movementGraph.Destroy();
-
-        movementGraph = PlayableGraph.Create("PlayerMovementGraph");
-        var output = AnimationPlayableOutput.Create(movementGraph, "PlayerMovementOutput", characterAnimator);
-        var playable = AnimationClipPlayable.Create(movementGraph, movementClip);
-        playable.SetApplyFootIK(true);
-        playable.SetApplyPlayableIK(false);
-        output.SetSourcePlayable(playable);
-        movementGraph.Play();
-
-        isMovementClipPlaying = true;
-    }
-
-    void StopMovementAnimation()
-    {
-        if (!isMovementClipPlaying)
-            return;
-
-        isMovementClipPlaying = false;
-
-        if (movementGraph.IsValid())
-            movementGraph.Destroy();
-
-        if (characterAnimator != null)
-        {
-            characterAnimator.Rebind();
-            characterAnimator.Update(Mathf.Max(movementBlendDuration, 0f));
-        }
-    }
-
-    void PlayHitReaction()
-    {
-        if (characterAnimator == null)
-            return;
-
-        if (hasHitTriggerParameter)
-            characterAnimator.SetTrigger(hitTriggerHash);
-
-        if (hitReactionClip == null)
-            return;
-
-        if (hitGraph.IsValid())
-            hitGraph.Destroy();
-
-        hitGraph = PlayableGraph.Create("PlayerHitGraph");
-        var output = AnimationPlayableOutput.Create(hitGraph, "PlayerHitOutput", characterAnimator);
-        var playable = AnimationClipPlayable.Create(hitGraph, hitReactionClip);
-        playable.SetApplyFootIK(false);
-        playable.SetApplyPlayableIK(false);
-        output.SetSourcePlayable(playable);
-        hitGraph.Play();
-
-        isHitClipPlaying = true;
-        hitClipTimer = 0f;
-        currentHitClipDuration = Mathf.Max(hitReactionClip.length, 0.01f);
-    }
-
-    void UpdateAttackClipPlayback()
-    {
-        if (!isAttackClipPlaying)
-            return;
-
-        attackClipTimer += Time.deltaTime;
-        if (attackClipTimer >= currentAttackClipDuration)
-            StopAttackClipPlayback();
-    }
-
-    void UpdateHitClipPlayback()
-    {
-        if (!isHitClipPlaying)
-            return;
-
-        hitClipTimer += Time.deltaTime;
-        if (hitClipTimer >= currentHitClipDuration)
-            StopHitReactionPlayback();
-    }
-
-    void StopAttackClipPlayback()
-    {
-        if (!isAttackClipPlaying)
-            return;
-
-        isAttackClipPlaying = false;
-        attackClipTimer = 0f;
-        currentAttackClipDuration = 0f;
-
-        if (attackGraph.IsValid())
-            attackGraph.Destroy();
-
-        if (characterAnimator != null)
-        {
-            characterAnimator.Rebind();
-            characterAnimator.Update(Mathf.Max(attackBlendDuration, 0f));
-        }
-    }
-
-    void StopHitReactionPlayback()
-    {
-        if (!isHitClipPlaying)
-            return;
-
-        isHitClipPlaying = false;
-        hitClipTimer = 0f;
-        currentHitClipDuration = 0f;
-
-        if (hitGraph.IsValid())
-            hitGraph.Destroy();
-
-        if (characterAnimator != null)
-        {
-            characterAnimator.Rebind();
-            characterAnimator.Update(Mathf.Max(hitBlendDuration, 0f));
-        }
-    }
-
     System.Collections.IEnumerator VisualFlash()
     {
         Renderer renderer = GetMainVisualRenderer();
@@ -785,8 +377,6 @@ public class PlayerController : MonoBehaviour
 
     void ResetSpeedIfNoSlime()
     {
-        // If we just landed on a tile, check if it's slimey
-        // If not, return to full speed
         if (!CheckForSlimeAt(transform.position))
         {
             currentMoveMultiplier = 1.0f;
@@ -795,7 +385,6 @@ public class PlayerController : MonoBehaviour
 
     public void ChangeHealth(int amount)
     {
-        // health += amount;
         OnHealthChanged?.Invoke(health);
     }
 
@@ -807,10 +396,6 @@ public class PlayerController : MonoBehaviour
 
     public void ResetState(Vector3 newSpawnPos)
     {
-        StopCurrentEmote();
-        StopMovementAnimation();
-        StopAttackClipPlayback();
-        StopHitReactionPlayback();
         StopAllCoroutines();
         damageInvulnerabilityRoutine = null;
         invulnerableUntilTime = 0f;
@@ -848,14 +433,6 @@ public class PlayerController : MonoBehaviour
         return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));
     }
 
-    void OnDisable()
-    {
-        StopCurrentEmote();
-        StopMovementAnimation();
-        StopAttackClipPlayback();
-        StopHitReactionPlayback();
-    }
-
     void OnDestroy()
     {
         if (Instance == this)
@@ -864,8 +441,6 @@ public class PlayerController : MonoBehaviour
 
     bool CheckForSlimeAt(Vector3 position)
     {
-        // Shoot a small overlap box at the floor level
-        // Center it at Y=0 where the floor is
         Collider[] hitColliders = Physics.OverlapBox(new Vector3(position.x, 0, position.z), new Vector3(0.45f, 1f, 0.45f));
 
         foreach (var col in hitColliders)
