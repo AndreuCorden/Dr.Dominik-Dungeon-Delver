@@ -6,58 +6,65 @@ public class LevelHandler : MonoBehaviour
 {
     [Header("References")]
     public GridGenerator gridGen;
-    public GameObject playerPrefab; 
+    public GameObject playerPrefab;
 
     [Header("Level Settings")]
     public bool shouldFloorFall = true;
     public int levelIndex = 0;
 
     [Header("Animation Tweaks")]
-    public float fallDistance = 8f;        
-    public float animationSpeed = 0.6f;    
-    public float staggerWaveValue = 0.04f;  
+    public float fallDistance = 8f;
+    public float animationSpeed = 0.6f;
+    public float staggerWaveValue = 0.04f;
 
     private GameObject activePlayer;
     private GameObject dummyVisualContainer;
     private Camera mainCam;
     private CameraFollow camFollowScript;
-
-    // Tracker flag to let the system know if we are doing the intro sequence or exit sequence
     private bool isLevelIntroActive = false;
 
-    System.Collections.IEnumerator Start()
+    IEnumerator Start()
     {
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
         mainCam = Camera.main;
-        
+
         if (mainCam != null)
         {
             camFollowScript = mainCam.GetComponent<CameraFollow>();
-            if (camFollowScript != null) camFollowScript.enabled = false; 
+            if (camFollowScript != null) camFollowScript.enabled = false;
         }
+
+        yield return StartCoroutine(RunLevelSetupSequence());
+    }
+
+    private IEnumerator RunLevelSetupSequence()
+    {
+        // Clear stale enemy registers before generating the new world map layouts
+        BaseEnemy.OccupiedTiles.Clear();
 
         // Phase 1: Generate the full functional world silently
         gridGen.GenerateDesignedLevel(levelIndex);
         SpawnPlayer(gridGen.playerSpawnPos);
 
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateRoom(levelIndex);
+        }
+
         // Calculate what the natural gameplay position *should* be right now
-        Vector3 defaultGameplayOffset = new Vector3(0f, 7f, -7f); 
+        Vector3 defaultGameplayOffset = new Vector3(0f, 7f, -7f);
         if (camFollowScript != null && camFollowScript.offset != Vector3.zero)
         {
             defaultGameplayOffset = camFollowScript.offset;
         }
-        else if (camFollowScript != null && mainCam != null && activePlayer != null)
-        {
-            defaultGameplayOffset = mainCam.transform.position - activePlayer.transform.position;
-        }
 
-        // Snap the camera instantly to its final track position.
+        // Snap the camera instantly to its track position
         if (mainCam != null && activePlayer != null)
         {
             mainCam.transform.position = activePlayer.transform.position + defaultGameplayOffset;
         }
 
-        // Phase 2: Create dummy visual clones FIRST while real world components are active!
+        // Phase 2: Create dummy visual clones FIRST while real world components are active
         CreateDummyVisualClone(out List<Transform> dummyFoundations, out List<Transform> dummyPropsAndEnemies);
 
         // Tell the state switcher we are in the intro phase, then apply states
@@ -65,19 +72,17 @@ public class LevelHandler : MonoBehaviour
         SetRealWorldState(false);
 
         // Animate the foundational floors and walls inward
-        yield return StartCoroutine(AnimateDummyGroupInward(dummyFoundations, true)); 
+        yield return StartCoroutine(AnimateDummyGroupInward(dummyFoundations, true));
 
         // Phase 3: Foundations landed! Now slide decorations, traps, and enemies down from above
-        yield return StartCoroutine(AnimateDummyGroupInward(dummyPropsAndEnemies, false)); 
+        yield return StartCoroutine(AnimateDummyGroupInward(dummyPropsAndEnemies, false));
 
         // Phase 4: THE MAGIC CUT - Trade visual dummies for live elements
-        Destroy(dummyVisualContainer);
-        
-        // Turn off intro flag right before turning on the real world
+        if (dummyVisualContainer != null) Destroy(dummyVisualContainer);
+
         isLevelIntroActive = false;
         SetRealWorldState(true);
 
-        // Brief mechanical pause to let things settle cleanly right before control swaps
         yield return new WaitForSeconds(0.5f);
 
         // Phase 5: Instantly hand tracking operations over to the camera tracking script
@@ -85,7 +90,7 @@ public class LevelHandler : MonoBehaviour
         {
             camFollowScript.target = activePlayer.transform;
             camFollowScript.offset = defaultGameplayOffset;
-            camFollowScript.enabled = true; 
+            camFollowScript.enabled = true;
         }
 
         yield return new WaitForEndOfFrame();
@@ -100,27 +105,21 @@ public class LevelHandler : MonoBehaviour
         }
     }
 
-    public void StartExitTransition(int sceneIndexToLoad)
+    public void StartExitTransition(int nextTargetIndex)
     {
-        StartCoroutine(TriggerLevelCollapseRoutine(sceneIndexToLoad));
+        StartCoroutine(TriggerLevelCollapseRoutine(nextTargetIndex));
     }
 
-    private System.Collections.IEnumerator TriggerLevelCollapseRoutine(int sceneIndexToLoad)
+    private IEnumerator TriggerLevelCollapseRoutine(int nextTargetIndex)
     {
-        // We are NOT in the intro, so this keeps components visible but strips game logic!
-        isLevelIntroActive = false; 
+        isLevelIntroActive = false;
         SetRealWorldState(false);
-        
+
         if (camFollowScript != null) camFollowScript.enabled = false;
 
         Vector3 centerPoint = activePlayer != null ? activePlayer.transform.position : Vector3.zero;
 
-        if (activePlayer != null)
-        {
-            float pDelay = Vector3.Distance(centerPoint, activePlayer.transform.position) * staggerWaveValue;
-            StartCoroutine(SlideDownBlock(activePlayer.transform, pDelay));
-        }
-
+        // Slide out grid generation assets
         foreach (Transform child in gridGen.transform)
         {
             if (child == null) continue;
@@ -129,19 +128,28 @@ public class LevelHandler : MonoBehaviour
         }
 
         yield return new WaitForSeconds(animationSpeed + 0.3f);
-        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneIndexToLoad);
+
+        // Clean up any remaining generation debris manually before proceeding
+        foreach (Transform child in gridGen.transform)
+        {
+            if (child != null) Destroy(child.gameObject);
+        }
+
+        // Set layout variables tracking loop index parameters
+        levelIndex = nextTargetIndex;
+
+        // Re-execute initialization steps inside loop bounds
+        yield return StartCoroutine(RunLevelSetupSequence());
     }
 
     private void SetRealWorldState(bool isEnabled)
     {
-        // INTRO RULE: If disabling during level setup, completely deactivate objects to avoid bugs
         if (!isEnabled && isLevelIntroActive)
         {
             DeactivateChildrenRecursive(gridGen.transform, false);
         }
         else
         {
-            // EXIT RULE / LIVE PLAYBACK: Keep layout active, but strips components/logic out cleanly
             DeactivateChildrenRecursive(gridGen.transform, true);
 
             foreach (Transform child in gridGen.transform)
@@ -149,7 +157,7 @@ public class LevelHandler : MonoBehaviour
                 if (child == null) continue;
 
                 if (child.TryGetComponent<Collider>(out Collider col)) col.enabled = isEnabled;
-                
+
                 foreach (var mono in child.GetComponentsInChildren<MonoBehaviour>())
                 {
                     if (mono != this) mono.enabled = isEnabled;
@@ -161,22 +169,20 @@ public class LevelHandler : MonoBehaviour
             }
         }
 
-        // Manage player visibility and control structures identically across both variants
         if (activePlayer != null)
         {
             if (activePlayer.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
                 rb.isKinematic = !isEnabled;
-                if (!isEnabled) rb.linearVelocity = Vector3.zero; 
+                if (!isEnabled) rb.linearVelocity = Vector3.zero;
             }
             if (activePlayer.TryGetComponent<PlayerController>(out PlayerController pc))
             {
                 pc.enabled = isEnabled;
             }
-            
+
             foreach (var renderer in activePlayer.GetComponentsInChildren<Renderer>())
             {
-                // Only hide player renderer physically during the setup sequence loop
                 if (!isEnabled && isLevelIntroActive) renderer.enabled = false;
                 else renderer.enabled = true;
             }
@@ -199,10 +205,12 @@ public class LevelHandler : MonoBehaviour
 
         foreach (Transform child in gridGen.transform)
         {
-            if (child == null) continue;
+            // FIX: If a floor block has already dropped below the baseline due to mechanics,
+            // or is marked dead, DO NOT clone it into the intro animation setup!
+            if (child == null || child.position.y < -1f) continue;
 
             GameObject dummyPiece = Instantiate(child.gameObject, child.position, child.rotation, dummyVisualContainer.transform);
-            dummyPiece.SetActive(false); 
+            dummyPiece.SetActive(false);
 
             string nameLower = child.name.ToLower();
             bool isFoundation = nameLower.Contains("floor") || nameLower.Contains("wall") || nameLower.Contains("door") || nameLower.Contains("arrowwall");
@@ -213,23 +221,19 @@ public class LevelHandler : MonoBehaviour
             foreach (var comp in dummyPiece.GetComponentsInChildren<Component>())
             {
                 if (comp is Transform || comp is MeshFilter || comp is MeshRenderer || comp is SkinnedMeshRenderer) continue;
-                Destroy(comp); 
+                Destroy(comp);
             }
 
             if (isFoundation)
-            {
-                dummyPiece.transform.position -= new Vector3(0, fallDistance, 0); 
-            }
+                dummyPiece.transform.position -= new Vector3(0, fallDistance, 0);
             else
-            {
-                dummyPiece.transform.position += new Vector3(0, fallDistance, 0); 
-            }
-            
+                dummyPiece.transform.position += new Vector3(0, fallDistance, 0);
+
             dummyPiece.transform.localScale = child.localScale;
         }
     }
 
-    private System.Collections.IEnumerator AnimateDummyGroupInward(List<Transform> pieces, bool riseFromBelow)
+    private IEnumerator AnimateDummyGroupInward(List<Transform> pieces, bool riseFromBelow)
     {
         for (int i = 0; i < pieces.Count; i++)
         {
@@ -247,14 +251,10 @@ public class LevelHandler : MonoBehaviour
         yield return new WaitForSeconds(animationSpeed + 0.2f);
     }
 
-    private System.Collections.IEnumerator SlideUpBlock(Transform block, Vector3 destination, Vector3 finalScale, float delay)
+    private IEnumerator SlideUpBlock(Transform block, Vector3 destination, Vector3 finalScale, float delay)
     {
         yield return new WaitForSeconds(delay);
-        
-        if (block != null)
-        {
-            block.gameObject.SetActive(true);
-        }
+        if (block != null) block.gameObject.SetActive(true);
 
         float elapsed = 0;
         Vector3 startingPos = (block != null) ? block.position : Vector3.zero;
@@ -278,7 +278,7 @@ public class LevelHandler : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator SlideDownBlock(Transform block, float delay)
+    private IEnumerator SlideDownBlock(Transform block, float delay)
     {
         yield return new WaitForSeconds(delay);
         if (block == null) yield break;
@@ -318,7 +318,7 @@ public class LevelHandler : MonoBehaviour
 
         if (activePlayer.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
-            rb.isKinematic = true; 
+            rb.isKinematic = true;
         }
     }
 

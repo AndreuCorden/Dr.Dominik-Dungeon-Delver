@@ -17,22 +17,22 @@ public class UIManager : MonoBehaviour
 
     void OnEnable()
     {
+        // Connect to our PlayerController data channels
         PlayerController.OnHealthChanged += UpdateHealth;
         PlayerController.OnCoinsChanged += UpdateCoins;
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     void OnDisable()
     {
         PlayerController.OnHealthChanged -= UpdateHealth;
         PlayerController.OnCoinsChanged -= UpdateCoins;
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    // NEW: Directly accessible by LevelHandler to display the actual generation index!
+    public void UpdateRoom(int currentRoomIndex)
     {
-        if (roomText != null) roomText.text = $"Room: {scene.buildIndex}";
-        if (PlayerController.Instance != null) UpdateHealth(PlayerController.Instance.health);
+        if (roomText != null) 
+            roomText.text = $"Room: {currentRoomIndex + 1}";
     }
 
     public void UpdateCoins(int amount) => coinText.text = $"Coins: {amount}";

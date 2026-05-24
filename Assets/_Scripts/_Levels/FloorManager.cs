@@ -42,4 +42,9 @@ public class FloorManager : MonoBehaviour
             }
         }
     }
+
+    public void setTimeBetweenRows(float newTime)
+    {
+        timeBetweenRows = newTime;
+    }
 }

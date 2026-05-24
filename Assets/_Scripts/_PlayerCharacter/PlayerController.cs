@@ -472,6 +472,7 @@ public class PlayerController : MonoBehaviour
         if (!isFall)
             StartDamageInvulnerability();
 
+        // 1. CRITICAL CHECK FIRST: Is the player completely dead?
         if (health <= 0)
         {
             LevelHandler handler = FindFirstObjectByType<LevelHandler>();
@@ -480,30 +481,40 @@ public class PlayerController : MonoBehaviour
             isStepMoving = false;
             isFalling = false;
 
+            // Reset local currencies and vital configurations safely 
+            ChangeHealth(3);
+            AddCoin(-coins);
+
             if (handler != null)
             {
-                ChangeHealth(3);
-                AddCoin(-coins);
-                handler.StartExitTransition(1);
+                // Send player all the way back to Level Index 1 for Game Over
+                handler.StartExitTransition(0);
             }
             else
             {
-                ChangeHealth(3);
-                AddCoin(-coins);
                 UnityEngine.SceneManagement.SceneManager.LoadScene(1);
             }
-            return;
+            return; // Halt logic completely so fall checks don't override this!
         }
 
+        // 2. SECONDARY CHECK: Did they just drop in a hole but still have health left?
         if (isFall)
         {
-            int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
-
             isMoving = false;
             isStepMoving = false;
             isFalling = false;
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
+            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+            if (handler != null)
+            {
+                // Re-inject current levelIndex to restart smoothly inside the same scene
+                handler.StartExitTransition(handler.levelIndex);
+            }
+            else
+            {
+                int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
+            }
         }
     }
 

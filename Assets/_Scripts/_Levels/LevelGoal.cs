@@ -1,11 +1,10 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LevelGoal : MonoBehaviour
 {
     private Transform player;
     private bool isUnlocked = false;
-    private bool isTransitioning = false; // Prevents triggering multiple times
+    private bool isTransitioning = false; 
 
     [Header("Settings")]
     public string lockedLayer = "Default";
@@ -14,10 +13,7 @@ public class LevelGoal : MonoBehaviour
     void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-        {
-            player = playerObj.transform;
-        }
+        if (playerObj != null) player = playerObj.transform;
 
         gameObject.layer = LayerMask.NameToLayer(lockedLayer);
         gameObject.tag = "Untagged";
@@ -64,19 +60,20 @@ public class LevelGoal : MonoBehaviour
     {
         isTransitioning = true;
         LevelHandler handler = FindFirstObjectByType<LevelHandler>();
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
 
-        if (handler != null && nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        if (handler != null)
         {
-            // Pass control up to the handler completely
-            handler.StartExitTransition(nextSceneIndex);
+            // SEAMLESS SWITCH: Advance index variable tracking parameter smoothly
+            int nextLevelIndex = handler.levelIndex + 1;
+            handler.StartExitTransition(nextLevelIndex);
         }
         else
         {
-            // Fallback safety route if something is missing
-            if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+            // Direct build index recovery fallback routing loop parameters if handler missing
+            int nextSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex + 1;
+            if (nextSceneIndex < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings)
             {
-                SceneManager.LoadScene(nextSceneIndex);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneIndex);
             }
         }
     }

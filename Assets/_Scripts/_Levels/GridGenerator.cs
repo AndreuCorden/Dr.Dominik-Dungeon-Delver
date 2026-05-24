@@ -34,6 +34,12 @@ public class GridGenerator : MonoBehaviour
         // --- MISSING FUNCTIONALITY: CLEAN SLATE ---
         BaseEnemy.OccupiedTiles.Clear();
 
+        if (TryGetComponent<FloorManager>(out FloorManager fmComponent))
+        {
+                float customTime = levels[index].time;
+                fmComponent.setTimeBetweenRows(customTime);
+        }
+
         string[] rows = levels[index].layout.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
         System.Array.Reverse(rows);
 
