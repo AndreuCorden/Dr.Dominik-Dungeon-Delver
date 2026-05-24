@@ -537,6 +537,9 @@ MonoBehaviour:
   playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
   shouldFloorFall: 1
   levelIndex: 0
+  fallDistance: 8
+  animationSpeed: 0.6
+  staggerWaveValue: 0.04
 --- !u!114 &566127729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -549,7 +552,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorManager
-  timeBetweenRows: 1e+9
+  timeBetweenRows: 1
 --- !u!1 &759838014
 GameObject:
   m_ObjectHideFlags: 0

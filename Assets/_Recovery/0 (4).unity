@@ -178,7 +178,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: -10
+  near clip plane: -100
   far clip plane: 1000
   field of view: 60
   orthographic: 1
@@ -206,13 +206,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 86264391}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.23911764, y: 0.369644, z: -0.09904582, w: -0.892399}
+  m_LocalRotation: {x: -0.25488704, y: 0.16773152, z: -0.044943534, w: -0.9512512}
   m_LocalPosition: {x: 10, y: 10, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 30, y: 315, z: 0}
+  m_LocalEulerAnglesHint: {x: 30, y: 340, z: 0}
 --- !u!114 &86264395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 'Coins: 0'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -454,20 +454,71 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc6ebfdcf79a8fa47908cdb98e79444c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridGenerator
-  levels: []
-  floorPrefab: {fileID: 247161348603889154, guid: 436d2861f1e63214fbb132aea8e4179d, type: 3}
-  wallPrefab: {fileID: 247161348603889154, guid: 7548a1790882b0648850c9c4cc883ffa, type: 3}
+  levels:
+  - levelName: Room 1
+    width: 15
+    depth: 20
+    layout: ' WWDWWWWWWWWWWW
+
+      W..............
+
+      W....M.M.......
+
+      W....6.....T...
+
+      W..5......4....
+
+      3..............
+
+      W........S.....
+
+      W..  
+      ....   ..
+
+      A..   L...   ..
+
+      A..   ...L   ..
+
+      A..   .L..  
+      ..
+
+      W...G......G...
+
+      W...T..........
+
+      W...C.....2....
+
+      W..............
+
+      W..S.....1.....
+
+      W...........F..
+
+      W.....III......
+
+      W...........0..
+
+      W...P.CCCCCC...'
+  floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
+  wallPrefab: {fileID: 807191524193933985, guid: 5f175d56be4069f4d9c77fd0972583f5, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
-  doorPrefab: {fileID: 8953428749450670648, guid: db163c0f66366b345911be8b040b76b1, type: 3}
-  spikeTrapFloorPrefab: {fileID: 0}
-  gargoylePrefab: {fileID: 0}
-  arrowWallPrefab: {fileID: 0}
-  pressurePlatePrefab: {fileID: 0}
-  mimicPrefab: {fileID: 0}
-  enemyPrefab: {fileID: 0}
-  trailEnemyPrefab: {fileID: 0}
-  patrollerEnemyPrefab: {fileID: 0}
-  decorPrefabs: []
+  doorPrefab: {fileID: 2813886024194416350, guid: d5374257240c65f4abc675315f45d6c7, type: 3}
+  spikeTrapFloorPrefab: {fileID: 247161348603889154, guid: 5f52e4ef07525934c8d7925376591ed1, type: 3}
+  gargoylePrefab: {fileID: 8762466043505509284, guid: 163f9b59d076edb4c80a6c517bad8c81, type: 3}
+  arrowWallPrefab: {fileID: 247161348603889154, guid: f66782876c4c1a8499673feec72b851c, type: 3}
+  pressurePlatePrefab: {fileID: 5704463378671115150, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
+  mimicPrefab: {fileID: 8521622053067295504, guid: f677a0f25a4d9cc4f8923f8fe56c77c9, type: 3}
+  enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
+  trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
+  patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}
+  decorPrefabs:
+  - {fileID: 3377260559590378100, guid: 1497dec1e526a4f41b4e8c758e8fb91f, type: 3}
+  - {fileID: 2393161040516350848, guid: 8674b3b1f7247a54dbdb47eb1d9700c6, type: 3}
+  - {fileID: 8017994772880146370, guid: ef2c6af1960cbe543be65d862483069d, type: 3}
+  - {fileID: 3787465495826125525, guid: 298e82da751d1234f9d926b74a25ccd0, type: 3}
+  - {fileID: 3883959030815111554, guid: ca76131b9b9496e468c1619b9e9ab33b, type: 3}
+  - {fileID: 8995461363272161921, guid: 03420a0ced8d45745b8a0d59043bb6fc, type: 3}
+  - {fileID: 2079383763272462457, guid: fe59593cc257ab6439591e33fe4102dc, type: 3}
   doorPosition: {x: 0, y: 0, z: 0}
   playerSpawnPos: {x: 0, y: 1, z: 0}
 --- !u!114 &566127728
@@ -485,10 +536,12 @@ MonoBehaviour:
   gridGen: {fileID: 566127727}
   playerPrefab: {fileID: 4957605393579145644, guid: 4f46098734d87e24490aef9267915ad2, type: 3}
   shouldFloorFall: 1
-  levelIndex: 1
-  fallDistance: 8
+  levelIndex: 0
+  fallDistance: 5
   animationSpeed: 0.6
   staggerWaveValue: 0.04
+  cinematicCamOffsetModifier: {x: 0, y: 6, z: -6}
+  cameraPanSpeed: 1
 --- !u!114 &566127729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -501,7 +554,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81fb741db4bb4754294b6563735280a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorManager
-  timeBetweenRows: 2
+  timeBetweenRows: 1e+9
 --- !u!1 &759838014
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,7 +845,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Level - 2
+  m_text: Level - 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
