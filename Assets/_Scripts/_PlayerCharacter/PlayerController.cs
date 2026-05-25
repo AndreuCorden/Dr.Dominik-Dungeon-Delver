@@ -82,6 +82,7 @@ public class PlayerController : MonoBehaviour
     private float moveDuration;
     private bool isMoving = false;
     private bool isStepMoving = false;
+    private bool isFalling = false; // Added to decouple death loops safely
     private PlayableGraph attackGraph;
     private PlayableGraph movementGraph;
     private bool isMovementClipPlaying;
@@ -107,7 +108,6 @@ public class PlayerController : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     void Start()
     {
         if (visualRoot == null)
@@ -150,6 +150,14 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // CRITICAL FIX: If we are falling through the void, let the coroutine have
+        // exclusive control over transform translations. Do not check movement input or calculations.
+        if (isFalling)
+        {
+            UpdateRotation();
+            return;
+        }
+
         UpdateEmoteInputAndPlayback();
         UpdateAttackClipPlayback();
         UpdateHitClipPlayback();
@@ -168,7 +176,6 @@ public class PlayerController : MonoBehaviour
                     Move(direction);
             }
         }
-
         if (!isMoving)
             CheckForVoid();
         UpdateMovementPosition();
@@ -186,11 +193,8 @@ public class PlayerController : MonoBehaviour
             isMoving = false;
             isStepMoving = false;
             movementVisualYOffset = 0f;
-
-            // This is now safe because the player is physically at the targetPosition
             ResetSpeedIfNoSlime();
         }
-
         SyncMovementAnimationState();
     }
 
@@ -224,11 +228,8 @@ public class PlayerController : MonoBehaviour
 
     Vector3 GetHeldMoveDirection(Keyboard kb)
     {
-        // Check Forward/Back (Vertical on Grid)
         if (kb.wKey.isPressed || kb.upArrowKey.isPressed) return Vector3.forward;
         if (kb.sKey.isPressed || kb.downArrowKey.isPressed) return Vector3.back;
-
-        // Check Left/Right (Horizontal on Grid)
         if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) return Vector3.left;
         if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) return Vector3.right;
 
@@ -400,58 +401,39 @@ public class PlayerController : MonoBehaviour
         float parabola = 4f * progress * (1f - progress);
         movementVisualYOffset = parabola * jumpHeight;
     }
-
     bool IsDestinationSafe(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
-        // Start higher and shoot lower to ensure we hit the floor at Y=0
         Ray ray = new Ray(new Vector3(dest.x, 5.0f, dest.z), Vector3.down);
 
-        // Increase distance to 6.0f to make sure we pass through Y=0
         if (!Physics.Raycast(ray, out _, 6.0f, floorLayer))
         {
             Debug.Log($"Movement Blocked: No floor detected at {dest}");
             return false;
         }
-
         if (BaseEnemy.OccupiedTiles.Contains(new Vector2(dest.x, dest.z)))
             return false;
-
         return true;
     }
-
     void Move(Vector3 direction)
     {
         StopCurrentEmote();
-
-        // 1. Determine destination
         Vector3 dest = RoundGridPosition(targetPosition + direction);
-
-        // 2. Check for slime AT THE DESTINATION
-        // If the tile we are moving INTO is slime, we should be slow
         currentMoveMultiplier = CheckForSlimeAt(dest) ? 0.5f : 1.0f;
-
-        // 3. Clear occupancy
         BaseEnemy.OccupiedTiles.Remove(new Vector2(targetPosition.x, targetPosition.z));
-
-        // 4. Set positions
         moveStartPosition = targetPosition;
         targetPosition = dest;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
-
         isMoving = true;
         isStepMoving = true;
         moveTimer = 0f;
-
-        // 5. CALCULATE DURATION (Crucial: uses the multiplier set in step 2)
         float effectiveSpeed = moveSpeed * currentMoveMultiplier;
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
-
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
-
     void CheckForVoid()
     {
+        if (isFalling) return;
         Ray ray = new Ray(transform.position, Vector3.down);
         if (!Physics.Raycast(ray, out _, 1.1f, floorLayer))
             StartCoroutine(HandleFallingDeath());
@@ -459,16 +441,17 @@ public class PlayerController : MonoBehaviour
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
+        isFalling = true; // Block double calculations
         StopCurrentEmote();
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
-
         float fallTimer = 0f;
         while (fallTimer < 1.0f)
         {
-            transform.Translate(Vector3.down * Time.deltaTime * 10f);
-            transform.Rotate(Vector3.up * Time.deltaTime * 500f);
+            // FIX: Specifying Space.World ensures downward motion ignores the rapid rotation
+            transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
+            transform.localScale = Vector3.Lerp(Vector3.one, Vector3.zero, fallTimer);
             fallTimer += Time.deltaTime;
             yield return null;
         }
@@ -489,18 +472,49 @@ public class PlayerController : MonoBehaviour
         if (!isFall)
             StartDamageInvulnerability();
 
+        // 1. CRITICAL CHECK FIRST: Is the player completely dead?
         if (health <= 0)
         {
+            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+
+            isMoving = false;
+            isStepMoving = false;
+            isFalling = false;
+
+            // Reset local currencies and vital configurations safely 
             ChangeHealth(3);
             AddCoin(-coins);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
-            return;
+
+            if (handler != null)
+            {
+                // Send player all the way back to Level Index 1 for Game Over
+                handler.StartExitTransition(0);
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+            return; // Halt logic completely so fall checks don't override this!
         }
 
+        // 2. SECONDARY CHECK: Did they just drop in a hole but still have health left?
         if (isFall)
         {
-            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
+            isMoving = false;
+            isStepMoving = false;
+            isFalling = false;
+
+            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+            if (handler != null)
+            {
+                // Re-inject current levelIndex to restart smoothly inside the same scene
+                handler.StartExitTransition(handler.levelIndex);
+            }
+            else
+            {
+                int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
+            }
         }
     }
 
@@ -723,11 +737,9 @@ public class PlayerController : MonoBehaviour
     {
         if (!isAttackClipPlaying)
             return;
-
         isAttackClipPlaying = false;
         attackClipTimer = 0f;
         currentAttackClipDuration = 0f;
-
         if (attackGraph.IsValid())
             attackGraph.Destroy();
 
@@ -737,7 +749,6 @@ public class PlayerController : MonoBehaviour
             characterAnimator.Update(Mathf.Max(attackBlendDuration, 0f));
         }
     }
-
     void StopHitReactionPlayback()
     {
         if (!isHitClipPlaying)
@@ -756,13 +767,11 @@ public class PlayerController : MonoBehaviour
             characterAnimator.Update(Mathf.Max(hitBlendDuration, 0f));
         }
     }
-
     System.Collections.IEnumerator VisualFlash()
     {
         Renderer renderer = GetMainVisualRenderer();
         if (renderer == null)
             yield break;
-
         Color oldColor = renderer.material.color;
         float elapsed = 0f;
         float duration = 0.5f;
@@ -773,29 +782,23 @@ public class PlayerController : MonoBehaviour
             renderer.material.color = Color.Lerp(new Color(1f, 0.25f, 0.08f, 1f), oldColor, elapsed / duration);
             yield return null;
         }
-
         renderer.material.color = oldColor;
     }
-
     void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.25f, 0.08f, 1f);
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
-
     void ResetSpeedIfNoSlime()
     {
-        // If we just landed on a tile, check if it's slimey
-        // If not, return to full speed
         if (!CheckForSlimeAt(transform.position))
         {
             currentMoveMultiplier = 1.0f;
         }
     }
-
     public void ChangeHealth(int amount)
     {
-        // health += amount;
+        health += amount;
         OnHealthChanged?.Invoke(health);
     }
 
@@ -814,7 +817,6 @@ public class PlayerController : MonoBehaviour
         StopAllCoroutines();
         damageInvulnerabilityRoutine = null;
         invulnerableUntilTime = 0f;
-
         BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(new Vector2(targetPosition.x, targetPosition.z)));
 
         Vector3 snappedSpawn = RoundGridPosition(newSpawnPos);
@@ -828,26 +830,24 @@ public class PlayerController : MonoBehaviour
 
         isMoving = false;
         isStepMoving = false;
+        isFalling = false;
         movementVisualYOffset = 0f;
         currentMoveMultiplier = 1.0f;
-
+        transform.localScale = Vector3.one;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
 
         Renderer renderer = GetMainVisualRenderer();
         if (renderer != null)
             renderer.material.color = Color.white;
     }
-
     Renderer GetMainVisualRenderer()
     {
         return visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
     }
-
     Vector3 RoundGridPosition(Vector3 pos)
     {
         return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));
     }
-
     void OnDisable()
     {
         StopCurrentEmote();
@@ -855,7 +855,6 @@ public class PlayerController : MonoBehaviour
         StopAttackClipPlayback();
         StopHitReactionPlayback();
     }
-
     void OnDestroy()
     {
         if (Instance == this)
@@ -864,8 +863,6 @@ public class PlayerController : MonoBehaviour
 
     bool CheckForSlimeAt(Vector3 position)
     {
-        // Shoot a small overlap box at the floor level
-        // Center it at Y=0 where the floor is
         Collider[] hitColliders = Physics.OverlapBox(new Vector3(position.x, 0, position.z), new Vector3(0.45f, 1f, 0.45f));
 
         foreach (var col in hitColliders)

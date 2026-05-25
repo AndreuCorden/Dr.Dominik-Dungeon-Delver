@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class GridGenerator : MonoBehaviour
 {
-    public List<LevelBlueprint> levels; // Design your levels in the Inspector!
+    public List<LevelBlueprint> levels = new List<LevelBlueprint>(); // Design your levels in the Inspector!
 
     [Header("Prefabs")]
     public GameObject floorPrefab;
@@ -15,6 +15,7 @@ public class GridGenerator : MonoBehaviour
     public GameObject arrowWallPrefab;
     public GameObject pressurePlatePrefab;
     public GameObject mimicPrefab;
+    public GameObject bossEnemyPrefab;
 
     [Header("Enemy Settings")]
     public GameObject enemyPrefab;
@@ -33,6 +34,12 @@ public class GridGenerator : MonoBehaviour
 
         // --- MISSING FUNCTIONALITY: CLEAN SLATE ---
         BaseEnemy.OccupiedTiles.Clear();
+
+        if (TryGetComponent<FloorManager>(out FloorManager fmComponent))
+        {
+            float customTime = levels[index].time;
+            fmComponent.setTimeBetweenRows(customTime);
+        }
 
         string[] rows = levels[index].layout.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
         System.Array.Reverse(rows);
@@ -87,12 +94,13 @@ public class GridGenerator : MonoBehaviour
                               // Rotate 90 degrees to face Right (as in your old code)
                         GameObject arrowWall = Instantiate(arrowWallPrefab, pos + Vector3.up, Quaternion.Euler(0, 90, 0), transform);
                         lastSpawnedShooter = arrowWall.GetComponent<ArrowTrap>();
+                        PlaceWall(pos, x, z, rows.Length);
                         break;
 
                     case 'L': // --- RESTORED: PARENTING & ASSIGNMENT ---
                         if (currentFloor != null)
                         {
-                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.55f, pos.z), Quaternion.identity, transform);
+                            GameObject plate = Instantiate(pressurePlatePrefab, new Vector3(pos.x, 0.5f, pos.z), Quaternion.identity, transform);
                             if (lastSpawnedShooter != null)
                                 plate.GetComponent<PressurePlate>().wallTrap = lastSpawnedShooter;
                         }
@@ -135,6 +143,9 @@ public class GridGenerator : MonoBehaviour
 
                     case 'S': // Trail Enemy
                         Instantiate(trailEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
+                    case 'B': // Boss Enemy
+                        Instantiate(bossEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
                         break;
 
                     case '0':
@@ -198,6 +209,26 @@ public class GridGenerator : MonoBehaviour
                     case '4':
                         {
                             GameObject decor = Instantiate(decorPrefabs[4], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                    case '5':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[5], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                    case '6':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[6], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
