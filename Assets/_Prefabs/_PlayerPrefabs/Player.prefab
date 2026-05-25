@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3241987678094117902}
   - component: {fileID: -8078499758361651822}
   - component: {fileID: -1333686828021907896}
+  - component: {fileID: 410176906679511246}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -113,8 +114,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 1.8, z: 1}
+  m_Center: {x: 0, y: 0.4, z: 0}
 --- !u!114 &-8078499758361651822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,33 +159,17 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  movingBoolParameter: IsMoving
-  speedFloatParameter: Speed
-  attackTriggerParameter: Attack
-  hitTriggerParameter: Hit
-  emoteClips: []
-  emoteBlendDuration: 0.08
-  idleVariationClips: []
-  idleVariationIntervalRange: {x: 4, y: 7}
   currentMoveMultiplier: 1
   attackRange: 1.1
-  useMovementClip: 0
-  movementClip: {fileID: 0}
-  attackClip: {fileID: 0}
-  movementBlendDuration: 0.08
-  attackBlendDuration: 0.08
   damageInvulnerabilityDuration: 0.7
   damageFlashInterval: 0.08
   damageFlashColor: {r: 1, g: 0.25, b: 0.25, a: 1}
-  hitReactionClip: {fileID: 0}
-  hitBlendDuration: 0.05
+  animator: {fileID: 410176906679511246}
+  hitTrigger: Hit
   shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}
   floorLayer:
     serializedVersion: 2
     m_Bits: 64
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 256
 --- !u!54 &-1333686828021907896
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -212,6 +197,28 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!95 &410176906679511246
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4971320521847776260}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: ac609aeffe6b86c4aaf69bc872cf231b, type: 3}
+  m_Controller: {fileID: 9100000, guid: c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &4787511299323338776
 PrefabInstance:
   m_ObjectHideFlags: 0

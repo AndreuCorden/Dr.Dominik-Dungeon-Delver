@@ -33,6 +33,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float damageFlashInterval = 0.08f;
     [SerializeField] private Color damageFlashColor = new Color(1f, 0.25f, 0.25f, 1f);
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private string hitTrigger = "Hit";
+    [SerializeField] private string attackTrigger = "Attack";
+
     [Header("VFX")]
     public GameObject shockwavePrefab;
 
@@ -65,20 +70,18 @@ public class PlayerController : MonoBehaviour
     {
         if (visualRoot == null)
         {
-            visualRoot = GetComponentInChildren<Animator>()?.transform;
-            if (visualRoot == transform) visualRoot = null;
-
+            visualRoot = GetFirstChildTransform(GetComponentsInChildren<Animator>(true));
             if (visualRoot == null)
-                visualRoot = GetComponentInChildren<SkinnedMeshRenderer>()?.transform;
-
+                visualRoot = GetFirstChildTransform(GetComponentsInChildren<SkinnedMeshRenderer>(true));
             if (visualRoot == null)
-                visualRoot = GetComponentInChildren<MeshRenderer>()?.transform;
-
-            if (visualRoot == transform) visualRoot = null;
+                visualRoot = GetFirstChildTransform(GetComponentsInChildren<MeshRenderer>(true));
         }
 
         if (visualRoot != null)
             visualRootInitialLocalPosition = visualRoot.localPosition;
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>(true);
 
         targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
@@ -92,6 +95,22 @@ public class PlayerController : MonoBehaviour
     {
         if (visualRoot != null)
             visualRoot.localPosition = visualRootInitialLocalPosition + new Vector3(0f, visualYOffset + movementVisualYOffset, 0f);
+    }
+
+    Transform GetFirstChildTransform(Component[] components)
+    {
+        foreach (var component in components)
+        {
+            if (component == null || component.transform == transform)
+                continue;
+
+            Transform candidate = component.transform;
+            while (candidate.parent != null && candidate.parent != transform)
+                candidate = candidate.parent;
+
+            return candidate;
+        }
+        return null;
     }
 
     void Update()
@@ -246,6 +265,9 @@ public class PlayerController : MonoBehaviour
         ChangeHealth(-1);
 
         if (!isFall)
+            TriggerHitAnimation();
+
+        if (!isFall)
             StartDamageInvulnerability();
 
         if (health <= 0)
@@ -261,6 +283,22 @@ public class PlayerController : MonoBehaviour
             string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
         }
+    }
+
+    void TriggerHitAnimation()
+    {
+        if (animator == null || string.IsNullOrWhiteSpace(hitTrigger))
+            return;
+
+        animator.SetTrigger(hitTrigger);
+    }
+
+    void TriggerAttackAnimation()
+    {
+        if (animator == null || string.IsNullOrWhiteSpace(attackTrigger))
+            return;
+
+        animator.SetTrigger(attackTrigger);
     }
 
     void StartDamageInvulnerability()
@@ -295,6 +333,7 @@ public class PlayerController : MonoBehaviour
 
     void PerformSpaceAttack()
     {
+        TriggerAttackAnimation();
         StartCoroutine(VisualFlash());
 
         if (shockwavePrefab != null)
