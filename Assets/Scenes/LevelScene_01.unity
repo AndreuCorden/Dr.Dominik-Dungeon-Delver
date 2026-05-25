@@ -455,10 +455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridGenerator
   levels:
-  - levelName: Room 1
-    width: 15
-    depth: 8
-    time: 1e+9
+  - time: 1e+9
     layout: ' WWWWWWWDWWWWWW
 
       W..............
@@ -474,10 +471,7 @@ MonoBehaviour:
       W.0.........C..
 
       W.....P........'
-  - levelName: Room 2
-    width: 15
-    depth: 20
-    time: 1e+9
+  - time: 1e+9
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -519,10 +513,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 3
-    width: 15
-    depth: 20
-    time: 10
+  - time: 10
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -564,10 +555,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 4
-    width: 15
-    depth: 20
-    time: 5
+  - time: 5
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -609,10 +597,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 5
-    width: 15
-    depth: 20
-    time: 5
+  - time: 5
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -654,10 +639,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 6
-    width: 15
-    depth: 20
-    time: 3
+  - time: 3
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -699,10 +681,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 7
-    width: 15
-    depth: 20
-    time: 3
+  - time: 3
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -744,10 +723,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 8
-    width: 15
-    depth: 20
-    time: 1
+  - time: 1
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -789,10 +765,7 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 9
-    width: 15
-    depth: 20
-    time: 1
+  - time: 1
     layout: ' WWDWWWWWWWWWWW
 
       W..............
@@ -834,51 +807,48 @@ MonoBehaviour:
       W...........0..
 
       W.........P....'
-  - levelName: Room 10
-    width: 15
-    depth: 20
-    time: 1e+9
-    layout: ' WWDWWWWWWWWWWW
+  - time: 1e+9
+    layout: ' WWWWWWWWWWWWWWWWWWW
 
-      W..............
+      W...................
 
-      W....M.M.......
+      W...................
 
-      W....6.....T...
+      W.........B.........
 
-      W..5......4....
+      W...................
 
-      3..............
+      W...................
 
-      W........S.....
+      W...2..22...22..2...
 
-      W..  
-      ....   ..
+      W...................
 
-      A..   L...   ..
+      W...G...........G...
 
-      A..   ...L   ..
+      W...................
 
-      A..   .L..  
-      ..
+      W...2..22...22..2...
 
-      W...G......G...
+      W...................
 
-      W...T..........
+      W...
+      I ....... I ...
 
-      W...C.....2....
+      W... I ....... I ...
 
-      W..............
+      W... I ....... I ...
 
-      W..S.....1.....
+      W...
+      I ....... I ...
 
-      W...........F..
+      W... I ....... I ...
 
-      W.....III......
+      W...................
 
-      W...........0..
+      W.........P.........
 
-      W.........P....'
+      W...................'
   floorPrefab: {fileID: 2465558204961391594, guid: 710e3440a525c41498ff95d030176ac3, type: 3}
   wallPrefab: {fileID: 807191524193933985, guid: 5f175d56be4069f4d9c77fd0972583f5, type: 3}
   CoinPrefab: {fileID: 330149354540523446, guid: eabcfa16b3558174d93d633289271f9e, type: 3}
@@ -888,6 +858,7 @@ MonoBehaviour:
   arrowWallPrefab: {fileID: 247161348603889154, guid: f66782876c4c1a8499673feec72b851c, type: 3}
   pressurePlatePrefab: {fileID: 5704463378671115150, guid: cd24966fb68fe74449be0279743f9cd6, type: 3}
   mimicPrefab: {fileID: 8521622053067295504, guid: f677a0f25a4d9cc4f8923f8fe56c77c9, type: 3}
+  bossEnemyPrefab: {fileID: 7271689476790030076, guid: 54cdd83755d6cdf4f98ae13cf4cdfb47, type: 3}
   enemyPrefab: {fileID: 6682069278422793840, guid: b60b567d017cb3f4dbb461bfc21d2064, type: 3}
   trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
   patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}

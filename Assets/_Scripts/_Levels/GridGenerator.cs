@@ -15,6 +15,7 @@ public class GridGenerator : MonoBehaviour
     public GameObject arrowWallPrefab;
     public GameObject pressurePlatePrefab;
     public GameObject mimicPrefab;
+    public GameObject bossEnemyPrefab;
 
     [Header("Enemy Settings")]
     public GameObject enemyPrefab;
@@ -36,8 +37,8 @@ public class GridGenerator : MonoBehaviour
 
         if (TryGetComponent<FloorManager>(out FloorManager fmComponent))
         {
-                float customTime = levels[index].time;
-                fmComponent.setTimeBetweenRows(customTime);
+            float customTime = levels[index].time;
+            fmComponent.setTimeBetweenRows(customTime);
         }
 
         string[] rows = levels[index].layout.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
@@ -142,6 +143,9 @@ public class GridGenerator : MonoBehaviour
 
                     case 'S': // Trail Enemy
                         Instantiate(trailEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        break;
+                    case 'B': // Boss Enemy
+                        Instantiate(bossEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
                         break;
 
                     case '0':

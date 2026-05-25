@@ -115,6 +115,26 @@ public class LevelHandler : MonoBehaviour
         isLevelIntroActive = false;
         SetRealWorldState(false);
 
+        // --- FIX: CLEAR FLOATING PROJECTILES/FIRE BLOCKS INSTANTLY ---
+        // We find objects by name patterns or components to sweep runtime hazards
+        GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        foreach (GameObject go in allObjects)
+        {
+            if (go == null) continue;
+            
+            string lowerName = go.name.ToLower();
+            // Add any naming variations your projectiles or fire objects use here
+            if (lowerName.Contains("fire") || lowerName.Contains("projectile") || lowerName.Contains("slime"))
+            {
+                // If it isn't part of the core level generation grid script hierarchy, sweep it!
+                if (!go.transform.IsChildOf(gridGen.transform))
+                {
+                    Destroy(go);
+                }
+            }
+        }
+        // -------------------------------------------------------------
+
         if (camFollowScript != null) camFollowScript.enabled = false;
 
         Vector3 centerPoint = activePlayer != null ? activePlayer.transform.position : Vector3.zero;
@@ -205,8 +225,6 @@ public class LevelHandler : MonoBehaviour
 
         foreach (Transform child in gridGen.transform)
         {
-            // FIX: If a floor block has already dropped below the baseline due to mechanics,
-            // or is marked dead, DO NOT clone it into the intro animation setup!
             if (child == null || child.position.y < -1f) continue;
 
             GameObject dummyPiece = Instantiate(child.gameObject, child.position, child.rotation, dummyVisualContainer.transform);
