@@ -28,11 +28,6 @@ public class PlayerController : MonoBehaviour
     [Header("Attack Settings")]
     public float attackRange = 1.1f;
 
-    [Header("Damage Feedback")]
-    [SerializeField] private float damageInvulnerabilityDuration = 0.7f;
-    [SerializeField] private float damageFlashInterval = 0.08f;
-    [SerializeField] private Color damageFlashColor = new Color(1f, 0.25f, 0.25f, 1f);
-
     [Header("Animation")]
     [SerializeField] private Animator animator;
     [SerializeField] private string hitTrigger = "Hit";
@@ -50,8 +45,7 @@ public class PlayerController : MonoBehaviour
     private float moveDuration;
     private bool isMoving = false;
     private bool isStepMoving = false;
-    private float invulnerableUntilTime;
-    private Coroutine damageInvulnerabilityRoutine;
+    private bool isFalling = false;
 
     void Awake()
     {
@@ -162,6 +156,9 @@ public class PlayerController : MonoBehaviour
 
     void UpdateMovementPosition()
     {
+        if (isFalling)
+            return;
+
         if (!isMoving)
         {
             transform.position = targetPosition;
@@ -240,6 +237,7 @@ public class PlayerController : MonoBehaviour
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
+        isFalling = true;
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
@@ -248,27 +246,32 @@ public class PlayerController : MonoBehaviour
         while (fallTimer < 1.0f)
         {
             transform.Translate(Vector3.down * Time.deltaTime * 10f);
-            transform.Rotate(Vector3.up * Time.deltaTime * 500f);
             fallTimer += Time.deltaTime;
             yield return null;
         }
 
+        isFalling = false;
         isMoving = false;
         TakeDamage(true);
     }
 
-    public void TakeDamage(bool isFall = false)
+    public void TakeDamage(bool isFall = false, Vector3? damageSourcePosition = null)
     {
-        if (!isFall && Time.time < invulnerableUntilTime)
-            return;
+        if (damageSourcePosition.HasValue)
+        {
+            Vector3 damageDirection = damageSourcePosition.Value - transform.position;
+            damageDirection.y = 0f;
+            if (damageDirection.sqrMagnitude > 0.0001f)
+            {
+                targetRotation = Quaternion.LookRotation(damageDirection, Vector3.up);
+                transform.rotation = targetRotation;
+            }
+        }
 
         ChangeHealth(-1);
 
         if (!isFall)
             TriggerHitAnimation();
-
-        if (!isFall)
-            StartDamageInvulnerability();
 
         if (health <= 0)
         {
@@ -301,35 +304,6 @@ public class PlayerController : MonoBehaviour
         animator.SetTrigger(attackTrigger);
     }
 
-    void StartDamageInvulnerability()
-    {
-        invulnerableUntilTime = Time.time + Mathf.Max(0f, damageInvulnerabilityDuration);
-        if (damageInvulnerabilityRoutine != null)
-            StopCoroutine(damageInvulnerabilityRoutine);
-
-        damageInvulnerabilityRoutine = StartCoroutine(DamageInvulnerabilityFlash());
-    }
-
-    System.Collections.IEnumerator DamageInvulnerabilityFlash()
-    {
-        Renderer renderer = GetMainVisualRenderer();
-        if (renderer == null)
-            yield break;
-
-        Color baseColor = renderer.material.color;
-        float interval = Mathf.Max(0.03f, damageFlashInterval);
-        bool useFlashColor = false;
-
-        while (Time.time < invulnerableUntilTime)
-        {
-            useFlashColor = !useFlashColor;
-            renderer.material.color = useFlashColor ? damageFlashColor : baseColor;
-            yield return new WaitForSeconds(interval);
-        }
-
-        renderer.material.color = baseColor;
-        damageInvulnerabilityRoutine = null;
-    }
 
     void PerformSpaceAttack()
     {
@@ -436,8 +410,6 @@ public class PlayerController : MonoBehaviour
     public void ResetState(Vector3 newSpawnPos)
     {
         StopAllCoroutines();
-        damageInvulnerabilityRoutine = null;
-        invulnerableUntilTime = 0f;
 
         BaseEnemy.OccupiedTiles.Remove(RoundGridPosition(new Vector2(targetPosition.x, targetPosition.z)));
 

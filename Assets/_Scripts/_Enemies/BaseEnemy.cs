@@ -97,7 +97,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.forward = dir;
         // Trigger Damage to Player and visual lunge here
-        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
+        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage(false, transform.position);
         nextMoveTime = Time.time + timeBetweenSteps;
     }
 

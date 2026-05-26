@@ -161,9 +161,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   currentMoveMultiplier: 1
   attackRange: 1.1
-  damageInvulnerabilityDuration: 0.7
-  damageFlashInterval: 0.08
-  damageFlashColor: {r: 1, g: 0.25, b: 0.25, a: 1}
   animator: {fileID: 410176906679511246}
   hitTrigger: Hit
   shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}

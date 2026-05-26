@@ -27,7 +27,7 @@ public class TrapDamage : MonoBehaviour
             // Only damage if enough time has passed (prevents instant death)
             if (Time.time >= lastDamageTime + damageCooldown)
             {
-                PlayerController.Instance.TakeDamage(false);
+                PlayerController.Instance.TakeDamage(false, transform.position);
                 lastDamageTime = Time.time;
             }
         }
