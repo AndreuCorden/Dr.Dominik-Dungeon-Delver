@@ -3,7 +3,7 @@ using UnityEngine;
 public class TrapDamage : MonoBehaviour
 {
     public float damageCooldown = 2.0f;
-    private float lastDamageTime;
+    private float lastDamageTime = 0.0f;
 
     private void OnTriggerEnter(Collider other)
     {

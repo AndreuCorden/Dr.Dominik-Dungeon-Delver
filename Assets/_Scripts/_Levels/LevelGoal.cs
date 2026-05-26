@@ -1,10 +1,10 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LevelGoal : MonoBehaviour
 {
     private Transform player;
     private bool isUnlocked = false;
+    private bool isTransitioning = false; 
 
     [Header("Settings")]
     public string lockedLayer = "Default";
@@ -12,32 +12,24 @@ public class LevelGoal : MonoBehaviour
 
     void Start()
     {
-        // Automatically find the player by their tag
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-        {
-            player = playerObj.transform;
-        }
+        if (playerObj != null) player = playerObj.transform;
 
-        // Start state: Locked physics
         gameObject.layer = LayerMask.NameToLayer(lockedLayer);
         gameObject.tag = "Untagged";
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || isTransitioning) return;
 
-        // 1. Logic to Unlock
         if (!isUnlocked && GameObject.FindGameObjectsWithTag("Enemy").Length == 0)
         {
             UnlockPath();
         }
 
-        // 2. Logic to Complete Level
         if (isUnlocked)
         {
-            // Check if player is standing on this specific tile
             float distance = Vector2.Distance(
                 new Vector2(player.position.x, player.position.z),
                 new Vector2(transform.position.x, transform.position.z)
@@ -59,23 +51,30 @@ public class LevelGoal : MonoBehaviour
         GameObject door = GameObject.Find("LevelExitDoor");
         if (door != null)
         {
-            DoorOpener opener = door.GetComponent<DoorOpener>();
-            if (opener != null) opener.OpenDoor();
+            if (door.TryGetComponent<DoorOpener>(out var opener)) opener.OpenDoor();
         }
-
-        // Optional visual cue
-        Renderer rend = GetComponentInChildren<Renderer>();
-        // if (rend != null) rend.material.color = Color.green;
-
         Debug.Log("Path to next level is now walkable!");
     }
 
     void CompleteLevel()
     {
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        isTransitioning = true;
+        LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+
+        if (handler != null)
         {
-            SceneManager.LoadScene(nextSceneIndex);
+            // SEAMLESS SWITCH: Advance index variable tracking parameter smoothly
+            int nextLevelIndex = handler.levelIndex + 1;
+            handler.StartExitTransition(nextLevelIndex);
+        }
+        else
+        {
+            // Direct build index recovery fallback routing loop parameters if handler missing
+            int nextSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex + 1;
+            if (nextSceneIndex < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings)
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneIndex);
+            }
         }
     }
 }

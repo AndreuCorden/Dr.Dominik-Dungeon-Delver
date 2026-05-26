@@ -59,7 +59,6 @@ public class PlayerController : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     void Start()
     {
         if (visualRoot == null)
@@ -123,7 +122,6 @@ public class PlayerController : MonoBehaviour
                     Move(direction);
             }
         }
-
         if (!isMoving)
             CheckForVoid();
         UpdateMovementPosition();
@@ -188,7 +186,6 @@ public class PlayerController : MonoBehaviour
         float parabola = 4f * progress * (1f - progress);
         movementVisualYOffset = parabola * jumpHeight;
     }
-
     bool IsDestinationSafe(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
@@ -199,13 +196,10 @@ public class PlayerController : MonoBehaviour
             Debug.Log($"Movement Blocked: No floor detected at {dest}");
             return false;
         }
-
         if (BaseEnemy.OccupiedTiles.Contains(new Vector2(dest.x, dest.z)))
             return false;
-
         return true;
     }
-
     void Move(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
@@ -217,19 +211,17 @@ public class PlayerController : MonoBehaviour
         moveStartPosition = targetPosition;
         targetPosition = dest;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
-
         isMoving = true;
         isStepMoving = true;
         moveTimer = 0f;
 
         float effectiveSpeed = moveSpeed * currentMoveMultiplier;
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
-
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
-
     void CheckForVoid()
     {
+        if (isFalling) return;
         Ray ray = new Ray(transform.position, Vector3.down);
         if (!Physics.Raycast(ray, out _, 1.1f, floorLayer))
             StartCoroutine(HandleFallingDeath());
@@ -241,7 +233,6 @@ public class PlayerController : MonoBehaviour
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
-
         float fallTimer = 0f;
         while (fallTimer < 1.0f)
         {
@@ -273,18 +264,49 @@ public class PlayerController : MonoBehaviour
         if (!isFall)
             TriggerHitAnimation();
 
+        // 1. CRITICAL CHECK FIRST: Is the player completely dead?
         if (health <= 0)
         {
+            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+
+            isMoving = false;
+            isStepMoving = false;
+            isFalling = false;
+
+            // Reset local currencies and vital configurations safely 
             ChangeHealth(3);
             AddCoin(-coins);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
-            return;
+
+            if (handler != null)
+            {
+                // Send player all the way back to Level Index 1 for Game Over
+                handler.StartExitTransition(0);
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+            }
+            return; // Halt logic completely so fall checks don't override this!
         }
 
+        // 2. SECONDARY CHECK: Did they just drop in a hole but still have health left?
         if (isFall)
         {
-            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneName);
+            isMoving = false;
+            isStepMoving = false;
+            isFalling = false;
+
+            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
+            if (handler != null)
+            {
+                // Re-inject current levelIndex to restart smoothly inside the same scene
+                handler.StartExitTransition(handler.levelIndex);
+            }
+            else
+            {
+                int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
+            }
         }
     }
 
@@ -367,7 +389,6 @@ public class PlayerController : MonoBehaviour
         Renderer renderer = GetMainVisualRenderer();
         if (renderer == null)
             yield break;
-
         Color oldColor = renderer.material.color;
         float elapsed = 0f;
         float duration = 0.5f;
@@ -378,16 +399,13 @@ public class PlayerController : MonoBehaviour
             renderer.material.color = Color.Lerp(new Color(1f, 0.25f, 0.08f, 1f), oldColor, elapsed / duration);
             yield return null;
         }
-
         renderer.material.color = oldColor;
     }
-
     void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.25f, 0.08f, 1f);
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
-
     void ResetSpeedIfNoSlime()
     {
         if (!CheckForSlimeAt(transform.position))
@@ -395,9 +413,9 @@ public class PlayerController : MonoBehaviour
             currentMoveMultiplier = 1.0f;
         }
     }
-
     public void ChangeHealth(int amount)
     {
+        //health += amount;
         OnHealthChanged?.Invoke(health);
     }
 
@@ -424,21 +442,20 @@ public class PlayerController : MonoBehaviour
 
         isMoving = false;
         isStepMoving = false;
+        isFalling = false;
         movementVisualYOffset = 0f;
         currentMoveMultiplier = 1.0f;
-
+        transform.localScale = Vector3.one;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
 
         Renderer renderer = GetMainVisualRenderer();
         if (renderer != null)
             renderer.material.color = Color.white;
     }
-
     Renderer GetMainVisualRenderer()
     {
         return visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
     }
-
     Vector3 RoundGridPosition(Vector3 pos)
     {
         return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));

@@ -125,6 +125,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3f4243fead7ab144a43ae2a9a42aacd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PixelFire
-  speed: 4
+  speed: 3
   lifetime: 0.5
-  initialScale: 0.4
+  maxScale: 0.66
