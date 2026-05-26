@@ -12,6 +12,13 @@ public abstract class BaseEnemy : MonoBehaviour
     public LayerMask floorLayer;
     public LayerMask blockingLayers;
 
+    [Header("Audio Configurations")]
+    [SerializeField] protected AudioClip moveSFX;
+    [SerializeField] protected AudioClip attackSFX;
+    // --- NEW: DEATH SFX FIELD ---
+    [SerializeField] protected AudioClip dieSFX; 
+    [SerializeField] [Range(0f, 1f)] protected float sfxVolume = 0.8f;
+
     protected Vector3 targetPosition;
     protected bool isMoving = false;
     protected bool isFalling = false;
@@ -50,7 +57,6 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected void CheckForVoid()
     {
-        // If no floor is hit by a raycast downward, trigger falling
         if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
         {
             isFalling = true;
@@ -62,17 +68,15 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
         transform.Rotate(Vector3.up * Time.deltaTime * 200f);
-        if (transform.position.y < -10f) Destroy(gameObject);
+        if (transform.position.y < -10f) Die(); // Direct redirection to clean up data properly on drop fall out
     }
 
     protected bool TryMove(Vector3 direction)
     {
         Vector3 dest3D = RoundToGrid(transform.position + direction);
 
-        // Check if player is standing exactly where we want to go (Attack Range)
         if (GetGridKey(player.position) == GetGridKey(dest3D))
         {
-            StartMovement();
             PerformAttack(direction);
             return true;
         }
@@ -85,7 +89,6 @@ public abstract class BaseEnemy : MonoBehaviour
             OccupiedTiles.Remove(GetGridKey(transform.position));
             OccupiedTiles.Add(GetGridKey(dest3D));
             targetPosition = dest3D;
-            isMoving = true;
             transform.forward = direction;
             StartMovement();
             return true;
@@ -96,7 +99,12 @@ public abstract class BaseEnemy : MonoBehaviour
     protected void PerformAttack(Vector3 dir)
     {
         transform.forward = dir;
-        // Trigger Damage to Player and visual lunge here
+        
+        if (AudioManager.Instance != null && attackSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
+        }
+
         if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
         nextMoveTime = Time.time + timeBetweenSteps;
     }
@@ -104,6 +112,11 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void StartMovement()
     {
         isMoving = true;
+
+        if (AudioManager.Instance != null && moveSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(moveSFX, transform.position, sfxVolume);
+        }
     }
 
     protected virtual void FinishMovement()
@@ -113,27 +126,24 @@ public abstract class BaseEnemy : MonoBehaviour
         nextMoveTime = Time.time + timeBetweenSteps;
     }
 
-    // Utility
     protected Vector2 GetGridKey(Vector3 pos) => new Vector2(Mathf.Round(pos.x), Mathf.Round(pos.z));
     protected Vector3 RoundToGrid(Vector3 pos) => new Vector3(Mathf.Round(pos.x), transform.position.y, Mathf.Round(pos.z));
 
     public virtual void Die()
     {
-        // 1. Remove the current position
-        OccupiedTiles.Remove(GetGridKey(transform.position));
-
-        // 2. IMPORTANT: Remove the target position if we were moving toward it
-        if (isMoving)
+        // --- ADDED: PLAY DEATH SFX BEFORE DESTRUCTION ---
+        if (AudioManager.Instance != null && dieSFX != null)
         {
-            OccupiedTiles.Remove(GetGridKey(targetPosition));
+            AudioManager.Instance.PlaySFX(dieSFX, transform.position, sfxVolume);
         }
 
+        OccupiedTiles.Remove(GetGridKey(transform.position));
+        if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
         Destroy(gameObject);
     }
 
     protected virtual void OnDestroy()
     {
-        // Final safety check to ensure this enemy NEVER leaves a ghost tile
         OccupiedTiles.Remove(GetGridKey(transform.position));
         if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
     }

@@ -25,6 +25,11 @@ public class LevelHandler : MonoBehaviour
 
     IEnumerator Start()
     {
+        if (PlayerPrefs.HasKey("SelectedLevelIndex"))
+        {
+            levelIndex = PlayerPrefs.GetInt("SelectedLevelIndex");
+            PlayerPrefs.DeleteKey("SelectedLevelIndex"); // Clear it so it doesn't persist forever
+        }
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
         mainCam = Camera.main;
 
@@ -45,6 +50,12 @@ public class LevelHandler : MonoBehaviour
         // Phase 1: Generate the full functional world silently
         gridGen.GenerateDesignedLevel(levelIndex);
         SpawnPlayer(gridGen.playerSpawnPos);
+
+        // --- ADDED: TELL AUDIO MANAGER TO LOOP THE LEVEL TRACK ---
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMusicForLevel(levelIndex);
+        }
 
         if (UIManager.Instance != null)
         {
@@ -93,7 +104,7 @@ public class LevelHandler : MonoBehaviour
             camFollowScript.enabled = true;
         }
 
-        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.05f);
 
         // Phase 6: Release Falling Floor Mechanics
         if (shouldFloorFall)
@@ -115,25 +126,21 @@ public class LevelHandler : MonoBehaviour
         isLevelIntroActive = false;
         SetRealWorldState(false);
 
-        // --- FIX: CLEAR FLOATING PROJECTILES/FIRE BLOCKS INSTANTLY ---
-        // We find objects by name patterns or components to sweep runtime hazards
+        // --- SWEEP FLOATING PROJECTILES/FIRE BLOCKS INSTANTLY ---
         GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         foreach (GameObject go in allObjects)
         {
             if (go == null) continue;
-            
+
             string lowerName = go.name.ToLower();
-            // Add any naming variations your projectiles or fire objects use here
             if (lowerName.Contains("fire") || lowerName.Contains("projectile") || lowerName.Contains("slime"))
             {
-                // If it isn't part of the core level generation grid script hierarchy, sweep it!
                 if (!go.transform.IsChildOf(gridGen.transform))
                 {
                     Destroy(go);
                 }
             }
         }
-        // -------------------------------------------------------------
 
         if (camFollowScript != null) camFollowScript.enabled = false;
 
@@ -257,10 +264,19 @@ public class LevelHandler : MonoBehaviour
         {
             if (pieces[i] == null) continue;
 
-            Vector3 finalTargetPos = pieces[i].position + new Vector3(0, riseFromBelow ? fallDistance : -fallDistance, 0);
+            // 1. FIRST: Cache the real target scale from the cloned piece layout safely
             Vector3 targetScale = pieces[i].localScale;
 
+            // Fallback safety check in case a piece got corrupted
+            if (targetScale == Vector3.zero && playerPrefab != null)
+            {
+                targetScale = playerPrefab.transform.localScale;
+            }
+
+            // 2. SECOND: Hide the visual dummy item by zeroing its scale out before animating
             pieces[i].localScale = Vector3.zero;
+
+            Vector3 finalTargetPos = pieces[i].position + new Vector3(0, riseFromBelow ? fallDistance : -fallDistance, 0);
 
             float rippleDelay = Vector3.Distance(gridGen.playerSpawnPos, finalTargetPos) * staggerWaveValue;
             StartCoroutine(SlideUpBlock(pieces[i], finalTargetPos, targetScale, rippleDelay));
@@ -323,13 +339,31 @@ public class LevelHandler : MonoBehaviour
 
     void SpawnPlayer(Vector3 spawnPos)
     {
-        if (PlayerController.Instance != null)
+        // --- IMPROVED: FIXED FOR NON-PERSISTENT SCENE LOCAL SELECTION ---
+        if (activePlayer == null)
         {
-            activePlayer = PlayerController.Instance.gameObject;
-            PlayerController.Instance.ResetState(spawnPos);
+            activePlayer = GameObject.FindWithTag("Player");
+            if (activePlayer == null && PlayerController.Instance != null)
+            {
+                activePlayer = PlayerController.Instance.gameObject;
+            }
+        }
+
+        if (activePlayer != null)
+        {
+            // If the player object exists in the scene layout, snap it and reset its stats
+            if (activePlayer.TryGetComponent<PlayerController>(out var pc))
+            {
+                pc.ResetState(spawnPos);
+            }
+            else
+            {
+                activePlayer.transform.position = spawnPos;
+            }
         }
         else
         {
+            // If completely missing (first boot initialization), spawn from prefab asset
             activePlayer = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
             activePlayer.name = "Player";
         }
@@ -340,5 +374,8 @@ public class LevelHandler : MonoBehaviour
         }
     }
 
-    void Awake() { BaseEnemy.OccupiedTiles.Clear(); }
+    void Awake()
+    {
+        BaseEnemy.OccupiedTiles.Clear();
+    }
 }

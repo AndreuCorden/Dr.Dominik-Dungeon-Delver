@@ -23,7 +23,7 @@ public class BossEnemy : EnemyFollower
 
         // Explicitly map all 3 tiles we are starting on
         UpdateOccupiedTilesMap(transform.position, transform.forward, currentOccupiedKeys);
-        
+
         // Register all 3 blocks into the global system
         foreach (Vector2 key in currentOccupiedKeys)
         {
@@ -109,11 +109,12 @@ public class BossEnemy : EnemyFollower
     protected override void DetermineNextStep()
     {
         Vector3 diff = player.position - transform.position;
-        Vector3 primary = Mathf.Abs(diff.x) > Mathf.Abs(diff.z) ? 
+        Vector3 primary = Mathf.Abs(diff.x) > Mathf.Abs(diff.z) ?
             new Vector3(Mathf.Sign(diff.x), 0, 0) : new Vector3(0, 0, Mathf.Sign(diff.z));
-        
+
         // Call our localized multi-tile TryMove instead of base.TryMove
-        if (!TryMove(primary)) {
+        if (!TryMove(primary))
+        {
             Vector3 secondary = (primary.x != 0) ? new Vector3(0, 0, Mathf.Sign(diff.z)) : new Vector3(Mathf.Sign(diff.x), 0, 0);
             TryMove(secondary);
         }
@@ -141,6 +142,15 @@ public class BossEnemy : EnemyFollower
         if (health <= 0 || isFalling)
         {
             ClearEntireFootprint();
+            if (NavigationManager.Instance != null)
+            {
+                NavigationManager.Instance.OpenCreditsScene();
+            }
+            else
+            {
+                // Fallback for scene simulation in the editor
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Credits");
+            }
             Destroy(gameObject);
         }
     }

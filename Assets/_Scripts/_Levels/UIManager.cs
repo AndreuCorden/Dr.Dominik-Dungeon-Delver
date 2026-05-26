@@ -5,14 +5,15 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
+
     [SerializeField] private TextMeshProUGUI coinText;
     [SerializeField] private TextMeshProUGUI roomText;
     [SerializeField] private Image[] heartImages;
 
     void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
-        else { Destroy(gameObject); }
+        // Simple scene-local instance assignment
+        Instance = this;
     }
 
     void OnEnable()
@@ -28,7 +29,21 @@ public class UIManager : MonoBehaviour
         PlayerController.OnCoinsChanged -= UpdateCoins;
     }
 
-    // NEW: Directly accessible by LevelHandler to display the actual generation index!
+    public void OnClickExitToMainMenu()
+    {
+        if (NavigationManager.Instance != null)
+        {
+            NavigationManager.Instance.ReturnToMainMenu();
+        }
+        else
+        {
+            // Fallback just in case you are testing the gameplay scene by itself without booting from the menu
+            Debug.LogWarning("NavigationManager instance not found. Falling back to direct scene load.");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        }
+    }
+
+    // Directly accessible by LevelHandler to display the actual generation index!
     public void UpdateRoom(int currentRoomIndex)
     {
         if (roomText != null) 

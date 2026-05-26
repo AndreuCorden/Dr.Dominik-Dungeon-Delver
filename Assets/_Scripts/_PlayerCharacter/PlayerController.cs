@@ -82,7 +82,7 @@ public class PlayerController : MonoBehaviour
     private float moveDuration;
     private bool isMoving = false;
     private bool isStepMoving = false;
-    private bool isFalling = false; // Added to decouple death loops safely
+    private bool isFalling = false;
     private PlayableGraph attackGraph;
     private PlayableGraph movementGraph;
     private bool isMovementClipPlaying;
@@ -98,16 +98,10 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        // Simple scene-local instance assignment
+        Instance = this;
     }
+
     void Start()
     {
         if (visualRoot == null)
@@ -150,8 +144,6 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // CRITICAL FIX: If we are falling through the void, let the coroutine have
-        // exclusive control over transform translations. Do not check movement input or calculations.
         if (isFalling)
         {
             UpdateRotation();
@@ -401,6 +393,7 @@ public class PlayerController : MonoBehaviour
         float parabola = 4f * progress * (1f - progress);
         movementVisualYOffset = parabola * jumpHeight;
     }
+
     bool IsDestinationSafe(Vector3 direction)
     {
         Vector3 dest = RoundGridPosition(targetPosition + direction);
@@ -415,6 +408,7 @@ public class PlayerController : MonoBehaviour
             return false;
         return true;
     }
+
     void Move(Vector3 direction)
     {
         StopCurrentEmote();
@@ -431,6 +425,7 @@ public class PlayerController : MonoBehaviour
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
     }
+
     void CheckForVoid()
     {
         if (isFalling) return;
@@ -441,7 +436,7 @@ public class PlayerController : MonoBehaviour
 
     System.Collections.IEnumerator HandleFallingDeath()
     {
-        isFalling = true; // Block double calculations
+        isFalling = true;
         StopCurrentEmote();
         isMoving = true;
         isStepMoving = false;
@@ -449,7 +444,6 @@ public class PlayerController : MonoBehaviour
         float fallTimer = 0f;
         while (fallTimer < 1.0f)
         {
-            // FIX: Specifying Space.World ensures downward motion ignores the rapid rotation
             transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
             transform.localScale = Vector3.Lerp(Vector3.one, Vector3.zero, fallTimer);
             fallTimer += Time.deltaTime;
@@ -472,32 +466,31 @@ public class PlayerController : MonoBehaviour
         if (!isFall)
             StartDamageInvulnerability();
 
-        // 1. CRITICAL CHECK FIRST: Is the player completely dead?
+        // --- GAME OVER: PLAYER DIED ---
         if (health <= 0)
         {
-            LevelHandler handler = FindFirstObjectByType<LevelHandler>();
-
             isMoving = false;
             isStepMoving = false;
             isFalling = false;
 
-            // Reset local currencies and vital configurations safely 
+            // Reset local variables for safety just in case
             ChangeHealth(3);
             AddCoin(-coins);
 
-            if (handler != null)
+            // route completely out of gameplay to the main menu via our manager
+            if (NavigationManager.Instance != null)
             {
-                // Send player all the way back to Level Index 1 for Game Over
-                handler.StartExitTransition(0);
+                NavigationManager.Instance.ReturnToMainMenu();
             }
             else
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+                // Fallback for isolated scene testing
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
             }
-            return; // Halt logic completely so fall checks don't override this!
+            return;
         }
 
-        // 2. SECONDARY CHECK: Did they just drop in a hole but still have health left?
+        // --- NON-LETHAL FALL: RESTART CURRENT LEVEL ---
         if (isFall)
         {
             isMoving = false;
@@ -507,7 +500,7 @@ public class PlayerController : MonoBehaviour
             LevelHandler handler = FindFirstObjectByType<LevelHandler>();
             if (handler != null)
             {
-                // Re-inject current levelIndex to restart smoothly inside the same scene
+                // Reset to the beginning of the CURRENT level index, not level 0
                 handler.StartExitTransition(handler.levelIndex);
             }
             else
@@ -749,6 +742,7 @@ public class PlayerController : MonoBehaviour
             characterAnimator.Update(Mathf.Max(attackBlendDuration, 0f));
         }
     }
+
     void StopHitReactionPlayback()
     {
         if (!isHitClipPlaying)
@@ -767,6 +761,7 @@ public class PlayerController : MonoBehaviour
             characterAnimator.Update(Mathf.Max(hitBlendDuration, 0f));
         }
     }
+
     System.Collections.IEnumerator VisualFlash()
     {
         Renderer renderer = GetMainVisualRenderer();
@@ -784,11 +779,13 @@ public class PlayerController : MonoBehaviour
         }
         renderer.material.color = oldColor;
     }
+
     void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.25f, 0.08f, 1f);
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
+
     void ResetSpeedIfNoSlime()
     {
         if (!CheckForSlimeAt(transform.position))
@@ -796,6 +793,7 @@ public class PlayerController : MonoBehaviour
             currentMoveMultiplier = 1.0f;
         }
     }
+
     public void ChangeHealth(int amount)
     {
         health += amount;
@@ -840,14 +838,17 @@ public class PlayerController : MonoBehaviour
         if (renderer != null)
             renderer.material.color = Color.white;
     }
+
     Renderer GetMainVisualRenderer()
     {
         return visualRoot != null ? visualRoot.GetComponentInChildren<Renderer>() : GetComponentInChildren<Renderer>();
     }
+
     Vector3 RoundGridPosition(Vector3 pos)
     {
         return new Vector3(Mathf.Round(pos.x), pos.y, Mathf.Round(pos.z));
     }
+
     void OnDisable()
     {
         StopCurrentEmote();
@@ -855,6 +856,7 @@ public class PlayerController : MonoBehaviour
         StopAttackClipPlayback();
         StopHitReactionPlayback();
     }
+
     void OnDestroy()
     {
         if (Instance == this)
