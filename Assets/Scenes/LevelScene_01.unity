@@ -863,7 +863,7 @@ MonoBehaviour:
   trailEnemyPrefab: {fileID: 3083240301797987029, guid: af303a4537c7d864f9749cab2166112e, type: 3}
   patrollerEnemyPrefab: {fileID: 3295438851446805185, guid: 687f14731ce701840b98db584931e41e, type: 3}
   decorPrefabs:
-  - {fileID: 3377260559590378100, guid: 1497dec1e526a4f41b4e8c758e8fb91f, type: 3}
+  - {fileID: 1927344867403144098, guid: b8dd0cb58646aac42b9900e785521046, type: 3}
   - {fileID: 2393161040516350848, guid: 8674b3b1f7247a54dbdb47eb1d9700c6, type: 3}
   - {fileID: 8017994772880146370, guid: ef2c6af1960cbe543be65d862483069d, type: 3}
   - {fileID: 3787465495826125525, guid: 298e82da751d1234f9d926b74a25ccd0, type: 3}
