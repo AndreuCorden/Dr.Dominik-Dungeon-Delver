@@ -13,8 +13,11 @@ public class GargoyleController : MonoBehaviour
     public float burstDuration = 0.5f;
     public float coneAngle = 15f; 
 
-    [Header("Cycle")]
+    [Header("Cycle & Movement")]
     public float timeBetweenActions = 2.0f;
+    // --- NEW: ADJUSTABLE ROTATION DURATION ---
+    [Tooltip("How long it takes (in seconds) to complete the 90-degree turn.")]
+    public float turnDuration = 1.2f; 
 
     [Header("Audio Settings")]
     public AudioClip turnSound;       // Heavy stone grinding sound
@@ -47,9 +50,11 @@ public class GargoyleController : MonoBehaviour
 
             Quaternion endRotation = transform.rotation * Quaternion.Euler(0, 90, 0);
             float rotElapsed = 0;
-            while (rotElapsed < 0.4f)
+            
+            // Replaced the hardcoded 0.4f value with our new adjustable variable
+            while (rotElapsed < turnDuration)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, endRotation, rotElapsed / 0.4f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, endRotation, rotElapsed / turnDuration);
                 rotElapsed += Time.deltaTime;
                 yield return null;
             }

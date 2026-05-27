@@ -137,6 +137,10 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  moveSFX: {fileID: 8300000, guid: e83584b762254184dad59bd48c698bbb, type: 3}
+  attackSFX: {fileID: 8300000, guid: c89b0f036c236784f9ccaba6394e74c3, type: 3}
+  dieSFX: {fileID: 8300000, guid: c36b877bb68b53048a1470d555ba5b81, type: 3}
+  sfxVolume: 0.8
   slimePrefab: {fileID: 2917023547777624576, guid: 80eb539bd18b7c9429648b55767dc908, type: 3}
 --- !u!54 &1958715321976630921
 Rigidbody:
