@@ -104,8 +104,8 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
         }
-
-        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage();
+        // Trigger Damage to Player and visual lunge here
+        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage(false, transform.position);
         nextMoveTime = Time.time + timeBetweenSteps;
     }
 

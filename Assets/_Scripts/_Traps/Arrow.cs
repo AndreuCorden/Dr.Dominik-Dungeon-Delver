@@ -26,7 +26,7 @@ public class Arrow : MonoBehaviour
         {
             if(canDamage)
             {
-                PlayerController.Instance.TakeDamage(false);
+                PlayerController.Instance.TakeDamage(false, transform.position);
             }
             Destroy(gameObject);
         }
