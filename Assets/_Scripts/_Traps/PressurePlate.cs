@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(AudioSource))]
 public class PressurePlate : MonoBehaviour
 {
     public ArrowTrap wallTrap;
@@ -12,15 +11,10 @@ public class PressurePlate : MonoBehaviour
 
     [Header("Audio Settings")]
     public AudioClip pressSound;   // Heavy stone click / mechanical snap
-    public AudioClip releaseSound; // Optional: soft reset sound
+    public AudioClip releaseSound; // Soft reset sound
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
 
-    private AudioSource audioSource;
     private List<Collider> occupants = new List<Collider>();
-
-    private void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-    }
 
     private void Update()
     {
@@ -61,8 +55,11 @@ public class PressurePlate : MonoBehaviour
     {
         isPressed = true;
         
-        // --- AUDIO TRIGGER ---
-        if (pressSound != null) audioSource.PlayOneShot(pressSound);
+        // --- ROUTED TO GLOBAL SFX SYSTEM ---
+        if (AudioManager.Instance != null && pressSound != null) 
+        {
+            AudioManager.Instance.PlaySFX(pressSound, transform.position, volume);
+        }
 
         if (wallTrap != null) wallTrap.FireArrows();
 
@@ -76,8 +73,11 @@ public class PressurePlate : MonoBehaviour
     {
         isPressed = false;
 
-        // --- AUDIO TRIGGER ---
-        if (releaseSound != null) audioSource.PlayOneShot(releaseSound);
+        // --- ROUTED TO GLOBAL SFX SYSTEM ---
+        if (AudioManager.Instance != null && releaseSound != null) 
+        {
+            AudioManager.Instance.PlaySFX(releaseSound, transform.position, volume);
+        }
 
         if (movingPart != null)
             movingPart.localPosition = Vector3.zero;

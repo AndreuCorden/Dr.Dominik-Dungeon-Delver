@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
 public class GargoyleController : MonoBehaviour
 {
     public GameObject pixelFirePrefab; 
@@ -20,16 +19,12 @@ public class GargoyleController : MonoBehaviour
     [Header("Audio Settings")]
     public AudioClip turnSound;       // Heavy stone grinding sound
     public AudioClip fireBreathSound; // Continuous roaring fire sound
-
-    private AudioSource audioSource;
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.7f;
 
     void Start()
     {
-        audioSource = GetComponent<AudioSource>();
         damageScript = damageStick.GetComponent<TrapDamage>();
 
-        // --- THE INITIALIZATION FIX ---
-        // Explicitly force the trap to be safe on frame zero!
         if (damageScript != null) 
         {
             damageScript.enabled = false;
@@ -45,7 +40,10 @@ public class GargoyleController : MonoBehaviour
             // ==========================================
             // PHASE 1: ROTATE 90 DEGREES
             // ==========================================
-            if (turnSound != null) audioSource.PlayOneShot(turnSound);
+            if (AudioManager.Instance != null && turnSound != null) 
+            {
+                AudioManager.Instance.PlaySFX(turnSound, transform.position, volume);
+            }
 
             Quaternion endRotation = transform.rotation * Quaternion.Euler(0, 90, 0);
             float rotElapsed = 0;
@@ -62,12 +60,14 @@ public class GargoyleController : MonoBehaviour
             // ==========================================
             // PHASE 2: FIRE BREATHING SEQUENCE
             // ==========================================
-            if (fireBreathSound != null) audioSource.PlayOneShot(fireBreathSound);
+            if (AudioManager.Instance != null && fireBreathSound != null) 
+            {
+                AudioManager.Instance.PlaySFX(fireBreathSound, transform.position, volume);
+            }
 
             float elapsed = 0;
             float spawnRate = burstDuration / cubesPerBurst;
             
-            // Activate damage zone ONLY during the actual fire burst
             if (damageScript != null) damageScript.enabled = true; 
 
             while (elapsed < burstDuration)
@@ -77,7 +77,6 @@ public class GargoyleController : MonoBehaviour
                 yield return new WaitForSeconds(spawnRate);
             }
             
-            // Instantly make the trap safe again when fire stops
             if (damageScript != null) damageScript.enabled = false;
 
             yield return new WaitForSeconds(timeBetweenActions);

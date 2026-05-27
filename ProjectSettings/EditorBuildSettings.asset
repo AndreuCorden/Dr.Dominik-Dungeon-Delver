@@ -12,32 +12,8 @@ EditorBuildSettings:
     path: Assets/Scenes/LevelScene_01.unity
     guid: c9a3ad2e019e2cc43b66939c13a6ef6c
   - enabled: 1
-    path: Assets/Scenes/LevelScene_02.unity
-    guid: 6b2fc2f89ccebba4f8b196424c5aa9ea
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_03.unity
-    guid: c285bb987d963a6428964c357ec36cde
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_04.unity
-    guid: 7934e4c08daf96f458b39e295c3cfdc0
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_05.unity
-    guid: 750116bedeac3b444ad5d0755cd534ce
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_06.unity
-    guid: 8a69b6843f4f2024d88022c6177d53f2
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_07.unity
-    guid: 366179ba0f34bd340a1af6159cba80bc
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_08.unity
-    guid: 3b37ff812e71a424c91ea731c6d82cb2
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_09.unity
-    guid: ed8c34e32c3bcb442a91441d78e5255f
-  - enabled: 1
-    path: Assets/Scenes/LevelScene_10.unity
-    guid: 75e1e68651fa44646b28b30e23f715b3
+    path: Assets/Scenes/Credits.unity
+    guid: db06442564f2d7b40a3f8ccc5d94a8f7
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
