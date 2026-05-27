@@ -39,6 +39,12 @@ public class PlayerController : MonoBehaviour
     [Header("Layers")]
     public LayerMask floorLayer;
 
+    [Header("Audio Configurations")]
+    [SerializeField] private AudioClip moveSFX;
+    [SerializeField] private AudioClip attackSFX;
+    [SerializeField] private AudioClip dieSFX;
+    [SerializeField] [Range(0f, 1f)] private float sfxVolume = 0.8f;
+
     private Vector3 targetPosition;
     private Vector3 moveStartPosition;
     private float moveTimer;
@@ -49,7 +55,6 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        // Simple scene-local instance assignment
         Instance = this;
     }
 
@@ -211,6 +216,12 @@ public class PlayerController : MonoBehaviour
         isStepMoving = true;
         moveTimer = 0f;
 
+        // --- PLAY PLAYER MOVE SFX ---
+        if (AudioManager.Instance != null && moveSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(moveSFX, transform.position, sfxVolume);
+        }
+
         float effectiveSpeed = moveSpeed * currentMoveMultiplier;
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
         targetRotation = Quaternion.LookRotation(direction, Vector3.up);
@@ -265,22 +276,25 @@ public class PlayerController : MonoBehaviour
         // --- GAME OVER: PLAYER DIED ---
         if (health <= 0)
         {
+            // --- PLAY PLAYER DEATH SFX ---
+            if (AudioManager.Instance != null && dieSFX != null)
+            {
+                AudioManager.Instance.PlaySFX(dieSFX, transform.position, sfxVolume);
+            }
+
             isMoving = false;
             isStepMoving = false;
             isFalling = false;
 
-            // Reset local variables for safety just in case
             ChangeHealth(3);
             AddCoin(-coins);
 
-            // route completely out of gameplay to the main menu via our manager
             if (NavigationManager.Instance != null)
             {
                 NavigationManager.Instance.ReturnToMainMenu();
             }
             else
             {
-                // Fallback for isolated scene testing
                 UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
             }
             return;
@@ -296,7 +310,6 @@ public class PlayerController : MonoBehaviour
             LevelHandler handler = FindFirstObjectByType<LevelHandler>();
             if (handler != null)
             {
-                // Reset to the beginning of the CURRENT level index, not level 0
                 handler.StartExitTransition(handler.levelIndex);
             }
             else
@@ -323,11 +336,16 @@ public class PlayerController : MonoBehaviour
         animator.SetTrigger(attackTrigger);
     }
 
-
     void PerformSpaceAttack()
     {
         TriggerAttackAnimation();
         StartCoroutine(VisualFlash());
+
+        // --- PLAY PLAYER ATTACK SFX ---
+        if (AudioManager.Instance != null && attackSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
+        }
 
         if (shockwavePrefab != null)
         {

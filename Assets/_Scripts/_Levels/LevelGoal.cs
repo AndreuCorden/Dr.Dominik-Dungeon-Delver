@@ -10,6 +10,10 @@ public class LevelGoal : MonoBehaviour
     public string lockedLayer = "Default";
     public string unlockedLayer = "Floor";
 
+    [Header("Audio Configurations")]
+    [SerializeField] private AudioClip doorOpenSFX;
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
+
     void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -48,6 +52,12 @@ public class LevelGoal : MonoBehaviour
         gameObject.tag = "Floor";
         gameObject.layer = LayerMask.NameToLayer(unlockedLayer);
 
+        // --- PLAY DOOR OPEN SFX ---
+        if (AudioManager.Instance != null && doorOpenSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(doorOpenSFX, transform.position, volume);
+        }
+
         GameObject door = GameObject.Find("LevelExitDoor");
         if (door != null)
         {
@@ -63,13 +73,11 @@ public class LevelGoal : MonoBehaviour
 
         if (handler != null)
         {
-            // SEAMLESS SWITCH: Advance index variable tracking parameter smoothly
             int nextLevelIndex = handler.levelIndex + 1;
             handler.StartExitTransition(nextLevelIndex);
         }
         else
         {
-            // Direct build index recovery fallback routing loop parameters if handler missing
             int nextSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex + 1;
             if (nextSceneIndex < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings)
             {
