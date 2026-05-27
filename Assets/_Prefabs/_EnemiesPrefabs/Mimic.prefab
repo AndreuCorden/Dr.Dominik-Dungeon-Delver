@@ -213,7 +213,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2007045755485631619}
-  - {fileID: 6180328241808293841}
+  - {fileID: 7700277957172825814}
   - {fileID: 126540518577927990}
   - {fileID: 8906864483599947778}
   m_Father: {fileID: 0}
@@ -238,9 +238,14 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  moveSFX: {fileID: 0}
+  attackSFX: {fileID: 0}
+  dieSFX: {fileID: 0}
+  sfxVolume: 0.8
   wakeRange: 2
-  chestModel: {fileID: 6813734468872594795}
+  chestModel: {fileID: 4381146763896040696}
   mimicModel: {fileID: 1193917721433959993}
+  transformSFX: {fileID: 0}
 --- !u!65 &-4709928120647921261
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -303,11 +308,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.21
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -417,13 +422,13 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
---- !u!4 &6180328241808293841 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2742715998934562146, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+--- !u!1 &4381146763896040696 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5699322530165843531, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
   m_PrefabInstance: {fileID: 8346571307903240883}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &6813734468872594795 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3268422592720416728, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+--- !u!4 &7700277957172825814 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1803718455535649893, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
   m_PrefabInstance: {fileID: 8346571307903240883}
   m_PrefabAsset: {fileID: 0}

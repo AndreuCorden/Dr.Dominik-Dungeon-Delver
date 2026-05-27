@@ -125,7 +125,7 @@ public class GridGenerator : MonoBehaviour
                     case 'M': // --- RESTORED: PARENTING ---
                         if (currentFloor != null)
                         {
-                            Instantiate(mimicPrefab, pos + Vector3.up * 0.6f, Quaternion.identity, transform);
+                            Instantiate(mimicPrefab, pos, Quaternion.identity, transform);
                         }
                         break;
 
@@ -150,7 +150,7 @@ public class GridGenerator : MonoBehaviour
 
                     case '0':
                         {
-                            GameObject decor = Instantiate(decorPrefabs[0], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            GameObject decor = Instantiate(decorPrefabs[0], pos, Quaternion.identity, transform);
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
@@ -192,18 +192,18 @@ public class GridGenerator : MonoBehaviour
                         if (x == 0 && z != rows.Length - 1) // Side wall (Facing Right)
                         {
                             // Push it slightly further out than the wall (0.7f) and up to eye level
-                            lanternOffset = new Vector3(0.7f, 1f, 0);
+                            lanternOffset = new Vector3(0.7f, 0.75f, 0);
                             lanternRotation = Quaternion.Euler(0, -90, 0);
                         }
                         else // Back wall (Facing Forward/Down)
                         {
                             // Push it slightly forward from the back wall (-0.7f)
-                            lanternOffset = new Vector3(0, 1f, -0.7f);
+                            lanternOffset = new Vector3(0,0.75f, -0.7f);
                             lanternRotation = Quaternion.identity;
                         }
 
                         // 3. Spawn the lantern (Assuming lanternPrefabs[3] is your lantern)
-                        GameObject lantern = Instantiate(decorPrefabs[3], pos + Vector3.up + lanternOffset, lanternRotation, transform);
+                        GameObject lantern = Instantiate(decorPrefabs[3], pos + lanternOffset, lanternRotation, transform);
                         break;
 
                     case '4':

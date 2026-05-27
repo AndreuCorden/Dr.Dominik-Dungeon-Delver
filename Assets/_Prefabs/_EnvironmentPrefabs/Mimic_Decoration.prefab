@@ -55,8 +55,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -68,6 +68,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1803718455535649893}
     m_Modifications:
+    - target: {fileID: 126014487358814839, guid: 271792d395c00f34a92d1fa6882c360a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 677b9a0a767b83d49b0a06c69946691f, type: 2}
+    - target: {fileID: 126014487358814839, guid: 271792d395c00f34a92d1fa6882c360a, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 677b9a0a767b83d49b0a06c69946691f, type: 2}
     - target: {fileID: 1293832022691463448, guid: 271792d395c00f34a92d1fa6882c360a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

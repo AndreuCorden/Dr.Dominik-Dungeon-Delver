@@ -415,7 +415,7 @@ public class PlayerController : MonoBehaviour
 
     public void ChangeHealth(int amount)
     {
-        //health += amount;
+        health += amount;
         OnHealthChanged?.Invoke(health);
     }
 
