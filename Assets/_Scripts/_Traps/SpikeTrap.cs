@@ -1,10 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
 public class SpikeTrap : MonoBehaviour
 {
-    // Drag ALL 5 spike meshes into this array in the Inspector
     public GameObject[] spikes; 
     
     [Header("Stage Duration Settings")]
@@ -21,38 +19,33 @@ public class SpikeTrap : MonoBehaviour
     public float retractSpeed = 0.4f;       // Time it takes to slide back into the floor
 
     [Header("Audio Settings")]
-    public AudioClip warningSound;  // Plays when entering Stage 2
-    public AudioClip springSound;   // Plays when entering Stage 3
-    public AudioClip retractSound;  // Plays when resetting back to Stage 1
+    public AudioClip warningSound;  // Plays when entering Stage 2 (Gears tightening)
+    public AudioClip springSound;   // Plays when entering Stage 3 (Quick burst + Woosh)
+    public AudioClip retractSound;  // Plays when resetting back to Stage 1 (Gears retracting)
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
 
     private TrapDamage damageScript;
-    private AudioSource audioSource;
     
-    // Arrays to hold the explicit 3-stage coordinate maps
     private Vector3[] stage1Positions;
     private Vector3[] stage2Positions;
     private Vector3[] stage3Positions;
 
     void Start()
     {
-        audioSource = GetComponent<AudioSource>();
-
         if (spikes.Length > 0)
             damageScript = spikes[0].GetComponent<TrapDamage>();
 
-        // Initialize our coordinate maps
         stage1Positions = new Vector3[spikes.Length];
         stage2Positions = new Vector3[spikes.Length];
         stage3Positions = new Vector3[spikes.Length];
 
-        // Bake the exact mathematical stage positions based on their initial layout position
         for (int i = 0; i < spikes.Length; i++)
         {
             Vector3 basePos = spikes[i].transform.position;
             
-            stage1Positions[i] = basePos; // Hidden state (0)
-            stage2Positions[i] = basePos + new Vector3(0, stage2WarningHeight, 0); // Only tops showing
-            stage3Positions[i] = basePos + new Vector3(0, stage3MaxHeight, 0); // Full extension
+            stage1Positions[i] = basePos;
+            stage2Positions[i] = basePos + new Vector3(0, stage2WarningHeight, 0);
+            stage3Positions[i] = basePos + new Vector3(0, stage3MaxHeight, 0);
         }
 
         StartCoroutine(TrapCycle());
@@ -67,8 +60,10 @@ public class SpikeTrap : MonoBehaviour
             // ==========================================
             if (damageScript != null) damageScript.enabled = false;
             
-            // Slide back down to Stage 1 positions
-            if (retractSound != null) audioSource.PlayOneShot(retractSound);
+            if (AudioManager.Instance != null && retractSound != null) 
+            {
+                AudioManager.Instance.PlaySFX(retractSound, transform.position, volume);
+            }
             yield return StartCoroutine(MoveSpikesToStage(stage1Positions, retractSpeed));
             
             yield return new WaitForSeconds(stage1IdleTime);
@@ -76,9 +71,10 @@ public class SpikeTrap : MonoBehaviour
             // ==========================================
             // STAGE 2: TELEGRAPH / ONLY TOPS IN VIEW
             // ==========================================
-            if (warningSound != null) audioSource.PlayOneShot(warningSound);
-            
-            // Pop up slightly to Stage 2 positions
+            if (AudioManager.Instance != null && warningSound != null) 
+            {
+                AudioManager.Instance.PlaySFX(warningSound, transform.position, volume);
+            }
             yield return StartCoroutine(MoveSpikesToStage(stage2Positions, 0.15f)); 
             
             yield return new WaitForSeconds(stage2WarningTime);
@@ -86,19 +82,18 @@ public class SpikeTrap : MonoBehaviour
             // ==========================================
             // STAGE 3: FULL EXTENSION & LETHAL
             // ==========================================
-            if (springSound != null) audioSource.PlayOneShot(springSound);
-            
-            // Rapid snap up to Stage 3 positions
+            if (AudioManager.Instance != null && springSound != null) 
+            {
+                AudioManager.Instance.PlaySFX(springSound, transform.position, volume);
+            }
             yield return StartCoroutine(MoveSpikesToStage(stage3Positions, springSpeed));
             
-            // Deal damage ONLY while completely extended at Stage 3
             if (damageScript != null) damageScript.enabled = true;
             
             yield return new WaitForSeconds(stage3ActiveTime);
         }
     }
 
-    // Coroutine to handle the movement interpolation to a specific stage array map
     IEnumerator MoveSpikesToStage(Vector3[] targetStagePositions, float duration)
     {
         Vector3[] startPositions = new Vector3[spikes.Length];
@@ -111,7 +106,7 @@ public class SpikeTrap : MonoBehaviour
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            t = Mathf.SmoothStep(0, 1, t); // Keeps the transitions smooth, not jarringly linear
+            t = Mathf.SmoothStep(0, 1, t);
 
             for (int i = 0; i < spikes.Length; i++)
             {
@@ -121,7 +116,6 @@ public class SpikeTrap : MonoBehaviour
             yield return null;
         }
 
-        // Hard lock alignment checkpoint to prevent rounding errors
         for (int i = 0; i < spikes.Length; i++)
         {
             spikes[i].transform.position = targetStagePositions[i];

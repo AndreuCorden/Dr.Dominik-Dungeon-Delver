@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
 public class ArrowTrap : MonoBehaviour
 {
     public GameObject arrowPrefab;
@@ -10,18 +9,15 @@ public class ArrowTrap : MonoBehaviour
 
     [Header("Audio Settings")]
     public AudioClip fireSound; // Sharp arrow release "thwip" or crossbow snap
-
-    private AudioSource audioSource;
-
-    private void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-    }
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
 
     public void FireArrows()
     {
-        // --- AUDIO TRIGGER ---
-        if (fireSound != null) audioSource.PlayOneShot(fireSound);
+        // --- ROUTED TO GLOBAL SFX SYSTEM ---
+        if (AudioManager.Instance != null && fireSound != null) 
+        {
+            AudioManager.Instance.PlaySFX(fireSound, transform.position, volume);
+        }
 
         bool enabled = true;
         foreach (Transform sp in spawnPoints)
