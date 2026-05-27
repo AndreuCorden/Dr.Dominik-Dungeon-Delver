@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public abstract class BaseEnemy : MonoBehaviour
@@ -19,11 +20,31 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected AudioClip dieSFX; 
     [SerializeField] [Range(0f, 1f)] protected float sfxVolume = 0.8f;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animatorOverride;
+    [SerializeField] private float deathDestroyDelay = 0.8f;
+
     protected Vector3 targetPosition;
     protected bool isMoving = false;
     protected bool isFalling = false;
     protected float nextMoveTime;
     protected Transform player;
+    private bool isDying = false;
+
+    private readonly List<AnimatorBinding> animatorBindings = new List<AnimatorBinding>();
+    private static readonly int IsMovingId = Animator.StringToHash("IsMoving");
+    private static readonly int AttackId = Animator.StringToHash("Attack");
+    private static readonly int DieId = Animator.StringToHash("Die");
+    private static readonly int FallId = Animator.StringToHash("Fall");
+
+    private struct AnimatorBinding
+    {
+        public Animator Animator;
+        public bool HasMove;
+        public bool HasAttack;
+        public bool HasDie;
+        public bool HasFall;
+    }
 
     protected virtual void Start()
     {
@@ -33,10 +54,14 @@ public abstract class BaseEnemy : MonoBehaviour
         targetPosition = RoundToGrid(transform.position);
         transform.position = targetPosition;
         OccupiedTiles.Add(GetGridKey(transform.position));
+
+        CacheAnimators();
+        SetMoving(false);
     }
 
     protected virtual void Update()
     {
+        if (isDying) return;
         if (isFalling) { HandleFalling(); return; }
 
         if (isMoving)
@@ -60,6 +85,7 @@ public abstract class BaseEnemy : MonoBehaviour
         if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
         {
             isFalling = true;
+            TriggerFall();
             OccupiedTiles.Remove(GetGridKey(transform.position));
         }
     }
@@ -99,6 +125,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected void PerformAttack(Vector3 dir)
     {
         transform.forward = dir;
+        TriggerAttack();
         
         if (AudioManager.Instance != null && attackSFX != null)
         {
@@ -112,6 +139,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void StartMovement()
     {
         isMoving = true;
+        SetMoving(true);
 
         if (AudioManager.Instance != null && moveSFX != null)
         {
@@ -123,6 +151,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.position = targetPosition;
         isMoving = false;
+        SetMoving(false);
         nextMoveTime = Time.time + timeBetweenSteps;
     }
 
@@ -131,6 +160,13 @@ public abstract class BaseEnemy : MonoBehaviour
 
     public virtual void Die()
     {
+        if (isDying) return;
+        isDying = true;
+        bool wasMoving = isMoving;
+        isMoving = false;
+        SetMoving(false);
+        TriggerDie();
+
         // --- ADDED: PLAY DEATH SFX BEFORE DESTRUCTION ---
         if (AudioManager.Instance != null && dieSFX != null)
         {
@@ -138,13 +174,113 @@ public abstract class BaseEnemy : MonoBehaviour
         }
 
         OccupiedTiles.Remove(GetGridKey(transform.position));
-        if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
-        Destroy(gameObject);
+        if (wasMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+        DisableColliders();
+
+        if (HasAnyDieParameter() && deathDestroyDelay > 0f)
+        {
+            StartCoroutine(DestroyAfterDelay());
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     protected virtual void OnDestroy()
     {
         OccupiedTiles.Remove(GetGridKey(transform.position));
         if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+    }
+
+    private void CacheAnimators()
+    {
+        animatorBindings.Clear();
+
+        Animator[] animators = animatorOverride != null
+            ? new[] { animatorOverride }
+            : GetComponentsInChildren<Animator>(true);
+
+        foreach (var anim in animators)
+        {
+            if (anim == null) continue;
+
+            var binding = new AnimatorBinding { Animator = anim };
+            foreach (var param in anim.parameters)
+            {
+                switch (param.name)
+                {
+                    case "IsMoving":
+                        binding.HasMove = true;
+                        break;
+                    case "Attack":
+                        binding.HasAttack = true;
+                        break;
+                    case "Die":
+                        binding.HasDie = true;
+                        break;
+                    case "Fall":
+                        binding.HasFall = true;
+                        break;
+                }
+            }
+
+            animatorBindings.Add(binding);
+        }
+    }
+
+    private void SetMoving(bool moving)
+    {
+        foreach (var binding in animatorBindings)
+        {
+            if (binding.HasMove) binding.Animator.SetBool(IsMovingId, moving);
+        }
+    }
+
+    private void TriggerAttack()
+    {
+        foreach (var binding in animatorBindings)
+        {
+            if (binding.HasAttack) binding.Animator.SetTrigger(AttackId);
+        }
+    }
+
+    private void TriggerDie()
+    {
+        foreach (var binding in animatorBindings)
+        {
+            if (binding.HasDie) binding.Animator.SetTrigger(DieId);
+        }
+    }
+
+    private void TriggerFall()
+    {
+        foreach (var binding in animatorBindings)
+        {
+            if (binding.HasFall) binding.Animator.SetTrigger(FallId);
+        }
+    }
+
+    private bool HasAnyDieParameter()
+    {
+        foreach (var binding in animatorBindings)
+        {
+            if (binding.HasDie) return true;
+        }
+        return false;
+    }
+
+    private void DisableColliders()
+    {
+        foreach (var col in GetComponentsInChildren<Collider>())
+        {
+            col.enabled = false;
+        }
+    }
+
+    private IEnumerator DestroyAfterDelay()
+    {
+        yield return new WaitForSeconds(deathDestroyDelay);
+        Destroy(gameObject);
     }
 }

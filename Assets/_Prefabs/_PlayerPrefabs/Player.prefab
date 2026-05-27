@@ -114,7 +114,7 @@ MonoBehaviour:
   animator: {fileID: 410176906679511246}
   hitTrigger: Hit
   attackTrigger: Attack
-  shockwavePrefab: {fileID: 0}
+  shockwavePrefab: {fileID: 5037140945467599887, guid: eac31f96d59752f4aab7fbf622c93322, type: 3}
   floorLayer:
     serializedVersion: 2
     m_Bits: 64

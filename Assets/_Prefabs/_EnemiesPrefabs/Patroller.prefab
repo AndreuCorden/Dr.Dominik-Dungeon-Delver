@@ -164,6 +164,10 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  moveSFX: {fileID: 0}
+  attackSFX: {fileID: 0}
+  dieSFX: {fileID: 0}
+  sfxVolume: 0.8
 --- !u!1001 &1103177799970637495
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -230,7 +234,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8621575989863660144, guid: f3f26804650d6ff4bbb724bb568ae6de, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
