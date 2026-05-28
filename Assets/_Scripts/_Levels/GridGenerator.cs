@@ -191,49 +191,184 @@ public class GridGenerator : MonoBehaviour
 
                         if (x == 0 && z != rows.Length - 1) // Side wall (Facing Right)
                         {
-                            // Push it slightly further out than the wall (0.7f) and up to eye level
                             lanternOffset = new Vector3(0.7f, 0.75f, 0);
                             lanternRotation = Quaternion.Euler(0, -90, 0);
                         }
                         else // Back wall (Facing Forward/Down)
                         {
-                            // Push it slightly forward from the back wall (-0.7f)
-                            lanternOffset = new Vector3(0,0.75f, -0.7f);
+                            lanternOffset = new Vector3(0, 0.75f, -0.7f);
                             lanternRotation = Quaternion.identity;
                         }
 
-                        // 3. Spawn the lantern (Assuming lanternPrefabs[3] is your lantern)
-                        GameObject lantern = Instantiate(decorPrefabs[3], pos + lanternOffset, lanternRotation, transform);
+                        // 3. Spawn the small torch
+                        GameObject smallTorch = Instantiate(decorPrefabs[3], pos + lanternOffset, lanternRotation, transform);
+
+                        // Nuke the broken URP data loops instantly
+                        var data3 = smallTorch.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
+                        var lights3 = smallTorch.GetComponentsInChildren<Light>(true);
+                        foreach (var d in data3) { DestroyImmediate(d); }
+                        foreach (var l in lights3) { DestroyImmediate(l); }
+
+                        // Create a pristine light object
+                        GameObject smallLightObj = new GameObject("Healthy_SmallTorch_Light");
+                        Transform smallCrystalTarget = null;
+
+                        // Search for the crystal component dynamically
+                        foreach (Transform child in smallTorch.GetComponentsInChildren<Transform>(true))
+                        {
+                            if (child.name.Contains("Crystal"))
+                            {
+                                smallCrystalTarget = child;
+                                break;
+                            }
+                        }
+
+                        // Anchor light directly to the crystal center
+                        if (smallCrystalTarget != null)
+                        {
+                            smallLightObj.transform.SetParent(smallCrystalTarget);
+                            smallLightObj.transform.localPosition = Vector3.zero;
+                        }
+                        else
+                        {
+                            smallLightObj.transform.SetParent(smallTorch.transform);
+                            smallLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+                        }
+
+                        // Configure small torch light settings
+                        Light smallLight = smallLightObj.AddComponent<Light>();
+                        smallLight.type = LightType.Point;
+                        smallLight.color = new Color(1f, 0.58f, 0.16f); // Warm cozy orange
+                        smallLight.range = 5f;                          // Medium reach for small torch
+                        smallLight.intensity = 1.2f;
+                        smallLight.shadows = LightShadows.Soft;
+
                         break;
 
                     case '4':
                         {
-                            GameObject decor = Instantiate(decorPrefabs[4], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
-                            if (decor.GetComponent<FallingTile>() == null)
-                            {
-                                decor.AddComponent<FallingTile>();
-                            }
+                            // 1. Spawn the big torch
+                            GameObject bigTorch = Instantiate(decorPrefabs[4], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+
+                            // Mark the grid tile layer for gameplay logic
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
+
+                            // Nuke the broken URP data loops instantly
+                            var data4 = bigTorch.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
+                            var lights4 = bigTorch.GetComponentsInChildren<Light>(true);
+                            foreach (var d in data4) { DestroyImmediate(d); }
+                            foreach (var l in lights4) { DestroyImmediate(l); }
+
+                            // Create a pristine light object
+                            GameObject bigLightObj = new GameObject("Healthy_BigTorch_Light");
+                            Transform bigCrystalTarget = null;
+
+                            // Search for the crystal component dynamically
+                            foreach (Transform child in bigTorch.GetComponentsInChildren<Transform>(true))
+                            {
+                                if (child.name.Contains("Crystal"))
+                                {
+                                    bigCrystalTarget = child;
+                                    break;
+                                }
+                            }
+
+                            // Anchor light directly to the big crystal center
+                            if (bigCrystalTarget != null)
+                            {
+                                bigLightObj.transform.SetParent(bigCrystalTarget);
+                                bigLightObj.transform.localPosition = Vector3.zero;
+                            }
+                            else
+                            {
+                                bigLightObj.transform.SetParent(bigTorch.transform);
+                                bigLightObj.transform.localPosition = new Vector3(0f, 1.2f, 0f); // Higher fallback offset for a larger object
+                            }
+
+                            // Configure big torch light settings (Brighter, wider radius)
+                            Light bigLight = bigLightObj.AddComponent<Light>();
+                            bigLight.type = LightType.Point;
+                            bigLight.color = new Color(1f, 0.65f, 0.25f); // Bright, intense amber flare
+                            bigLight.range = 8f;                         // Reaches further into the dungeon halls
+                            bigLight.intensity = 2.0f;                    // Noticeably brighter than the wall torch
+                            bigLight.shadows = LightShadows.Soft;
+
+                            if (bigTorch.GetComponent<FallingTile>() == null)
+                            {
+                                bigTorch.AddComponent<FallingTile>();
+                            }
+
                             break;
                         }
                     case '5':
                         {
                             GameObject decor = Instantiate(decorPrefabs[5], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+
+                            // 1. Core gameplay logic settings
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
                             }
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
+
+                            // 2. Nuke any broken legacy URP scripts if they exist on the root object
+                            var data5 = decor.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
+                            var lights5 = decor.GetComponentsInChildren<Light>(true);
+                            foreach (var d in data5) { DestroyImmediate(d); }
+                            foreach (var l in lights5) { DestroyImmediate(l); }
+
+                            // 3. Create a clean child GameObject for the light source
+                            GameObject pinkLightObj = new GameObject("Crystal_Pink_Light");
+                            pinkLightObj.transform.SetParent(decor.transform);
+
+                            // Place it slightly upward so the light radiates from the upper body of the crystal
+                            pinkLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+
+                            // 4. Attach and configure the pink crystal light
+                            Light pinkLight = pinkLightObj.AddComponent<Light>();
+                            pinkLight.type = LightType.Point;
+
+                            // Hex #E995CC conversion (RGB normalized to 0-1)
+                            pinkLight.color = new Color(0.914f, 0.584f, 0.8f);
+                            pinkLight.range = 6f;       // Radiates a decent distance
+                            pinkLight.intensity = 1.8f;  // Bright magical emission
+                            pinkLight.shadows = LightShadows.Soft;
+
                             break;
                         }
+
                     case '6':
                         {
                             GameObject decor = Instantiate(decorPrefabs[6], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+
+                            // 1. Core gameplay logic settings
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
                             }
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
+
+                            // 2. Nuke any broken legacy URP scripts if they exist on the root object
+                            var data6 = decor.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
+                            var lights6 = decor.GetComponentsInChildren<Light>(true);
+                            foreach (var d in data6) { DestroyImmediate(d); }
+                            foreach (var l in lights6) { DestroyImmediate(l); }
+
+                            // 3. Create a clean child GameObject for the light source
+                            GameObject yellowLightObj = new GameObject("Crystal_Yellow_Light");
+                            yellowLightObj.transform.SetParent(decor.transform);
+                            yellowLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+
+                            // 4. Attach and configure the yellow crystal light
+                            Light yellowLight = yellowLightObj.AddComponent<Light>();
+                            yellowLight.type = LightType.Point;
+
+                            // Hex #FFFF23 conversion (RGB normalized to 0-1)
+                            yellowLight.color = new Color(1f, 1f, 0.137f);
+                            yellowLight.range = 6f;
+                            yellowLight.intensity = 1.8f;
+                            yellowLight.shadows = LightShadows.Soft;
+
                             break;
                         }
                 }
