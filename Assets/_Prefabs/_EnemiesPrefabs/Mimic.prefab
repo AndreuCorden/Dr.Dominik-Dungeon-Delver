@@ -417,6 +417,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mimic_Closed
       objectReference: {fileID: 0}
+    - target: {fileID: 5699322530165843531, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

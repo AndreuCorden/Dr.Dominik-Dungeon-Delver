@@ -164,6 +164,10 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  moveSFX: {fileID: 8300000, guid: 6dae22dbbea260d4d923bb914c0c1ab9, type: 3}
+  attackSFX: {fileID: 8300000, guid: 47402c22fbc9d8b448c28c3435e8c473, type: 3}
+  dieSFX: {fileID: 8300000, guid: fc70803b05ec09948a7e7411fd970599, type: 3}
+  sfxVolume: 0.8
 --- !u!1001 &1103177799970637495
 PrefabInstance:
   m_ObjectHideFlags: 0

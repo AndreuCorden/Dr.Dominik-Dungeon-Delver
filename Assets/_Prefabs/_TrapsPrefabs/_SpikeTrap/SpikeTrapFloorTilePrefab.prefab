@@ -160,7 +160,7 @@ MonoBehaviour:
   warningSound: {fileID: 8300000, guid: 98de3699670636a45a4617ae391c7802, type: 3}
   springSound: {fileID: 8300000, guid: 83246f089cf29f946adffc7e92917be1, type: 3}
   retractSound: {fileID: 8300000, guid: 3830d5f52a1da18449a1ac6f8ac83eca, type: 3}
-  volume: 0.8
+  volume: 0.3
 --- !u!82 &2995714323149613329
 AudioSource:
   m_ObjectHideFlags: 0
