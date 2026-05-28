@@ -238,14 +238,14 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
-  moveSFX: {fileID: 0}
-  attackSFX: {fileID: 0}
-  dieSFX: {fileID: 0}
+  moveSFX: {fileID: 8300000, guid: 5dd11d240836b6b4fb2bf529df4903cf, type: 3}
+  attackSFX: {fileID: 8300000, guid: c393f28f36597fc4fa400c96b94c73d8, type: 3}
+  dieSFX: {fileID: 8300000, guid: 32f19405e1a879846b66698c5d543c7d, type: 3}
   sfxVolume: 0.8
   wakeRange: 2
   chestModel: {fileID: 4381146763896040696}
   mimicModel: {fileID: 1193917721433959993}
-  transformSFX: {fileID: 0}
+  transformSFX: {fileID: 8300000, guid: e93e7d37fafab3441af0896f61a26269, type: 3}
 --- !u!65 &-4709928120647921261
 BoxCollider:
   m_ObjectHideFlags: 0
