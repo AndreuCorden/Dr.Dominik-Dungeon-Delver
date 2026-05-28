@@ -304,35 +304,46 @@ public class GridGenerator : MonoBehaviour
                         {
                             GameObject decor = Instantiate(decorPrefabs[5], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
 
-                            // 1. Core gameplay logic settings
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
                             }
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
 
-                            // 2. Nuke any broken legacy URP scripts if they exist on the root object
+                            // Nuke any broken legacy URP scripts
                             var data5 = decor.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
                             var lights5 = decor.GetComponentsInChildren<Light>(true);
                             foreach (var d in data5) { DestroyImmediate(d); }
                             foreach (var l in lights5) { DestroyImmediate(l); }
 
-                            // 3. Create a clean child GameObject for the light source
+                            // ==========================================
+                            // FIX SHADOWS & ADD EMISSION GLOW
+                            // ==========================================
+                            // 1. Tell the crystal mesh NOT to cast shadows from its own internal light
+                            MeshRenderer renderer5 = decor.GetComponentInChildren<MeshRenderer>();
+                            if (renderer5 != null)
+                            {
+                                renderer5.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                                // 2. Make the crystal material physically glow in the dark (URP Emission)
+                                // This turns on the glowing look so it doesn't look black/unlit from the inside out
+                                Color pinkGlowColor = new Color(0.914f, 0.584f, 0.8f);
+                                renderer5.material.EnableKeyword("_EMISSION");
+                                renderer5.material.SetColor("_EmissionColor", pinkGlowColor * 2.0f); // Multiply by 2 for extra intensity!
+                            }
+
+                            // 3. Create the clean child GameObject for the light source
                             GameObject pinkLightObj = new GameObject("Crystal_Pink_Light");
                             pinkLightObj.transform.SetParent(decor.transform);
-
-                            // Place it slightly upward so the light radiates from the upper body of the crystal
                             pinkLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
 
-                            // 4. Attach and configure the pink crystal light
+                            // 4. Configure light
                             Light pinkLight = pinkLightObj.AddComponent<Light>();
                             pinkLight.type = LightType.Point;
-
-                            // Hex #E995CC conversion (RGB normalized to 0-1)
                             pinkLight.color = new Color(0.914f, 0.584f, 0.8f);
-                            pinkLight.range = 6f;       // Radiates a decent distance
-                            pinkLight.intensity = 1.8f;  // Bright magical emission
-                            pinkLight.shadows = LightShadows.Soft;
+                            pinkLight.range = 6f;
+                            pinkLight.intensity = 1.8f;
+                            pinkLight.shadows = LightShadows.Soft; // It will still cast shadows on surrounding walls/floors!
 
                             break;
                         }
@@ -341,29 +352,41 @@ public class GridGenerator : MonoBehaviour
                         {
                             GameObject decor = Instantiate(decorPrefabs[6], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
 
-                            // 1. Core gameplay logic settings
                             if (decor.GetComponent<FallingTile>() == null)
                             {
                                 decor.AddComponent<FallingTile>();
                             }
                             currentFloor.layer = LayerMask.NameToLayer("Trap");
 
-                            // 2. Nuke any broken legacy URP scripts if they exist on the root object
+                            // Nuke any broken legacy URP scripts
                             var data6 = decor.GetComponentsInChildren<UnityEngine.Rendering.Universal.UniversalAdditionalLightData>(true);
                             var lights6 = decor.GetComponentsInChildren<Light>(true);
                             foreach (var d in data6) { DestroyImmediate(d); }
                             foreach (var l in lights6) { DestroyImmediate(l); }
 
-                            // 3. Create a clean child GameObject for the light source
+                            // ==========================================
+                            // FIX SHADOWS & ADD EMISSION GLOW
+                            // ==========================================
+                            // 1. Tell the crystal mesh NOT to cast shadows from its own internal light
+                            MeshRenderer renderer6 = decor.GetComponentInChildren<MeshRenderer>();
+                            if (renderer6 != null)
+                            {
+                                renderer6.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                                // 2. Make the crystal material physically glow in the dark (URP Emission)
+                                Color yellowGlowColor = new Color(1f, 1f, 0.137f);
+                                renderer6.material.EnableKeyword("_EMISSION");
+                                renderer6.material.SetColor("_EmissionColor", yellowGlowColor * 2.0f);
+                            }
+
+                            // 3. Create the clean child GameObject for the light source
                             GameObject yellowLightObj = new GameObject("Crystal_Yellow_Light");
                             yellowLightObj.transform.SetParent(decor.transform);
                             yellowLightObj.transform.localPosition = new Vector3(0f, 0.5f, 0f);
 
-                            // 4. Attach and configure the yellow crystal light
+                            // 4. Configure light
                             Light yellowLight = yellowLightObj.AddComponent<Light>();
                             yellowLight.type = LightType.Point;
-
-                            // Hex #FFFF23 conversion (RGB normalized to 0-1)
                             yellowLight.color = new Color(1f, 1f, 0.137f);
                             yellowLight.range = 6f;
                             yellowLight.intensity = 1.8f;
