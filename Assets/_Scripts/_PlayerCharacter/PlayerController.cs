@@ -72,8 +72,12 @@ public class PlayerController : MonoBehaviour
         if (visualRoot != null)
             visualRootInitialLocalPosition = visualRoot.localPosition;
 
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>(true);
+        if (animator == null || animator.gameObject == gameObject)
+        {
+            Animator resolvedAnimator = ResolveAnimator();
+            if (resolvedAnimator != null)
+                animator = resolvedAnimator;
+        }
 
         targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
@@ -103,6 +107,24 @@ public class PlayerController : MonoBehaviour
             return candidate;
         }
         return null;
+    }
+
+    Animator ResolveAnimator()
+    {
+        if (visualRoot != null)
+        {
+            Animator visualAnimator = visualRoot.GetComponentInChildren<Animator>(true);
+            if (visualAnimator != null)
+                return visualAnimator;
+        }
+
+        Animator[] animators = GetComponentsInChildren<Animator>(true);
+        foreach (var candidate in animators)
+        {
+            if (candidate != null && candidate.gameObject != gameObject)
+                return candidate;
+        }
+        return animators.Length > 0 ? animators[0] : null;
     }
 
     void Update()
