@@ -119,7 +119,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.61814, y: -0, z: 0.67454}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2014909856224005102}
@@ -161,6 +161,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PressurePlate
   wallTrap: {fileID: 2294099563962166056, guid: f66782876c4c1a8499673feec72b851c, type: 3}
   movingPart: {fileID: 5229092715483517340}
+  pressSound: {fileID: 8300000, guid: 5df0a1597ab18a84592c194451c6a140, type: 3}
+  releaseSound: {fileID: 8300000, guid: 21570828e7425f5428c83a7e0d8cb012, type: 3}
+  volume: 0.8
 --- !u!114 &6205407117631084754
 MonoBehaviour:
   m_ObjectHideFlags: 0

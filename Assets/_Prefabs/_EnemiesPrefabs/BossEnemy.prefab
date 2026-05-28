@@ -135,4 +135,8 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
+  moveSFX: {fileID: 8300000, guid: bbf00202b31450940b8b9a4a6b0c7cfa, type: 3}
+  attackSFX: {fileID: 8300000, guid: b9aa03a76f1933e418ec0cb98775cffd, type: 3}
+  dieSFX: {fileID: 8300000, guid: 2fa08f157ab81e14e977bd7d8af2938e, type: 3}
+  sfxVolume: 0.8
   health: 3

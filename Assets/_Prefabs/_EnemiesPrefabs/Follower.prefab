@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 1, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1032905479236999808}
@@ -63,8 +63,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
+  m_Radius: 0.35117844
+  m_Height: 2.6076524
   m_Direction: 1
   m_Center: {x: 0, y: 0.34, z: 0}
 --- !u!54 &9094835156215912286
@@ -92,7 +92,7 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!114 &7513011581984336247
 MonoBehaviour:
@@ -114,9 +114,9 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 256
-  moveSFX: {fileID: 0}
-  attackSFX: {fileID: 0}
-  dieSFX: {fileID: 0}
+  moveSFX: {fileID: 8300000, guid: 92c0a69582a1c0f4eaccac6e28d45d8d, type: 3}
+  attackSFX: {fileID: 8300000, guid: 4044f7a794217c94da83ac0740b94e0f, type: 3}
+  dieSFX: {fileID: 8300000, guid: a40f71d8e676ed24cb133da125f5218e, type: 3}
   sfxVolume: 0.8
   animatorOverride: {fileID: 6392211900142452986}
   deathDestroyDelay: 0.8
@@ -134,7 +134,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 447677704497462610, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.6275552
+      value: 0.62755525
       objectReference: {fileID: 0}
     - target: {fileID: 447677704497462610, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
       propertyPath: m_LocalRotation.y
@@ -166,7 +166,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2199628841774520173, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2199628841774520173, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
       propertyPath: m_LocalPosition.z

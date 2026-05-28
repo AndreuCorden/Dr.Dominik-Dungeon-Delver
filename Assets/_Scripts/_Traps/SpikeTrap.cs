@@ -62,7 +62,7 @@ public class SpikeTrap : MonoBehaviour
             
             if (AudioManager.Instance != null && retractSound != null) 
             {
-                AudioManager.Instance.PlaySFX(retractSound, transform.position, volume);
+                // AudioManager.Instance.PlaySFX(retractSound, transform.position, volume);
             }
             yield return StartCoroutine(MoveSpikesToStage(stage1Positions, retractSpeed));
             

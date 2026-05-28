@@ -156,6 +156,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Arrow
   lifetime: 3
   canDamage: 1
+  swishSound: {fileID: 8300000, guid: f80d7fd5645475f46853d136295918eb, type: 3}
+  volume: 0.6
 --- !u!1001 &7606016786114693139
 PrefabInstance:
   m_ObjectHideFlags: 0

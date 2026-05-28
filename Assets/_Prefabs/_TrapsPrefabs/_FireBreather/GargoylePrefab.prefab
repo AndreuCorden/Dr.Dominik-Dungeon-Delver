@@ -272,8 +272,9 @@ MonoBehaviour:
   burstDuration: 0.5
   coneAngle: 15
   timeBetweenActions: 2
-  turnSound: {fileID: 0}
-  fireBreathSound: {fileID: 0}
+  turnSound: {fileID: 8300000, guid: f9eb0f914c27d034082db482c1802779, type: 3}
+  fireBreathSound: {fileID: 8300000, guid: 0d2ba5050ab72fb43a7681e2d8cafd2c, type: 3}
+  volume: 0.7
 --- !u!114 &5203428059185695799
 MonoBehaviour:
   m_ObjectHideFlags: 0

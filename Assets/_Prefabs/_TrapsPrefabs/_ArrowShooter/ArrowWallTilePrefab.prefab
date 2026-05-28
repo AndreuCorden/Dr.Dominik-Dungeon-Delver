@@ -130,7 +130,8 @@ MonoBehaviour:
   - {fileID: 1612026834121031505}
   - {fileID: 1960094661123119465}
   arrowSpeed: 10
-  fireSound: {fileID: 0}
+  fireSound: {fileID: 8300000, guid: f80d7fd5645475f46853d136295918eb, type: 3}
+  volume: 0.8
 --- !u!82 &2995714323149613329
 AudioSource:
   m_ObjectHideFlags: 0

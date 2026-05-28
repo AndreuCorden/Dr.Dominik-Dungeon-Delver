@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(AudioSource))]
 public class Coin : MonoBehaviour
 {
     public float rotateSpeed = 100f;
@@ -15,15 +14,14 @@ public class Coin : MonoBehaviour
     [Header("Audio")]
     public AudioClip collectSound;   
     public AudioClip explosionSound; 
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
 
     private bool isFalling = false;
     private bool isCollected = false; 
-    private AudioSource audioSource;
     private Collider coinCollider;
 
     void Start()
     {
-        audioSource = GetComponent<AudioSource>();
         coinCollider = GetComponent<Collider>();
     }
 
@@ -69,9 +67,7 @@ public class Coin : MonoBehaviour
 
             PlayerController.Instance.AddCoin(1);
 
-            // --- THE FIX ---
-            // Clear the parent completely. This moves the coin to the root scene level
-            // where global scale is a perfect (1,1,1), killing the stretching effect!
+            // Clear the parent completely to neutralize weird grouping scale artifacts
             transform.SetParent(null);
 
             StartCoroutine(AnimateCollectSequence());
@@ -80,12 +76,14 @@ public class Coin : MonoBehaviour
 
     IEnumerator AnimateCollectSequence()
     {
-        if (collectSound != null) audioSource.PlayOneShot(collectSound);
+        // --- PLAY COIN COLLECT SFX (Global) ---
+        if (AudioManager.Instance != null && collectSound != null)
+        {
+            AudioManager.Instance.PlaySFX(collectSound, transform.position, volume);
+        }
 
         Vector3 startPos = transform.position;
         Vector3 targetPos = startPos + new Vector3(0, collectJumpHeight, 0);
-        
-        // Cache the coin's exact local scale before starting to avoid sudden snapping pops
         Vector3 originalScale = transform.localScale;
 
         float elapsed = 0;
@@ -97,7 +95,7 @@ public class Coin : MonoBehaviour
             float smoothT = Mathf.Sin(t * Mathf.PI * 0.5f); 
             transform.position = Vector3.Lerp(startPos, targetPos, smoothT);
 
-            // Spin perfectly along the clean, distortion-free world-up axis
+            // Spin perfectly along clean world axis
             transform.Rotate(Vector3.up * collectSpinMultiplier * 360f * Time.deltaTime, Space.World);
 
             // Scale down smoothly in the last 40% of the movement sequence
@@ -113,7 +111,12 @@ public class Coin : MonoBehaviour
 
         transform.localScale = Vector3.zero;
 
-        if (explosionSound != null) audioSource.PlayOneShot(explosionSound);
+        // --- PLAY EXPLOSION SFX (Global) ---
+        // This won't get cut off anymore since the AudioManager handles its lifetime!
+        if (AudioManager.Instance != null && explosionSound != null)
+        {
+            AudioManager.Instance.PlaySFX(explosionSound, transform.position, volume);
+        }
 
         if (collectEffectPrefab != null)
         {
