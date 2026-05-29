@@ -241,7 +241,7 @@ MonoBehaviour:
   moveSFX: {fileID: 8300000, guid: 5dd11d240836b6b4fb2bf529df4903cf, type: 3}
   attackSFX: {fileID: 8300000, guid: c393f28f36597fc4fa400c96b94c73d8, type: 3}
   dieSFX: {fileID: 8300000, guid: 32f19405e1a879846b66698c5d543c7d, type: 3}
-  sfxVolume: 0.8
+  sfxVolume: 1
   animatorOverride: {fileID: 0}
   deathDestroyDelay: 0.8
   wakeRange: 2
