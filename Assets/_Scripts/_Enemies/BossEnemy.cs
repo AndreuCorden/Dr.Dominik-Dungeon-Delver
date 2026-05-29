@@ -6,6 +6,7 @@ public class BossEnemy : EnemyFollower
 {
     [Header("Boss Health Settings")]
     public int health = 3;
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.9f;
 
     // A helper list to track all 3 coordinates this Boss currently spans
     private List<Vector2> currentOccupiedKeys = new List<Vector2>();
@@ -89,6 +90,13 @@ public class BossEnemy : EnemyFollower
         List<Vector2> temp = currentOccupiedKeys;
         currentOccupiedKeys = targetOccupiedKeys;
         targetOccupiedKeys = temp;
+
+        // --- PLAY BOSS WALK SFX ---
+        // Trigger right when a step is successfully calculated and accepted
+        if (AudioManager.Instance != null && moveSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(moveSFX, transform.position, volume);
+        }
 
         targetPosition = centerDest3D;
         isMoving = true;

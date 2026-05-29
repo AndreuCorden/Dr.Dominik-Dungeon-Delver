@@ -134,8 +134,8 @@ MonoBehaviour:
   collectSpinMultiplier: 4
   animDuration: 0.4
   collectEffectPrefab: {fileID: 4482973810328260721, guid: 24681c4ef83930e439f8d22d53916bb8, type: 3}
-  collectSound: {fileID: 0}
-  explosionSound: {fileID: 0}
+  collectSound: {fileID: 8300000, guid: 03705569e4061664582e039659f63255, type: 3}
+  explosionSound: {fileID: 8300000, guid: d000f9e29ca47a94280e56c58dd66927, type: 3}
 --- !u!114 &4608467006702975530
 MonoBehaviour:
   m_ObjectHideFlags: 0
