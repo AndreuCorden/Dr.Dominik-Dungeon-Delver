@@ -125,7 +125,7 @@ public class GridGenerator : MonoBehaviour
                     case 'M': // --- RESTORED: PARENTING ---
                         if (currentFloor != null)
                         {
-                            Instantiate(mimicPrefab, pos, Quaternion.identity, transform);
+                            Instantiate(mimicPrefab, pos, Quaternion.Euler(0, 180, 0), transform);
                         }
                         break;
 
@@ -392,6 +392,36 @@ public class GridGenerator : MonoBehaviour
                             yellowLight.intensity = 1.8f;
                             yellowLight.shadows = LightShadows.Soft;
 
+                            break;
+                        }
+                        case '7':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[7], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                        case '8':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[8], pos + Vector3.up * 0.5f, Quaternion.Euler(0, 180, 0), transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
+                            break;
+                        }
+                        case '9':
+                        {
+                            GameObject decor = Instantiate(decorPrefabs[9], pos + Vector3.up * 0.5f, Quaternion.identity, transform);
+                            if (decor.GetComponent<FallingTile>() == null)
+                            {
+                                decor.AddComponent<FallingTile>();
+                            }
+                            currentFloor.layer = LayerMask.NameToLayer("Trap");
                             break;
                         }
                 }

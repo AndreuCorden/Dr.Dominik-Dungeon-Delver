@@ -242,10 +242,15 @@ MonoBehaviour:
   attackSFX: {fileID: 8300000, guid: c393f28f36597fc4fa400c96b94c73d8, type: 3}
   dieSFX: {fileID: 8300000, guid: 32f19405e1a879846b66698c5d543c7d, type: 3}
   sfxVolume: 0.8
+  animatorOverride: {fileID: 0}
+  deathDestroyDelay: 0.8
   wakeRange: 2
+  wakeDelayDuration: 0.8
   chestModel: {fileID: 4381146763896040696}
   mimicModel: {fileID: 1193917721433959993}
   transformSFX: {fileID: 8300000, guid: e93e7d37fafab3441af0896f61a26269, type: 3}
+  fallAngle: 80
+  proceduralDuration: 0.6
 --- !u!65 &-4709928120647921261
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -304,7 +309,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.059
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -312,7 +317,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 3949865370558331470, guid: d6c17152321380342a6550b0ea6a157a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -373,6 +378,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7035394665918936042}
     m_Modifications:
+    - target: {fileID: 1803718455535649893, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1803718455535649893, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1803718455535649893, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
     - target: {fileID: 2742715998934562146, guid: 9208272829148d14c842c1ec75eb39ae, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.1
