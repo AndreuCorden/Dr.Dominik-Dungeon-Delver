@@ -23,12 +23,15 @@ public class LevelHandler : MonoBehaviour
     private CameraFollow camFollowScript;
     private bool isLevelIntroActive = false;
 
+    private Coroutine activeSetupRoutine;
+    public bool IsTransitioning { get; private set; }
+
     IEnumerator Start()
     {
         if (PlayerPrefs.HasKey("SelectedLevelIndex"))
         {
             levelIndex = PlayerPrefs.GetInt("SelectedLevelIndex");
-            PlayerPrefs.DeleteKey("SelectedLevelIndex"); // Clear it so it doesn't persist forever
+            PlayerPrefs.DeleteKey("SelectedLevelIndex");
         }
         if (gridGen == null) gridGen = GetComponent<GridGenerator>();
         mainCam = Camera.main;
@@ -39,7 +42,9 @@ public class LevelHandler : MonoBehaviour
             if (camFollowScript != null) camFollowScript.enabled = false;
         }
 
-        yield return StartCoroutine(RunLevelSetupSequence());
+        // Store the routine reference so we can cancel it if needed
+        activeSetupRoutine = StartCoroutine(RunLevelSetupSequence());
+        yield return activeSetupRoutine;
     }
 
     private IEnumerator RunLevelSetupSequence()
@@ -118,12 +123,29 @@ public class LevelHandler : MonoBehaviour
 
     public void StartExitTransition(int nextTargetIndex)
     {
+        // Guard check: If we are already changing levels, ignore consecutive inputs!
+        if (IsTransitioning) return;
+
         StartCoroutine(TriggerLevelCollapseRoutine(nextTargetIndex));
     }
 
     private IEnumerator TriggerLevelCollapseRoutine(int nextTargetIndex)
     {
+        IsTransitioning = true; // Lock entry gates instantly
         isLevelIntroActive = false;
+
+        // Force-cancel the entrance animation sequence if it was still running
+        if (activeSetupRoutine != null)
+        {
+            StopCoroutine(activeSetupRoutine);
+        }
+
+        // Clean up any half-generated visual intro dummies immediately
+        if (dummyVisualContainer != null)
+        {
+            Destroy(dummyVisualContainer);
+        }
+
         SetRealWorldState(false);
 
         // --- SWEEP FLOATING PROJECTILES/FIRE BLOCKS INSTANTLY ---
@@ -165,8 +187,12 @@ public class LevelHandler : MonoBehaviour
         // Set layout variables tracking loop index parameters
         levelIndex = nextTargetIndex;
 
-        // Re-execute initialization steps inside loop bounds
-        yield return StartCoroutine(RunLevelSetupSequence());
+        // Re-execute initialization steps inside loop bounds cleanly
+        activeSetupRoutine = StartCoroutine(RunLevelSetupSequence());
+
+        // Wait for the new level setup to finish before releasing the transition lock
+        yield return activeSetupRoutine;
+        IsTransitioning = false;
     }
 
     private void SetRealWorldState(bool isEnabled)

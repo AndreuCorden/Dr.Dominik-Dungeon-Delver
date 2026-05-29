@@ -59,7 +59,7 @@ public class MimicEnemy : EnemyFollower
     // ==========================================
     // CUSTOM OVERRIDDEN PROCEDURAL DEATH SEQUENCE
     // ==========================================
-    public override void Die()
+    public override void Die(Vector3? deathSourcePosition = null)
     {
         if (AudioManager.Instance != null && dieSFX != null)
         {

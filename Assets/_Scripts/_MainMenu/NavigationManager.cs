@@ -1,15 +1,15 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem; 
+using UnityEngine.InputSystem;
 
 public class NavigationManager : MonoBehaviour
 {
     public static NavigationManager Instance { get; private set; }
 
     [Header("Scene Name Settings")]
-    public string mainMenuSceneName = "MainMenu"; 
-    public string gameplaySceneName = "LevelScene_01"; 
-    public string creditsSceneName = "Credits"; 
+    public string mainMenuSceneName = "MainMenu";
+    public string gameplaySceneName = "LevelScene_01";
+    public string creditsSceneName = "Credits";
 
     private void Awake()
     {
@@ -79,9 +79,16 @@ public class NavigationManager : MonoBehaviour
     private void LoadSpecificLevel(int levelIndex)
     {
         LevelHandler activeHandler = GameObject.FindAnyObjectByType<LevelHandler>();
-        
+
         if (activeHandler != null && SceneManager.GetActiveScene().name == gameplaySceneName)
         {
+            // NEW: If the level handler is currently mid-animation, reject the input entirely!
+            if (activeHandler.IsTransitioning)
+            {
+                Debug.LogWarning("Developer Shortcut Rejected: Level is currently transitioning.");
+                return;
+            }
+
             Debug.Log($"Mid-game Developer Shortcut: Transitioning directly to Level Index {levelIndex}");
             activeHandler.StartExitTransition(levelIndex);
         }

@@ -425,6 +425,8 @@ MonoBehaviour:
   doorHinge: {fileID: 8197203475936752171}
   openAngle: 90
   openSpeed: 2
+  doorOpenSFX: {fileID: 8300000, guid: 27bfc79f7c57f5b479ae6a3f62eb199f, type: 3}
+  volumeOffset: 1
 --- !u!1 &6301477434155057236
 GameObject:
   m_ObjectHideFlags: 0
