@@ -128,3 +128,5 @@ MonoBehaviour:
   speed: 3
   lifetime: 0.5
   maxScale: 0.66
+  crackleSound: {fileID: 0}
+  volume: 0.2

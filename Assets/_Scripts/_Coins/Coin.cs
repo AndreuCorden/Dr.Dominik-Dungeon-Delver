@@ -3,50 +3,57 @@ using System.Collections;
 
 public class Coin : MonoBehaviour
 {
-    public float rotateSpeed = 100f;
-    
+    [Header("Glow Settings")]
+    [SerializeField] private float glowRange = 3f;
+    [SerializeField] private float glowIntensity = 1.2f;
+    [SerializeField] private Color glowColor = new Color(1f, 0.75f, 0.2f); // Golden glow for the bag
+
     [Header("Collection Animation")]
-    public float collectJumpHeight = 1.5f; 
-    public float collectSpinMultiplier = 8f; 
+    public float collectJumpHeight = 1.0f; // Exactly 1 unit arch up
     public float animDuration = 0.4f; 
-    public GameObject collectEffectPrefab; 
 
     [Header("Audio")]
     public AudioClip collectSound;   
-    public AudioClip explosionSound; 
     [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
 
     private bool isFalling = false;
     private bool isCollected = false; 
     private Collider coinCollider;
+    private Transform playerTransform;
 
     void Start()
     {
         coinCollider = GetComponent<Collider>();
+
+        // Dynamic Runtime Light: Gives the bag its glow without asset file corruption loops
+        GameObject glowObj = new GameObject("Bag_Glow_Light");
+        glowObj.transform.SetParent(transform);
+        glowObj.transform.localPosition = new Vector3(0f, 0.2f, 0f); 
+
+        Light bagLight = glowObj.AddComponent<Light>();
+        bagLight.type = LightType.Point;
+        bagLight.color = glowColor;
+        bagLight.range = glowRange;
+        bagLight.intensity = glowIntensity;
+        bagLight.shadows = LightShadows.None; 
     }
 
     void Update()
     {
         if (isCollected) return;
 
-        // 1. Always Spin normally
-        transform.Rotate(Vector3.up * rotateSpeed * Time.deltaTime, Space.World);
+        // NOTE: Idle spinning logic completely removed! The bag stays stationary.
 
-        // 2. Check for the void
+        // Keep your fallback check for void drops
         if (!isFalling)
         {
             if (!Physics.Raycast(transform.position, Vector3.down, 1.1f))
             {
                 isFalling = true;
             }
-            else
-            {
-                float newY = 1.0f + Mathf.Sin(Time.time * 5f) * 0.1f;
-                transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-            }
+            // Removed old hovering Mathf.Sin code so it sits naturally flat on the ground grid
         }
 
-        // 3. Falling Logic
         if (isFalling)
         {
             transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
@@ -63,27 +70,26 @@ public class Coin : MonoBehaviour
         if (other.CompareTag("Player") && !isCollected)
         {
             isCollected = true;
+            playerTransform = other.transform; // Save reference to the player to track them down
+
             if (coinCollider != null) coinCollider.enabled = false;
 
             PlayerController.Instance.AddCoin(1);
 
-            // Clear the parent completely to neutralize weird grouping scale artifacts
             transform.SetParent(null);
-
             StartCoroutine(AnimateCollectSequence());
         }
     }
 
     IEnumerator AnimateCollectSequence()
     {
-        // --- PLAY COIN COLLECT SFX (Global) ---
+        // Play only the crisp collection audio
         if (AudioManager.Instance != null && collectSound != null)
         {
             AudioManager.Instance.PlaySFX(collectSound, transform.position, volume);
         }
 
         Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + new Vector3(0, collectJumpHeight, 0);
         Vector3 originalScale = transform.localScale;
 
         float elapsed = 0;
@@ -91,42 +97,24 @@ public class Coin : MonoBehaviour
         {
             float t = elapsed / animDuration;
             
-            // Move upward
-            float smoothT = Mathf.Sin(t * Mathf.PI * 0.5f); 
-            transform.position = Vector3.Lerp(startPos, targetPos, smoothT);
+            // 1. Follow the player's position laterally as they move
+            Vector3 currentPlayerPos = playerTransform != null ? playerTransform.position : startPos;
+            Vector3 linearProgress = Vector3.Lerp(startPos, currentPlayerPos, t);
 
-            // Spin perfectly along clean world axis
-            transform.Rotate(Vector3.up * collectSpinMultiplier * 360f * Time.deltaTime, Space.World);
+            // 2. Generate a clean mathematical arc that peaks exactly 1 unit up
+            float parabolicArcY = 4f * collectJumpHeight * t * (1f - t);
 
-            // Scale down smoothly in the last 40% of the movement sequence
-            if (t > 0.6f)
-            {
-                float shrinkT = (t - 0.6f) / 0.4f; 
-                transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, shrinkT);
-            }
+            // 3. Combine linear movement with vertical leap
+            transform.position = new Vector3(linearProgress.x, linearProgress.y + parabolicArcY, linearProgress.z);
+
+            // Smoothly shrink into the player's center over time
+            transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, t);
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        transform.localScale = Vector3.zero;
-
-        // --- PLAY EXPLOSION SFX (Global) ---
-        // This won't get cut off anymore since the AudioManager handles its lifetime!
-        if (AudioManager.Instance != null && explosionSound != null)
-        {
-            AudioManager.Instance.PlaySFX(explosionSound, transform.position, volume);
-        }
-
-        if (collectEffectPrefab != null)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                Quaternion scatterRot = Quaternion.Euler(0, i * 60f, 0); 
-                Instantiate(collectEffectPrefab, transform.position, scatterRot);
-            }
-        }
-
+        // NOTE: Old explosion SFX, explosion Prefabs, and scattering loop completely removed.
         Destroy(gameObject);
     }
 }
