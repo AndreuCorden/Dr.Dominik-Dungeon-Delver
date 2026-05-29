@@ -34,7 +34,7 @@ public class Arrow : MonoBehaviour
         {
             if (other.TryGetComponent<BaseEnemy>(out var enemy))
             {
-                enemy.Die();
+                enemy.Die(transform.position);
             }
             Destroy(gameObject);
         }

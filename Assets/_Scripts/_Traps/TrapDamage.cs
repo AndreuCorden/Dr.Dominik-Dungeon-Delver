@@ -36,7 +36,7 @@ public class TrapDamage : MonoBehaviour
             // Damage enemies immediately without cooldown (they can be sacrificed!)
             if (other.TryGetComponent<BaseEnemy>(out var enemy))
             {
-                enemy.Die();
+                enemy.Die(transform.position);
             }
         }
     }
