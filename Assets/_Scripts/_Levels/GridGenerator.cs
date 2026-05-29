@@ -109,8 +109,8 @@ public class GridGenerator : MonoBehaviour
                     case 'C': // --- RESTORED: ROTATION & PARENTING ---
                         if (currentFloor != null)
                         {
-                            Quaternion coinRot = Quaternion.Euler(90, 0, 0);
-                            Instantiate(CoinPrefab, pos + Vector3.up, coinRot, transform);
+                            Quaternion coinRot = Quaternion.Euler(0, 0, 0);
+                            Instantiate(CoinPrefab, pos + Vector3.up * 0.52f, coinRot, transform);
                         }
                         break;
 

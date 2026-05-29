@@ -6,9 +6,14 @@ public class PixelFire : MonoBehaviour
     public float lifetime = 0.6f;
     public float maxScale = 1.0f;
 
+    [Header("Light Settings")]
+    [SerializeField] private float lightRange = 4f;        // How far the fireball illuminates
+    [SerializeField] private float maxLightIntensity = 2f; // Peak brightness at birth
+    private Light projectileLight;
+
     [Header("Audio Settings")]
     [SerializeField] private AudioClip crackleSound;
-    [SerializeField] [Range(0f, 1f)] private float volume = 0.2f; // Kept lower due to burst grouping densities
+    [SerializeField] [Range(0f, 1f)] private float volume = 0.2f; 
 
     private MeshRenderer meshRenderer;
     private float startTime;
@@ -35,6 +40,22 @@ public class PixelFire : MonoBehaviour
         {
             AudioManager.Instance.PlaySFX(crackleSound, transform.position, volume);
         }
+
+        // ==========================================
+        // DYNAMIC RUNTIME LIGHT GENERATION
+        // ==========================================
+        // Create a pristine child object so URP doesn't glitch on dependencies
+        GameObject lightObj = new GameObject("Fireball_Light");
+        lightObj.transform.SetParent(transform);
+        lightObj.transform.localPosition = Vector3.zero;
+
+        projectileLight = lightObj.AddComponent<Light>();
+        projectileLight.type = LightType.Point;
+        projectileLight.range = lightRange;
+        projectileLight.intensity = maxLightIntensity;
+        
+        // Disable shadows on projectiles for a massive performance boost during heavy bursts
+        projectileLight.shadows = LightShadows.None; 
     }
 
     void Update()
@@ -49,6 +70,18 @@ public class PixelFire : MonoBehaviour
 
         baseColor.a = exponentialAlpha;
         meshRenderer.material.color = baseColor;
+
+        // ==========================================
+        // DYNAMIC LIGHT UPDATES
+        // ==========================================
+        if (projectileLight != null)
+        {
+            // 1. Force the light to match the changing color of the mesh perfectly
+            projectileLight.color = baseColor;
+
+            // 2. Fade out the light's intensity linearly as the projectile burns out
+            projectileLight.intensity = Mathf.Lerp(maxLightIntensity, 0f, lifePercentage);
+        }
 
         float scale = Mathf.Lerp(0f, maxScale, lifePercentage);
         transform.localScale = Vector3.one * scale;
