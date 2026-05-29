@@ -237,16 +237,31 @@ public class LevelHandler : MonoBehaviour
             GameObject dummyPiece = Instantiate(child.gameObject, child.position, child.rotation, dummyVisualContainer.transform);
             dummyPiece.SetActive(false);
 
+            // ==========================================
+            // FIXED: PREVENT URP COMPONENT DEPENDENCY ERRORS
+            // ==========================================
+            // Look for any child objects holding a Light component on the dummy block
+            foreach (Transform subChild in dummyPiece.GetComponentsInChildren<Transform>(true))
+            {
+                if (subChild != null && subChild.GetComponent<Light>() != null)
+                {
+                    // Destroy the entire game object instantly. 
+                    // This forces Unity to wipe out the Light AND its URP Data script simultaneously without errors!
+                    DestroyImmediate(subChild.gameObject);
+                }
+            }
+
             string nameLower = child.name.ToLower();
             bool isFoundation = nameLower.Contains("floor") || nameLower.Contains("wall") || nameLower.Contains("door") || nameLower.Contains("arrowwall");
 
             if (isFoundation) foundations.Add(dummyPiece.transform);
             else propsAndEnemies.Add(dummyPiece.transform);
 
+            // This loop handles the remaining regular scripts cleanly
             foreach (var comp in dummyPiece.GetComponentsInChildren<Component>())
             {
                 if (comp is Transform || comp is MeshFilter || comp is MeshRenderer || comp is SkinnedMeshRenderer) continue;
-                Destroy(comp);
+                if (comp != null) Destroy(comp);
             }
 
             if (isFoundation)

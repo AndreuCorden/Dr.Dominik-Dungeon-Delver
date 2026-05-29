@@ -387,6 +387,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 7ef2423181359fc4980e9d69ee835a18, type: 3}
   - {fileID: 8300000, guid: 651be101672c91c4ab8aef87a2c58588, type: 3}
   defaultTrack: {fileID: 8300000, guid: 19956414cdbae014cb3de8d0ae6537ce, type: 3}
+  musicVolume: 0.5
 --- !u!4 &307939687
 Transform:
   m_ObjectHideFlags: 0
