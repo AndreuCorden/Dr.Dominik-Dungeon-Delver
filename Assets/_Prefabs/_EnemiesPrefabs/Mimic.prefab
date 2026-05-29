@@ -244,6 +244,11 @@ MonoBehaviour:
   sfxVolume: 1
   animatorOverride: {fileID: 0}
   deathDestroyDelay: 0.8
+  slashVfxPrefab: {fileID: 0}
+  slashSpawnPoint: {fileID: 0}
+  slashRotationOffset: {x: 0, y: 0, z: 0}
+  slashPositionOffset: {x: 0, y: 0, z: 0}
+  slashLifetime: 1
   wakeRange: 2
   wakeDelayDuration: 0.8
   chestModel: {fileID: 4381146763896040696}
@@ -270,8 +275,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.97163564, y: 1.3812356, z: 1}
+  m_Center: {x: 0.09783883, y: 1.1535382, z: 0}
 --- !u!54 &82252503088378300
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -10,10 +10,6 @@ public class LevelGoal : MonoBehaviour
     public string lockedLayer = "Default";
     public string unlockedLayer = "Floor";
 
-    [Header("Audio Configurations")]
-    [SerializeField] private AudioClip doorOpenSFX;
-    [SerializeField] [Range(0f, 1f)] private float volume = 0.8f;
-
     void Start()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -51,12 +47,6 @@ public class LevelGoal : MonoBehaviour
         isUnlocked = true;
         gameObject.tag = "Floor";
         gameObject.layer = LayerMask.NameToLayer(unlockedLayer);
-
-        // --- PLAY DOOR OPEN SFX ---
-        if (AudioManager.Instance != null && doorOpenSFX != null)
-        {
-            AudioManager.Instance.PlaySFX(doorOpenSFX, transform.position, volume);
-        }
 
         GameObject door = GameObject.Find("LevelExitDoor");
         if (door != null)

@@ -125,4 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4382270df3540fd4bb671651da03ca2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelGoal
-  nextLevelName: 
+  lockedLayer: Default
+  unlockedLayer: Floor
+  doorOpenSFX: {fileID: 8300000, guid: 27bfc79f7c57f5b479ae6a3f62eb199f, type: 3}
+  volumeOffset: 1
