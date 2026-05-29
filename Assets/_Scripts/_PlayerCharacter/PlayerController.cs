@@ -34,7 +34,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private string attackTrigger = "Attack";
 
     [Header("VFX")]
-    public GameObject shockwavePrefab;
+    [SerializeField] private GameObject slashVfxPrefab;
+    [SerializeField] private Transform slashSpawnPoint;
+    [SerializeField] private Vector3 slashRotationOffset;
+    [SerializeField] private Vector3 slashPositionOffset;
+    [SerializeField] private float slashLifetime = 0.5f;
 
     [Header("Layers")]
     public LayerMask floorLayer;
@@ -58,6 +62,86 @@ public class PlayerController : MonoBehaviour
         Instance = this;
     }
 
+    public void SpawnSlashVFX()
+    {
+        if (slashVfxPrefab == null)
+            return;
+
+        if (slashSpawnPoint == null)
+        {
+            Debug.LogWarning("Slash Spawn Point no asignado");
+            return;
+        }
+
+        Vector3 finalPosition =
+            slashSpawnPoint.position +
+            slashSpawnPoint.TransformDirection(slashPositionOffset);
+
+        Vector3 flatForward = Vector3.ProjectOnPlane(slashSpawnPoint.forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.forward;
+
+        Quaternion finalRotation =
+            Quaternion.LookRotation(flatForward.normalized, Vector3.up) *
+            Quaternion.Euler(0f, slashRotationOffset.y, 0f);
+
+        GameObject slash = Instantiate(
+            slashVfxPrefab,
+            finalPosition,
+            finalRotation
+        );
+
+        Destroy(slash, slashLifetime);
+    }
+
+    void ResolveSlashSpawnPoint()
+    {
+        if (slashSpawnPoint != null && slashSpawnPoint != transform && slashSpawnPoint.name != "SlashSpawnPoint")
+            return;
+
+        Transform searchRoot = visualRoot != null ? visualRoot : transform;
+        Transform resolved = FindPreferredSlashAnchor(searchRoot);
+
+        if (resolved == null && searchRoot != transform)
+            resolved = FindPreferredSlashAnchor(transform);
+
+        if (resolved != null)
+            slashSpawnPoint = resolved;
+    }
+
+    Transform FindPreferredSlashAnchor(Transform root)
+    {
+        if (root == null)
+            return null;
+
+        string[] preferredNames = { "Sword", "Wrist.R", "Wrist.L", "UpperArm.R", "UpperArm.L" };
+        foreach (string preferredName in preferredNames)
+        {
+            Transform found = FindDeepChild(root, preferredName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    Transform FindDeepChild(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName)
+                return child;
+
+            Transform found = FindDeepChild(child, childName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
     void Start()
     {
         if (visualRoot == null)
@@ -78,6 +162,8 @@ public class PlayerController : MonoBehaviour
             if (resolvedAnimator != null)
                 animator = resolvedAnimator;
         }
+
+        ResolveSlashSpawnPoint();
 
         targetPosition = RoundGridPosition(transform.position);
         moveStartPosition = targetPosition;
@@ -363,32 +449,38 @@ public class PlayerController : MonoBehaviour
         TriggerAttackAnimation();
         StartCoroutine(VisualFlash());
 
-        // --- PLAY PLAYER ATTACK SFX ---
         if (AudioManager.Instance != null && attackSFX != null)
-        {
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
-        }
 
-        if (shockwavePrefab != null)
-        {
-            Vector3 shockwavePosition = GetShockwaveSpawnPosition();
-            GameObject visual = Instantiate(shockwavePrefab, shockwavePosition, Quaternion.identity);
-            visual.transform.localScale = Vector3.zero;
-            ApplyShockwaveFireTint(visual);
-            Destroy(visual, 0.25f);
-        }
+        Vector3 attackPos = GetAttackTilePosition();
 
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, attackRange);
+        // Buscar solo en la casilla de enfrente
+        Collider[] hitColliders = Physics.OverlapBox(
+            attackPos,
+            new Vector3(0.35f, 0.5f, 0.35f)
+        );
+
         foreach (Collider hitCollider in hitColliders)
         {
             if (!hitCollider.CompareTag("Enemy"))
                 continue;
 
             if (hitCollider.TryGetComponent<BaseEnemy>(out var enemy))
-                enemy.Die();
+                enemy.Die(transform.position);
             else
                 Destroy(hitCollider.gameObject);
         }
+    }
+
+    Vector3 GetAttackTilePosition()
+    {
+        Vector3 dir = transform.forward;
+        dir.y = 0f;
+        dir = dir.normalized;
+
+        // Una casilla delante
+        Vector3 tile = transform.position + dir;
+        return RoundGridPosition(tile);
     }
 
     Vector3 GetShockwaveSpawnPosition()

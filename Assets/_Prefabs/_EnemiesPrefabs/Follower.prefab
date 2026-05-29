@@ -120,6 +120,11 @@ MonoBehaviour:
   sfxVolume: 0.8
   animatorOverride: {fileID: 6392211900142452986}
   deathDestroyDelay: 0.8
+  slashVfxPrefab: {fileID: 8587560481101609250, guid: 2204f06b178af014986bf95a7bda8e6e, type: 3}
+  slashSpawnPoint: {fileID: 0}
+  slashRotationOffset: {x: 0, y: 0, z: 0}
+  slashPositionOffset: {x: 0, y: 0, z: 0}
+  slashLifetime: 0.8
 --- !u!1001 &1212375158884748781
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -227,6 +232,30 @@ PrefabInstance:
     - target: {fileID: 4693465416863845198, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -2.374
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712345678901234567, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.34202018
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712345678901234567, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9396926
+      objectReference: {fileID: 0}
+    - target: {fileID: 7712345678901234567, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -140
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820147392856103848, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.17364825
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820147392856103848, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9848078
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820147392856103848, guid: 61b3e3801d56a3f429556c96ea2f07d6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -160
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

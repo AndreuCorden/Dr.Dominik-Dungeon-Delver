@@ -24,6 +24,13 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] private Animator animatorOverride;
     [SerializeField] private float deathDestroyDelay = 0.8f;
 
+    [Header("Attack VFX")]
+    [SerializeField] private GameObject slashVfxPrefab;
+    [SerializeField] private Transform slashSpawnPoint;
+    [SerializeField] private Vector3 slashRotationOffset;
+    [SerializeField] private Vector3 slashPositionOffset;
+    [SerializeField] private float slashLifetime = 1f;
+
     protected Vector3 targetPosition;
     protected bool isMoving = false;
     protected bool isFalling = false;
@@ -56,6 +63,7 @@ public abstract class BaseEnemy : MonoBehaviour
         OccupiedTiles.Add(GetGridKey(transform.position));
 
         CacheAnimators();
+        ResolveSlashSpawnPoint();
         SetMoving(false);
     }
 
@@ -94,7 +102,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.Translate(Vector3.down * Time.deltaTime * 10f, Space.World);
         transform.Rotate(Vector3.up * Time.deltaTime * 200f);
-        if (transform.position.y < -10f) Die(); // Direct redirection to clean up data properly on drop fall out
+        if (transform.position.y < -10f) Die(null); // Direct redirection to clean up data properly on drop fall out
     }
 
     protected bool TryMove(Vector3 direction)
@@ -155,16 +163,104 @@ public abstract class BaseEnemy : MonoBehaviour
         nextMoveTime = Time.time + timeBetweenSteps;
     }
 
+    public void SpawnSlashVFX()
+    {
+        if (slashVfxPrefab == null)
+            return;
+
+        if (slashSpawnPoint == null)
+        {
+            Debug.LogWarning("Slash Spawn Point no asignado");
+            return;
+        }
+
+        Vector3 finalPosition =
+            slashSpawnPoint.position +
+            slashSpawnPoint.TransformDirection(slashPositionOffset);
+
+        Vector3 flatForward = Vector3.ProjectOnPlane(slashSpawnPoint.forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f)
+            flatForward = Vector3.forward;
+
+        Quaternion finalRotation =
+            Quaternion.LookRotation(flatForward.normalized, Vector3.up) *
+            Quaternion.Euler(0f, slashRotationOffset.y, 0f);
+
+        GameObject slash = Instantiate(
+            slashVfxPrefab,
+            finalPosition,
+            finalRotation
+        );
+
+        Destroy(slash, slashLifetime);
+    }
+
+    private void ResolveSlashSpawnPoint()
+    {
+        if (slashVfxPrefab == null || slashSpawnPoint != null)
+            return;
+
+        Transform searchRoot = animatorOverride != null ? animatorOverride.transform : transform;
+        slashSpawnPoint = FindPreferredSlashAnchor(searchRoot);
+    }
+
+    private static Transform FindPreferredSlashAnchor(Transform root)
+    {
+        if (root == null)
+            return null;
+
+        // Prefer explicit anchor, same pattern as Player's SlashSpawnPoint.
+        string[] preferredNames = { "SlashSpawnPoint", "Falchion_01", "Falchion", "Sword", "hand.r", "forearm.r", "Wrist.R", "UpperArm.R" };
+        foreach (string preferredName in preferredNames)
+        {
+            Transform found = FindDeepChild(root, preferredName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static Transform FindDeepChild(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName)
+                return child;
+
+            Transform found = FindDeepChild(child, childName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
     protected Vector2 GetGridKey(Vector3 pos) => new Vector2(Mathf.Round(pos.x), Mathf.Round(pos.z));
     protected Vector3 RoundToGrid(Vector3 pos) => new Vector3(Mathf.Round(pos.x), transform.position.y, Mathf.Round(pos.z));
 
-    public virtual void Die()
+    protected void FaceDeathSource(Vector3? deathSourcePosition)
+    {
+        if (!deathSourcePosition.HasValue) return;
+
+        if (GetGridKey(deathSourcePosition.Value) == GetGridKey(transform.position)) return;
+
+        Vector3 lookDirection = deathSourcePosition.Value - transform.position;
+        lookDirection.y = 0f;
+        if (lookDirection.sqrMagnitude > 0.0001f)
+            transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
+    }
+
+    public virtual void Die(Vector3? deathSourcePosition = null)
     {
         if (isDying) return;
         isDying = true;
         bool wasMoving = isMoving;
         isMoving = false;
         SetMoving(false);
+        FaceDeathSource(deathSourcePosition);
         TriggerDie();
 
         // --- ADDED: PLAY DEATH SFX BEFORE DESTRUCTION ---
@@ -204,6 +300,10 @@ public abstract class BaseEnemy : MonoBehaviour
         foreach (var anim in animators)
         {
             if (anim == null) continue;
+
+            // Ensure AnimationEvents (e.g. SpawnSlashVFX) have a receiver on the Animator GameObject.
+            if (anim.GetComponent<EnemyAnimationEvents>() == null)
+                anim.gameObject.AddComponent<EnemyAnimationEvents>();
 
             var binding = new AnimatorBinding { Animator = anim };
             foreach (var param in anim.parameters)

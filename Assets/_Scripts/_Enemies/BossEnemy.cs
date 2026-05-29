@@ -134,7 +134,7 @@ public class BossEnemy : EnemyFollower
 
     // --- DAMAGE AND LIFECYCLE MANAGEMENT ---
 
-    public override void Die()
+    public override void Die(Vector3? deathSourcePosition = null)
     {
         health -= 1;
         Debug.Log($"Boss took damage! Health remaining: {health}");
