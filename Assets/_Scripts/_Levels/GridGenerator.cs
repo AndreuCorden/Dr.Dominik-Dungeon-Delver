@@ -145,7 +145,98 @@ public class GridGenerator : MonoBehaviour
                         Instantiate(trailEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
                         break;
                     case 'B': // Boss Enemy
-                        Instantiate(bossEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+                        {
+                            // 1. Spawn the pristine, unedited Boss Enemy prefab structure
+                            GameObject bossObj = Instantiate(bossEnemyPrefab, pos + Vector3.up, Quaternion.identity, transform);
+
+                            // 2. Scan the armature hierarchy to locate Eye bones AND the Mouth Tip bone
+                            Transform leftEyeBone = null;
+                            Transform rightEyeBone = null;
+                            Transform headTipBone = null;
+
+                            foreach (Transform child in bossObj.GetComponentsInChildren<Transform>(true))
+                            {
+                                if (child == null) continue;
+
+                                if (child.name.Equals("LeftEye"))
+                                {
+                                    leftEyeBone = child;
+                                }
+                                else if (child.name.Equals("RightEye"))
+                                {
+                                    rightEyeBone = child;
+                                }
+                                else if (child.name.Equals("Head.downTip_end")) // Updated bone name match!
+                                {
+                                    headTipBone = child;
+                                }
+
+                                // Optimization: Stop scanning once all three target components are secured
+                                if (leftEyeBone != null && rightEyeBone != null && headTipBone != null) break;
+                            }
+
+                            // 3. Programmatically build and anchor the Left Eye Point Light
+                            if (leftEyeBone != null)
+                            {
+                                GameObject leftLightObj = new GameObject("Healthy_Boss_LeftEye_Light");
+                                leftLightObj.transform.SetParent(leftEyeBone);
+                                leftLightObj.transform.localPosition = Vector3.zero;
+                                leftLightObj.transform.localRotation = Quaternion.identity;
+
+                                Light leftLight = leftLightObj.AddComponent<Light>();
+                                leftLight.type = LightType.Point;
+                                leftLight.color = Color.red;
+                                leftLight.range = 10f;
+                                leftLight.intensity = 0.4f;
+                                leftLight.shadows = LightShadows.None;
+                            }
+
+                            // 4. Programmatically build and anchor the Right Eye Point Light
+                            if (rightEyeBone != null)
+                            {
+                                GameObject rightLightObj = new GameObject("Healthy_Boss_RightEye_Light");
+                                rightLightObj.transform.SetParent(rightEyeBone);
+                                rightLightObj.transform.localPosition = Vector3.zero;
+                                rightLightObj.transform.localRotation = Quaternion.identity;
+
+                                Light rightLight = rightLightObj.AddComponent<Light>();
+                                rightLight.type = LightType.Point;
+                                rightLight.color = Color.red;
+                                rightLight.range = 10f;
+                                rightLight.intensity = 0.4f;
+                                rightLight.shadows = LightShadows.None;
+                            }
+
+                            // =========================================================
+                            // 5. GENERATE THE SHOOT POINT AT THE CORRECT MOUTH BONE
+                            // =========================================================
+                            if (headTipBone != null)
+                            {
+                                // Create a brand new clean shoot point object container
+                                GameObject shootPointObj = new GameObject("Generated_Boss_FireShootPoint");
+                                shootPointObj.transform.SetParent(headTipBone);
+
+                                // Pin it exactly to the bone position
+                                shootPointObj.transform.localPosition = Vector3.zero;
+
+                                // Align its direction directly with the main Boss body's facing direction
+                                shootPointObj.transform.rotation = bossObj.transform.rotation;
+
+                                // Link it directly to the BossEnemy component
+                                if (bossObj.TryGetComponent<BossEnemy>(out var bossController))
+                                {
+                                    bossController.shootPoint = shootPointObj.transform;
+                                }
+                            }
+                            else
+                            {
+                                Debug.LogWarning("Boss Generator Warning: 'Head.downTip_end' bone wasn't found. Fire shoot point assigned to fallback position.");
+                                if (bossObj.TryGetComponent<BossEnemy>(out var bossController))
+                                {
+                                    bossController.shootPoint = bossObj.transform;
+                                }
+                            }
+                        }
                         break;
 
                     case '0':

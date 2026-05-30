@@ -7,13 +7,24 @@ public class BossEnemy : EnemyFollower
 {
     [Header("Boss Health Settings")]
     public int health = 3;
-    [SerializeField] [Range(0f, 1f)] private float volume = 0.9f;
+    [SerializeField][Range(0f, 1f)] private float volume = 0.9f;
 
     [Header("Boss Death")]
     [SerializeField] private float bossDeathDuration = 3f;
 
     [Header("Boss Attack")]
-    [SerializeField] private float attackAnimDuration = 1f;
+    [SerializeField] private float attackAnimDuration = 2.467f;
+
+    // =========================================================
+    // UPDATED: FIRE BREATH ATTACK CONFIGURATIONS (NO DAMAGE STICK)
+    // =========================================================
+    [Header("Fire Breath Settings")]
+    public GameObject pixelFirePrefab;
+    [HideInInspector] public Transform shootPoint; // Automatically assigned by the level generator code
+
+    public int cubesPerBurst = 20;
+    public float burstDuration = 0.5f;
+    public float coneAngle = 15f;
 
     [Header("Boss Damage Feedback")]
     [SerializeField] private float damageFlashDuration = 0.4f;
@@ -37,6 +48,9 @@ public class BossEnemy : EnemyFollower
     // A helper list to track all 3 coordinates this Boss currently spans
     private List<Vector2> currentOccupiedKeys = new List<Vector2>();
     private List<Vector2> targetOccupiedKeys = new List<Vector2>();
+
+    // NEW STATE TRACKER: Prevents the movement AI loops from running mid-animation
+    private bool isAttacking = false;
 
     protected override void Start()
     {
@@ -63,6 +77,9 @@ public class BossEnemy : EnemyFollower
         CacheDamageFlashTargets();
     }
 
+    // =========================================================
+    // MODIFIED: ATTACK TRIGGERS VISUAL FIRE BURST AND DIRECT PLAYER DAMAGE
+    // =========================================================
     protected override void PerformAttack(Vector3 dir)
     {
         if (isDying) return;
@@ -72,13 +89,62 @@ public class BossEnemy : EnemyFollower
         SetMoving(false);
         TriggerAttack();
 
+        // Standardized project master volume calculation logic
         if (AudioManager.Instance != null && attackSFX != null)
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
 
+        // Standard Proximity Damage: Hurts player instantly if they are within the attack zone
         if (player.TryGetComponent<PlayerController>(out var pc))
             pc.TakeDamage(false, transform.position);
 
+        // Run fire breath particle stream burst purely for visual effect/juice!
+        StartCoroutine(ExecuteFireBreathSequence());
+
         nextMoveTime = Time.time + attackAnimDuration;
+    }
+
+    // =========================================================
+    // VISUAL FIRE STREAM COROUTINE GENERATOR LOOP
+    // =========================================================
+    private IEnumerator ExecuteFireBreathSequence()
+    {
+        isAttacking = true; // Lock out movement steps!
+        
+        float elapsed = 0;
+        float spawnRate = burstDuration / Mathf.Max(cubesPerBurst, 1);
+
+        while (elapsed < burstDuration)
+        {
+            SpawnFirePixel();
+            elapsed += spawnRate;
+            yield return new WaitForSeconds(spawnRate);
+        }
+
+        // Wait out the rest of the physical animation length before unlocking AI tracking
+        float remainingTime = attackAnimDuration - burstDuration;
+        if (remainingTime > 0f)
+        {
+            yield return new WaitForSeconds(remainingTime);
+        }
+
+        isAttacking = false; // Safely unlock movement now that full animation has played out!
+    }
+
+    private void SpawnFirePixel()
+    {
+        // Use either the programmatically generated snout location or fall back to center body
+        Transform originNode = (shootPoint != null) ? shootPoint : transform;
+
+        Quaternion randomRot = originNode.rotation * Quaternion.Euler(
+            Random.Range(-coneAngle, coneAngle),
+            Random.Range(-coneAngle, coneAngle),
+            0
+        );
+
+        if (pixelFirePrefab != null)
+        {
+            Instantiate(pixelFirePrefab, originNode.position, randomRot);
+        }
     }
 
     protected override void StartMovement()
@@ -94,6 +160,9 @@ public class BossEnemy : EnemyFollower
 
     protected new bool TryMove(Vector3 direction)
     {
+        // Safety lock: if animating an attack, do not attempt to process steps or shift forward vectors
+        if (isAttacking) return false;
+
         // --- FIX: ATTACK RANGE CHECK BEFORE MOVEMENT CALCULATIONS ---
         // Calculate the grid tile that is exactly 2 blocks away from our *current* center
         Vector3 attackCheckPos = RoundToGrid(transform.position + (direction * 2f));
@@ -150,7 +219,6 @@ public class BossEnemy : EnemyFollower
         targetOccupiedKeys = temp;
 
         // --- PLAY BOSS WALK SFX ---
-        // Trigger right when a step is successfully calculated and accepted
         if (AudioManager.Instance != null && moveSFX != null)
         {
             AudioManager.Instance.PlaySFX(moveSFX, transform.position, volume);
@@ -181,7 +249,9 @@ public class BossEnemy : EnemyFollower
         {
             transform.position = targetPosition;
             CheckForVoid();
-            if (!isFalling && Time.time >= nextMoveTime)
+            
+            // MODIFIED: Added !isAttacking check to prevent calculation attempts mid-animation
+            if (!isFalling && !isAttacking && Time.time >= nextMoveTime)
                 DetermineNextStep();
         }
     }
@@ -202,6 +272,9 @@ public class BossEnemy : EnemyFollower
 
     protected override void DetermineNextStep()
     {
+        // Absolute check backup
+        if (isAttacking) return;
+
         Vector3 diff = player.position - transform.position;
         Vector3 primary = Mathf.Abs(diff.x) > Mathf.Abs(diff.z) ?
             new Vector3(Mathf.Sign(diff.x), 0, 0) : new Vector3(0, 0, Mathf.Sign(diff.z));
@@ -218,7 +291,6 @@ public class BossEnemy : EnemyFollower
 
     protected override void CheckForVoid()
     {
-        // The boss only falls if its central foundation tile breaks away out from under it
         if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
         {
             isFalling = true;
@@ -396,7 +468,6 @@ public class BossEnemy : EnemyFollower
         Destroy(gameObject);
     }
 
-
     protected override void OnDestroy()
     {
         ClearEntireFootprint();
@@ -404,12 +475,9 @@ public class BossEnemy : EnemyFollower
 
     // --- FOOTPRINT CALCULATOR UTILITIES ---
 
-    // Fills a target list with the 3 grid coordinate keys mapped to Center, Left, and Right wings
     private void UpdateOccupiedTilesMap(Vector3 centerPos, Vector3 forwardDir, List<Vector2> listToFill)
     {
         listToFill.Clear();
-
-        // Establish structural lookups perpendicular to our current facing view direction
         Vector3 rightOffset = Vector3.Cross(Vector3.up, forwardDir).normalized;
 
         Vector3 centerTile = centerPos;
