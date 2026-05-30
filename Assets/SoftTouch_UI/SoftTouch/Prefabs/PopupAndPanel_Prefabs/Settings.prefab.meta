@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d46ceba21c53484478f08a9a18e9d797
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/PopupAndPanel_Prefabs/Settings.prefab
+  uploadId: 910132

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0f94ea67e0b3cb049b2f86e169123a55
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/PopupAndPanel_Prefabs/VictoryPanel.prefab
+  uploadId: 910132

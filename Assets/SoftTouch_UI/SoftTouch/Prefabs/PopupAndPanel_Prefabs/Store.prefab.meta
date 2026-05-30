@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c8a18a9cfcc631144b82f0bc7d2a7f1a
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/PopupAndPanel_Prefabs/Store.prefab
+  uploadId: 910132
