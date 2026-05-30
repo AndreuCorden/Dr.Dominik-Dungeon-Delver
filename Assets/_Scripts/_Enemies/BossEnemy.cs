@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,6 +8,31 @@ public class BossEnemy : EnemyFollower
     [Header("Boss Health Settings")]
     public int health = 3;
     [SerializeField] [Range(0f, 1f)] private float volume = 0.9f;
+
+    [Header("Boss Death")]
+    [SerializeField] private float bossDeathDuration = 3f;
+
+    [Header("Boss Attack")]
+    [SerializeField] private float attackAnimDuration = 1f;
+
+    [Header("Boss Damage Feedback")]
+    [SerializeField] private float damageFlashDuration = 0.4f;
+    [SerializeField] private int damageFlashPulses = 3;
+    [SerializeField] private Color damageFlashColor = new Color(1f, 0.12f, 0.12f, 1f);
+
+    private struct MaterialColorSnapshot
+    {
+        public Material Material;
+        public Color OriginalColor;
+        public Color OriginalBaseColor;
+        public bool HasColor;
+        public bool HasBaseColor;
+    }
+
+    private MaterialColorSnapshot[] materialSnapshots;
+    private Light[] eyeLights;
+    private Color[] eyeLightOriginalColors;
+    private Coroutine damageFlashRoutine;
 
     // A helper list to track all 3 coordinates this Boss currently spans
     private List<Vector2> currentOccupiedKeys = new List<Vector2>();
@@ -30,7 +56,39 @@ public class BossEnemy : EnemyFollower
         {
             OccupiedTiles.Add(key);
         }
+
+        nextMoveTime = Time.time;
+
+        InitializeAnimations();
+        CacheDamageFlashTargets();
     }
+
+    protected override void PerformAttack(Vector3 dir)
+    {
+        if (isDying) return;
+
+        transform.forward = dir;
+        isMoving = false;
+        SetMoving(false);
+        TriggerAttack();
+
+        if (AudioManager.Instance != null && attackSFX != null)
+            AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
+
+        if (player.TryGetComponent<PlayerController>(out var pc))
+            pc.TakeDamage(false, transform.position);
+
+        nextMoveTime = Time.time + attackAnimDuration;
+    }
+
+    protected override void StartMovement()
+    {
+        moveStartPosition = transform.position;
+        isMoving = true;
+        SetMoving(true);
+    }
+
+    private Vector3 moveStartPosition;
 
     // --- OVERRIDDEN MULTI-TILE VALIDATION AND MOVEMENT ---
 
@@ -99,15 +157,43 @@ public class BossEnemy : EnemyFollower
         }
 
         targetPosition = centerDest3D;
-        isMoving = true;
         transform.forward = direction;
+        StartMovement();
         return true;
     }
+
+    protected override void Update()
+    {
+        if (isDying) return;
+        if (isFalling) { HandleFalling(); return; }
+
+        if (isMoving)
+        {
+            float stepDuration = 1f / Mathf.Max(moveSpeed, 0.01f);
+            moveTimer += Time.deltaTime;
+            float t = stepDuration <= Mathf.Epsilon ? 1f : Mathf.Clamp01(moveTimer / stepDuration);
+            transform.position = Vector3.Lerp(moveStartPosition, targetPosition, t);
+
+            if (t >= 1f)
+                FinishMovement();
+        }
+        else
+        {
+            transform.position = targetPosition;
+            CheckForVoid();
+            if (!isFalling && Time.time >= nextMoveTime)
+                DetermineNextStep();
+        }
+    }
+
+    private float moveTimer;
 
     protected override void FinishMovement()
     {
         transform.position = targetPosition;
         isMoving = false;
+        moveTimer = 0f;
+        SetMoving(false);
         nextMoveTime = Time.time + timeBetweenSteps;
 
         // Double-check alignment precision for all 3 tracked sub-tiles
@@ -130,7 +216,7 @@ public class BossEnemy : EnemyFollower
 
     // --- OVERRIDDEN VOID DETECTION ---
 
-    protected new void CheckForVoid()
+    protected override void CheckForVoid()
     {
         // The boss only falls if its central foundation tile breaks away out from under it
         if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
@@ -144,24 +230,172 @@ public class BossEnemy : EnemyFollower
 
     public override void Die(Vector3? deathSourcePosition = null)
     {
+        if (isDying) return;
+
         health -= 1;
         Debug.Log($"Boss took damage! Health remaining: {health}");
 
-        if (health <= 0 || isFalling)
+        if (health > 0 && !isFalling)
         {
-            ClearEntireFootprint();
-            if (NavigationManager.Instance != null)
+            FaceDeathSource(deathSourcePosition);
+            PlayDamageFlash();
+            return;
+        }
+
+        StartCoroutine(BossDeathSequence(deathSourcePosition));
+    }
+
+    private void CacheDamageFlashTargets()
+    {
+        var renderers = GetComponentsInChildren<Renderer>(true);
+        var snapshots = new List<MaterialColorSnapshot>();
+
+        foreach (var renderer in renderers)
+        {
+            if (renderer is MeshRenderer meshRenderer && !meshRenderer.enabled)
+                continue;
+
+            foreach (var material in renderer.materials)
             {
-                NavigationManager.Instance.OpenCreditsScene();
+                if (material == null) continue;
+
+                var snapshot = new MaterialColorSnapshot { Material = material };
+                if (material.HasProperty("_Color"))
+                {
+                    snapshot.HasColor = true;
+                    snapshot.OriginalColor = material.color;
+                }
+                if (material.HasProperty("_BaseColor"))
+                {
+                    snapshot.HasBaseColor = true;
+                    snapshot.OriginalBaseColor = material.GetColor("_BaseColor");
+                }
+                snapshots.Add(snapshot);
             }
-            else
-            {
-                // Fallback for scene simulation in the editor
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Credits");
-            }
-            Destroy(gameObject);
+        }
+
+        materialSnapshots = snapshots.ToArray();
+        eyeLights = GetComponentsInChildren<Light>(true);
+        eyeLightOriginalColors = new Color[eyeLights.Length];
+        for (int i = 0; i < eyeLights.Length; i++)
+            eyeLightOriginalColors[i] = eyeLights[i].color;
+    }
+
+    private void PlayDamageFlash()
+    {
+        if (materialSnapshots == null || materialSnapshots.Length == 0)
+            CacheDamageFlashTargets();
+
+        if (damageFlashRoutine != null)
+            StopCoroutine(damageFlashRoutine);
+
+        damageFlashRoutine = StartCoroutine(DamageFlashRoutine());
+    }
+
+    private IEnumerator DamageFlashRoutine()
+    {
+        float pulseDuration = damageFlashDuration / Mathf.Max(damageFlashPulses, 1);
+
+        for (int pulse = 0; pulse < damageFlashPulses; pulse++)
+        {
+            ApplyDamageFlashColor(damageFlashColor);
+            yield return new WaitForSeconds(pulseDuration * 0.45f);
+            RestoreDamageFlashColors();
+            yield return new WaitForSeconds(pulseDuration * 0.55f);
+        }
+
+        damageFlashRoutine = null;
+    }
+
+    private void ApplyDamageFlashColor(Color flashColor)
+    {
+        foreach (var snapshot in materialSnapshots)
+        {
+            if (snapshot.Material == null) continue;
+
+            if (snapshot.HasColor)
+                snapshot.Material.color = flashColor;
+            if (snapshot.HasBaseColor)
+                snapshot.Material.SetColor("_BaseColor", flashColor);
+        }
+
+        for (int i = 0; i < eyeLights.Length; i++)
+        {
+            if (eyeLights[i] != null)
+                eyeLights[i].color = flashColor;
         }
     }
+
+    private void RestoreDamageFlashColors()
+    {
+        foreach (var snapshot in materialSnapshots)
+        {
+            if (snapshot.Material == null) continue;
+
+            if (snapshot.HasColor)
+                snapshot.Material.color = snapshot.OriginalColor;
+            if (snapshot.HasBaseColor)
+                snapshot.Material.SetColor("_BaseColor", snapshot.OriginalBaseColor);
+        }
+
+        for (int i = 0; i < eyeLights.Length; i++)
+        {
+            if (eyeLights[i] != null)
+                eyeLights[i].color = eyeLightOriginalColors[i];
+        }
+    }
+
+    private IEnumerator BossDeathSequence(Vector3? deathSourcePosition)
+    {
+        if (damageFlashRoutine != null)
+        {
+            StopCoroutine(damageFlashRoutine);
+            damageFlashRoutine = null;
+        }
+        RestoreDamageFlashColors();
+
+        isDying = true;
+        isMoving = false;
+        SetMoving(false);
+        ClearEntireFootprint();
+        FaceDeathSource(deathSourcePosition);
+        TriggerDie();
+        PlayDeathSfx();
+        DisableColliders();
+
+        float deathDuration = bossDeathDuration;
+        if (animatorOverride != null && animatorOverride.runtimeAnimatorController != null)
+        {
+            yield return null;
+            AnimatorStateInfo state = animatorOverride.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Die") && state.length > 0f)
+                deathDuration = state.length;
+        }
+
+        Light[] lights = GetComponentsInChildren<Light>();
+        float[] lightStart = new float[lights.Length];
+        for (int i = 0; i < lights.Length; i++)
+            lightStart[i] = lights[i].intensity;
+
+        float elapsed = 0f;
+        while (elapsed < deathDuration)
+        {
+            float t = Mathf.Clamp01(elapsed / deathDuration);
+            for (int i = 0; i < lights.Length; i++)
+                lights[i].intensity = Mathf.Lerp(lightStart[i], 0f, t);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (NavigationManager.Instance != null)
+            NavigationManager.Instance.OpenCreditsScene();
+        else
+            SceneManager.LoadScene("Credits");
+
+        Destroy(gameObject);
+    }
+
 
     protected override void OnDestroy()
     {
