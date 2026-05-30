@@ -483,6 +483,42 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5559151937749674871}
     m_Modifications:
+    - target: {fileID: -9214144680200322619, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 39.905903
+      objectReference: {fileID: 0}
+    - target: {fileID: -9214144680200322619, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 1.1028919
+      objectReference: {fileID: 0}
+    - target: {fileID: -9214144680200322619, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 20.34705
+      objectReference: {fileID: 0}
+    - target: {fileID: -8818923927361274504, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -12.616462
+      objectReference: {fileID: 0}
+    - target: {fileID: -8818923927361274504, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -0.17275733
+      objectReference: {fileID: 0}
+    - target: {fileID: -8818923927361274504, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -0.3137765
+      objectReference: {fileID: 0}
+    - target: {fileID: -8814740427168803506, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -3.8027437
+      objectReference: {fileID: 0}
+    - target: {fileID: -8814740427168803506, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -0.75242037
+      objectReference: {fileID: 0}
+    - target: {fileID: -8814740427168803506, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 22.37668
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 350e73162dc3ea14db4ae6c25069d255, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.7
