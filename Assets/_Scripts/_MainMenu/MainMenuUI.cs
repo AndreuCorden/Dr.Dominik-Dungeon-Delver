@@ -33,4 +33,13 @@ public class MainMenuUI : MonoBehaviour
         if (NavigationManager.Instance != null)
             NavigationManager.Instance.ToggleInstructions();
     }
+
+    public void OnClickExitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 }

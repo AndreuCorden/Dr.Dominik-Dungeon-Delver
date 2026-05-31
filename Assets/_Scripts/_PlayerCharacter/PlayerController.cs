@@ -378,12 +378,6 @@ public class PlayerController : MonoBehaviour
         isStepMoving = false;
         movementVisualYOffset = 0f;
 
-        if (health <= 1 && !isGodMode)
-        {
-            TakeDamage(true);
-            yield break;
-        }
-
         float fallTimer = 0f;
         while (fallTimer < 1.0f)
         {
@@ -419,7 +413,10 @@ public class PlayerController : MonoBehaviour
         if (health <= 0)
         {
             isDying = true;
-            StartCoroutine(HandlePlayerDeath());
+            if (isFall)
+                StartCoroutine(HandleFallGameOver());
+            else
+                StartCoroutine(HandlePlayerDeath());
             return;
         }
 
@@ -443,6 +440,23 @@ public class PlayerController : MonoBehaviour
                 UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
             }
         }
+    }
+
+    IEnumerator HandleFallGameOver()
+    {
+        isDying = true;
+        isMoving = false;
+        isStepMoving = false;
+        isFalling = false;
+
+        AddCoin(-coins);
+
+        if (NavigationManager.Instance != null)
+            NavigationManager.Instance.ReturnToMainMenu();
+        else
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+
+        yield break;
     }
 
     IEnumerator HandlePlayerDeath()
