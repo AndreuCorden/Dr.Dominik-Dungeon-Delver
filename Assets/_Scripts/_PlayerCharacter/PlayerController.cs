@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private AudioClip moveSFX;
     [SerializeField] private AudioClip attackSFX;
     [SerializeField] private AudioClip dieSFX;
-    [SerializeField][Range(0f, 1f)] private float sfxVolume = 0.8f;
+    [SerializeField] [Range(0f, 1f)] private float sfxVolume = 0.8f;
 
     private Vector3 targetPosition;
     private Vector3 moveStartPosition;
@@ -400,11 +400,6 @@ public class PlayerController : MonoBehaviour
         }
 
         ChangeHealth(-1);
-
-        if (AudioManager.Instance != null && dieSFX != null)
-        {
-            AudioManager.Instance.PlaySFX(dieSFX, transform.position, sfxVolume);
-        }
 
         if (!isFall)
             TriggerHitAnimation();

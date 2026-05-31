@@ -2,6 +2,11 @@ using UnityEngine;
 
 public class MainMenuUI : MonoBehaviour
 {
+    void Awake()
+    {
+        MainMenuCameraSetup.Apply();
+    }
+
     void Start()
     {
         if (AudioManager.Instance != null)

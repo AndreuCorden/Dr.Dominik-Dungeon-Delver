@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8b968c6416e8b854092e84ed3cfd4bb1
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/Buttons_Prefabs/Confirm.prefab
+  uploadId: 910132

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f0d7ed70ce9219445b789dac7fde166f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/Buttons_Prefabs/Upgrade.prefab
+  uploadId: 910132

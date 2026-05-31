@@ -26,13 +26,33 @@ public class NavigationManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
     void Start()
     {
-        // Ensure it starts hidden when launching the game
+        HidePersistentOverlays();
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == mainMenuSceneName)
+            HidePersistentOverlays();
+    }
+
+    void HidePersistentOverlays()
+    {
         if (instructionsCanvas != null)
-        {
             instructionsCanvas.SetActive(false);
-        }
+
+        Time.timeScale = 1f;
     }
 
     void Update()
@@ -61,19 +81,19 @@ public class NavigationManager : MonoBehaviour
     // --- GLOBAL SCENE NAVIGATION ---
     public void StartGame()
     {
-        Time.timeScale = 1f; // Safeguard if moving scenes
+        HidePersistentOverlays();
         SceneManager.LoadScene(gameplaySceneName);
     }
 
     public void ReturnToMainMenu()
     {
-        Time.timeScale = 1f;
+        HidePersistentOverlays();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
     public void OpenCreditsScene()
     {
-        Time.timeScale = 1f;
+        HidePersistentOverlays();
         SceneManager.LoadScene(creditsSceneName);
     }
 
