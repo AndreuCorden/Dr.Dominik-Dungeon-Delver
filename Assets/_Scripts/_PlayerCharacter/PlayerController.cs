@@ -8,6 +8,9 @@ public class PlayerController : MonoBehaviour
     public static event Action<int> OnHealthChanged;
     public static event Action<int> OnCoinsChanged;
 
+    [Header("Debug / Cheats")]
+    public bool isGodMode = false; // Toggled via pressing 'G'
+
     public int health = 3;
     public int coins = 0;
     public float moveSpeed = 5f;
@@ -216,21 +219,41 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         Keyboard kb = Keyboard.current;
-        if (!isMoving && kb != null)
+        if (kb != null)
         {
-            if (kb.spaceKey.wasPressedThisFrame)
+            // --- GOD MODE TOGGLE WATCHER ---
+            if (kb.gKey.wasPressedThisFrame)
             {
-                PerformSpaceAttack();
+                isGodMode = !isGodMode;
+                Debug.Log($"God Mode Active status: {isGodMode}");
             }
-            else
+
+            if (!isMoving)
             {
-                Vector3 direction = GetHeldMoveDirection(kb);
-                if (direction != Vector3.zero && IsDestinationSafe(direction))
-                    Move(direction);
+                if (kb.spaceKey.wasPressedThisFrame)
+                {
+                    PerformSpaceAttack();
+                }
+                else
+                {
+                    Vector3 direction = GetHeldMoveDirection(kb);
+                    if (direction != Vector3.zero)
+                    {
+                        // Update player orientation to face direction pressed instantly, even if the destination is blocked
+                        targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+
+                        if (IsDestinationSafe(direction))
+                        {
+                            Move(direction);
+                        }
+                    }
+                }
             }
         }
+
         if (!isMoving)
             CheckForVoid();
+
         UpdateMovementPosition();
         UpdateRotation();
 
@@ -324,7 +347,6 @@ public class PlayerController : MonoBehaviour
         isStepMoving = true;
         moveTimer = 0f;
 
-        // --- PLAY PLAYER MOVE SFX ---
         if (AudioManager.Instance != null && moveSFX != null)
         {
             AudioManager.Instance.PlaySFX(moveSFX, transform.position, sfxVolume);
@@ -332,7 +354,8 @@ public class PlayerController : MonoBehaviour
 
         float effectiveSpeed = moveSpeed * currentMoveMultiplier;
         moveDuration = Vector3.Distance(moveStartPosition, targetPosition) / Mathf.Max(effectiveSpeed, 0.01f);
-        targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+        
+        // Note: targetRotation is now handled instantly upon checking input in Update()
     }
 
     void CheckForVoid()
@@ -381,15 +404,8 @@ public class PlayerController : MonoBehaviour
         if (!isFall)
             TriggerHitAnimation();
 
-        // --- GAME OVER: PLAYER DIED ---
         if (health <= 0)
         {
-            // --- PLAY PLAYER DEATH SFX ---
-            if (AudioManager.Instance != null && dieSFX != null)
-            {
-                AudioManager.Instance.PlaySFX(dieSFX, transform.position, sfxVolume);
-            }
-
             isMoving = false;
             isStepMoving = false;
             isFalling = false;
@@ -408,7 +424,6 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // --- NON-LETHAL FALL: RESTART CURRENT LEVEL ---
         if (isFall)
         {
             isMoving = false;
@@ -454,7 +469,6 @@ public class PlayerController : MonoBehaviour
 
         Vector3 attackPos = GetAttackTilePosition();
 
-        // Buscar solo en la casilla de enfrente
         Collider[] hitColliders = Physics.OverlapBox(
             attackPos,
             new Vector3(0.35f, 0.5f, 0.35f)
@@ -478,7 +492,6 @@ public class PlayerController : MonoBehaviour
         dir.y = 0f;
         dir = dir.normalized;
 
-        // Una casilla delante
         Vector3 tile = transform.position + dir;
         return RoundGridPosition(tile);
     }
@@ -547,7 +560,10 @@ public class PlayerController : MonoBehaviour
 
     public void ChangeHealth(int amount)
     {
-        health += amount;
+        if(!isGodMode || amount == 3)
+        {
+            health += amount;
+        }
         OnHealthChanged?.Invoke(health);
     }
 

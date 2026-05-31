@@ -17,11 +17,11 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected AudioClip moveSFX;
     [SerializeField] protected AudioClip attackSFX;
     // --- NEW: DEATH SFX FIELD ---
-    [SerializeField] protected AudioClip dieSFX; 
-    [SerializeField] [Range(0f, 1f)] protected float sfxVolume = 0.8f;
+    [SerializeField] protected AudioClip dieSFX;
+    [SerializeField][Range(0f, 1f)] protected float sfxVolume = 0.8f;
 
     [Header("Animation")]
-    [SerializeField] private Animator animatorOverride;
+    [SerializeField] protected Animator animatorOverride;
     [SerializeField] private float deathDestroyDelay = 0.8f;
 
     [Header("Attack VFX")]
@@ -36,7 +36,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected bool isFalling = false;
     protected float nextMoveTime;
     protected Transform player;
-    private bool isDying = false;
+    protected bool isDying = false;
 
     private readonly List<AnimatorBinding> animatorBindings = new List<AnimatorBinding>();
     private static readonly int IsMovingId = Animator.StringToHash("IsMoving");
@@ -62,6 +62,11 @@ public abstract class BaseEnemy : MonoBehaviour
         transform.position = targetPosition;
         OccupiedTiles.Add(GetGridKey(transform.position));
 
+        InitializeAnimations();
+    }
+
+    protected void InitializeAnimations()
+    {
         CacheAnimators();
         ResolveSlashSpawnPoint();
         SetMoving(false);
@@ -88,7 +93,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     // --- SHARED LOGIC ---
 
-    protected void CheckForVoid()
+    protected virtual void CheckForVoid()
     {
         if (!Physics.Raycast(transform.position + Vector3.up, Vector3.down, 2f, floorLayer))
         {
@@ -130,11 +135,11 @@ public abstract class BaseEnemy : MonoBehaviour
         return false;
     }
 
-    protected void PerformAttack(Vector3 dir)
+    protected virtual void PerformAttack(Vector3 dir)
     {
         transform.forward = dir;
         TriggerAttack();
-        
+
         if (AudioManager.Instance != null && attackSFX != null)
         {
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
@@ -285,8 +290,11 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void OnDestroy()
     {
-        OccupiedTiles.Remove(GetGridKey(transform.position));
-        if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+        if (!isDying)
+        {
+            OccupiedTiles.Remove(GetGridKey(transform.position));
+            if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+        }
     }
 
     private void CacheAnimators()
@@ -304,6 +312,8 @@ public abstract class BaseEnemy : MonoBehaviour
             // Ensure AnimationEvents (e.g. SpawnSlashVFX) have a receiver on the Animator GameObject.
             if (anim.GetComponent<EnemyAnimationEvents>() == null)
                 anim.gameObject.AddComponent<EnemyAnimationEvents>();
+
+            anim.applyRootMotion = false;
 
             var binding = new AnimatorBinding { Animator = anim };
             foreach (var param in anim.parameters)
@@ -329,7 +339,7 @@ public abstract class BaseEnemy : MonoBehaviour
         }
     }
 
-    private void SetMoving(bool moving)
+    protected void SetMoving(bool moving)
     {
         foreach (var binding in animatorBindings)
         {
@@ -337,7 +347,7 @@ public abstract class BaseEnemy : MonoBehaviour
         }
     }
 
-    private void TriggerAttack()
+    protected void TriggerAttack()
     {
         foreach (var binding in animatorBindings)
         {
@@ -345,7 +355,7 @@ public abstract class BaseEnemy : MonoBehaviour
         }
     }
 
-    private void TriggerDie()
+    protected void TriggerDie()
     {
         foreach (var binding in animatorBindings)
         {
@@ -370,11 +380,19 @@ public abstract class BaseEnemy : MonoBehaviour
         return false;
     }
 
-    private void DisableColliders()
+    protected void DisableColliders()
     {
         foreach (var col in GetComponentsInChildren<Collider>())
         {
             col.enabled = false;
+        }
+    }
+
+    protected void PlayDeathSfx()
+    {
+        if (AudioManager.Instance != null && dieSFX != null)
+        {
+            AudioManager.Instance.PlaySFX(dieSFX, transform.position, sfxVolume);
         }
     }
 
