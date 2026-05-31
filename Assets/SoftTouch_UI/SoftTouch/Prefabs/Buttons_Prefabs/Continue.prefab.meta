@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d37fd6bf8de76154e9cff998628e464f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/Buttons_Prefabs/Continue.prefab
+  uploadId: 910132

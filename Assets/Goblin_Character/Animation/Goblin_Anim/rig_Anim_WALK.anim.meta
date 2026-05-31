@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5f09becb7295b1e49bcf0ca4cc285fd0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311643
+  packageName: Goblin LowPoly - Animation
+  packageVersion: 1.0
+  assetPath: Assets/Goblin_Character/Animation/Goblin_Anim/rig_Anim_WALK.anim
+  uploadId: 734482

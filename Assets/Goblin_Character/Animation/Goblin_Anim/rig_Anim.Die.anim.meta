@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b8c2236a561815c48b42e7cead4243ed
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311643
+  packageName: Goblin LowPoly - Animation
+  packageVersion: 1.0
+  assetPath: Assets/Goblin_Character/Animation/Goblin_Anim/rig_Anim.Die.anim
+  uploadId: 734482

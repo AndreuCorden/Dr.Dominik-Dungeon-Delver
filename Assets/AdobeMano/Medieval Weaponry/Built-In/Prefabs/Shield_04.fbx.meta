@@ -1,0 +1,238 @@
+fileFormatVersion: 2
+guid: 5d147e50a8ed26d46b112734e78a094e
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield _04 Steel Plate
+    second: {fileID: 2100000, guid: 47900cab099273e48b0a532ea3afd048, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Back
+    second: {fileID: 2100000, guid: 12baf8b7b23fa8c4aaa5eddf0a899242, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Front
+    second: {fileID: 2100000, guid: ada022fbea92292499a3337a11a5f258, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Handle
+    second: {fileID: 2100000, guid: 3cb633627c97588479e640c7d379c3bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Steel Base
+    second: {fileID: 2100000, guid: c09df9c7d34bb4844aae0a811f1bb16d, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield _04 Steel Plate_BaseColor
+    second: {fileID: 2800000, guid: 79ba5f18c81bcb840ba0779c8559529d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield _04 Steel Plate_Metallic
+    second: {fileID: 2800000, guid: 1021e3d31c8ee9f468696f38f726c111, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield _04 Steel Plate_Normal
+    second: {fileID: 2800000, guid: dfeb3f3583e00444c9ca0873649ca389, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield _04 Steel Plate_Roughness
+    second: {fileID: 2800000, guid: 62386243bf88ee24695e6e5008fb48b0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Back_BaseColor
+    second: {fileID: 2800000, guid: 5e15d4c912c5d8643adfa10f0ad00099, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Back_Metallic
+    second: {fileID: 2800000, guid: 9425b7c250904a541bd0d089357ecabf, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Back_Normal
+    second: {fileID: 2800000, guid: 4c740236a2ea2b9469a51043bdf2d988, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Back_Roughness
+    second: {fileID: 2800000, guid: b36c89a3d04de3d40ac942d8d2b49ca6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Front_BaseColor
+    second: {fileID: 2800000, guid: 1ac71c06bc17ac641ad043f966c85844, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Front_Metallic
+    second: {fileID: 2800000, guid: 09258db7b61ce0a429adf590980e16b6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Front_Normal
+    second: {fileID: 2800000, guid: a6368ec518595fa4aacb53fa26e3bfe7, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Front_Roughness
+    second: {fileID: 2800000, guid: ca63cdb8f4c40f04f9ae54aaa91d87f6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Handle_BaseColor
+    second: {fileID: 2800000, guid: 5b3b5687499be0f47bbfa45bda14dbdc, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Handle_Metallic
+    second: {fileID: 2800000, guid: e3398e868b9456542b10fca08b14d4d0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Handle_Normal
+    second: {fileID: 2800000, guid: c259a035d21f50a4ca46f9c6ed471a3d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Handle_Roughness
+    second: {fileID: 2800000, guid: 3d46a39a1263e1348a200bce39f82f65, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Steel Base_BaseColor
+    second: {fileID: 2800000, guid: 277b72fb1d478424e87f931bc7e49a47, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Steel Base_Metallic
+    second: {fileID: 2800000, guid: b972ba99f8690044180e9faf454afe08, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Steel Base_Normal
+    second: {fileID: 2800000, guid: 837e1f9aace81244bac8eb8249e1685b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Shield_04 Steel Base_Roughness
+    second: {fileID: 2800000, guid: 64d69f6c674bff74d8b62d25c1841f19, type: 3}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 1
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 308065
+  packageName: 3D Medieval Weaponry
+  packageVersion: 1.0
+  assetPath: Assets/AdobeMano/Medieval Weaponry/Built-In/Prefabs/Shield_04.fbx
+  uploadId: 724344

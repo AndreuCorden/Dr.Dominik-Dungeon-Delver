@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ba3dfd94e6549924a9ecd40584a458dc
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 377802
+  packageName: Soft Touch UI Kit Demo
+  packageVersion: 1.0
+  assetPath: Assets/SoftTouch_UI/SoftTouch/Prefabs/Buttons_Prefabs/Unlock.prefab
+  uploadId: 910132
