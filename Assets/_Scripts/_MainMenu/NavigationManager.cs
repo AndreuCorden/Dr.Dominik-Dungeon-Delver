@@ -11,6 +11,9 @@ public class NavigationManager : MonoBehaviour
     public string gameplaySceneName = "LevelScene_01";
     public string creditsSceneName = "Credits";
 
+    [Header("UI Persistent Overlays")]
+    [SerializeField] private GameObject instructionsCanvas; // Drag your Panel or Canvas here!
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -23,16 +26,56 @@ public class NavigationManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    void Start()
+    {
+        // Ensure it starts hidden when launching the game
+        if (instructionsCanvas != null)
+        {
+            instructionsCanvas.SetActive(false);
+        }
+    }
+
     void Update()
     {
         HandleKeyboardShortcuts();
     }
 
-    // --- GLOBAL SCENE NAVIGATION ---
+    // --- TOGGLE INSTRUCTIONS GAMEPLAY OVERLAY ---
+    public void ToggleInstructions()
+    {
+        if (instructionsCanvas == null)
+        {
+            Debug.LogWarning("Instructions Canvas reference is missing on NavigationManager!");
+            return;
+        }
 
-    public void StartGame() => SceneManager.LoadScene(gameplaySceneName);
-    public void ReturnToMainMenu() => SceneManager.LoadScene(mainMenuSceneName);
-    public void OpenCreditsScene() => SceneManager.LoadScene(creditsSceneName);
+        bool isCurrentlyActive = instructionsCanvas.activeSelf;
+        bool willBeActive = !isCurrentlyActive;
+
+        instructionsCanvas.SetActive(willBeActive);
+
+        // Pause time if active, resume if deactivated
+        Time.timeScale = willBeActive ? 0f : 1f;
+    }
+
+    // --- GLOBAL SCENE NAVIGATION ---
+    public void StartGame()
+    {
+        Time.timeScale = 1f; // Safeguard if moving scenes
+        SceneManager.LoadScene(gameplaySceneName);
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(mainMenuSceneName);
+    }
+
+    public void OpenCreditsScene()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(creditsSceneName);
+    }
 
     // --- GLOBAL KEYBOARD SHORTCUTS ---
     private void HandleKeyboardShortcuts()
@@ -40,6 +83,15 @@ public class NavigationManager : MonoBehaviour
         if (Keyboard.current == null) return;
 
         string currentSceneName = SceneManager.GetActiveScene().name;
+
+        // Press 'I' to toggle instructions anywhere
+        if (Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            ToggleInstructions();
+        }
+
+        // Disable normal shortcuts if game is paused by instructions screen
+        if (instructionsCanvas != null && instructionsCanvas.activeSelf) return;
 
         if (Keyboard.current.mKey.wasPressedThisFrame && currentSceneName != mainMenuSceneName)
         {
@@ -82,7 +134,6 @@ public class NavigationManager : MonoBehaviour
 
         if (activeHandler != null && SceneManager.GetActiveScene().name == gameplaySceneName)
         {
-            // NEW: If the level handler is currently mid-animation, reject the input entirely!
             if (activeHandler.IsTransitioning)
             {
                 Debug.LogWarning("Developer Shortcut Rejected: Level is currently transitioning.");

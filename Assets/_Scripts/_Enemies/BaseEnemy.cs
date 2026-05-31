@@ -17,8 +17,8 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected AudioClip moveSFX;
     [SerializeField] protected AudioClip attackSFX;
     // --- NEW: DEATH SFX FIELD ---
-    [SerializeField] protected AudioClip dieSFX; 
-    [SerializeField] [Range(0f, 1f)] protected float sfxVolume = 0.8f;
+    [SerializeField] protected AudioClip dieSFX;
+    [SerializeField][Range(0f, 1f)] protected float sfxVolume = 0.8f;
 
     [Header("Animation")]
     [SerializeField] protected Animator animatorOverride;
@@ -139,7 +139,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         transform.forward = dir;
         TriggerAttack();
-        
+
         if (AudioManager.Instance != null && attackSFX != null)
         {
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
@@ -290,8 +290,11 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void OnDestroy()
     {
-        OccupiedTiles.Remove(GetGridKey(transform.position));
-        if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+        if (!isDying)
+        {
+            OccupiedTiles.Remove(GetGridKey(transform.position));
+            if (isMoving) OccupiedTiles.Remove(GetGridKey(targetPosition));
+        }
     }
 
     private void CacheAnimators()

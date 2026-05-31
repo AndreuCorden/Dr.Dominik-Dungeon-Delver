@@ -15,12 +15,9 @@ public class BossEnemy : EnemyFollower
     [Header("Boss Attack")]
     [SerializeField] private float attackAnimDuration = 2.467f;
 
-    // =========================================================
-    // UPDATED: FIRE BREATH ATTACK CONFIGURATIONS (NO DAMAGE STICK)
-    // =========================================================
     [Header("Fire Breath Settings")]
     public GameObject pixelFirePrefab;
-    [HideInInspector] public Transform shootPoint; // Automatically assigned by the level generator code
+    [HideInInspector] public Transform shootPoint; 
 
     public int cubesPerBurst = 20;
     public float burstDuration = 0.5f;
@@ -45,30 +42,30 @@ public class BossEnemy : EnemyFollower
     private Color[] eyeLightOriginalColors;
     private Coroutine damageFlashRoutine;
 
-    // A helper list to track all 3 coordinates this Boss currently spans
+    // Helper lists to track the 6 coordinates (3x2 footprint) this Boss occupies
     private List<Vector2> currentOccupiedKeys = new List<Vector2>();
     private List<Vector2> targetOccupiedKeys = new List<Vector2>();
 
-    // NEW STATE TRACKER: Prevents the movement AI loops from running mid-animation
     private bool isAttacking = false;
+    private Vector3 moveStartPosition;
+    private float moveTimer;
 
     protected override void Start()
     {
-        // Find player and round center position using BaseEnemy initialization rules
         player = GameObject.FindGameObjectWithTag("Player").transform;
         targetPosition = RoundToGrid(transform.position);
         transform.position = targetPosition;
 
-        // Force a starting forward direction so our side-tile offsets calculate correctly
         if (transform.forward == Vector3.zero) transform.forward = Vector3.forward;
 
-        // Explicitly map all 3 tiles we are starting on
+        // Populate the starting 3x2 grid footprint
         UpdateOccupiedTilesMap(transform.position, transform.forward, currentOccupiedKeys);
 
-        // Register all 3 blocks into the global system
+        // Register all 6 core blocks into the global system
         foreach (Vector2 key in currentOccupiedKeys)
         {
-            OccupiedTiles.Add(key);
+            if (!OccupiedTiles.Contains(key))
+                OccupiedTiles.Add(key);
         }
 
         nextMoveTime = Time.time;
@@ -77,9 +74,6 @@ public class BossEnemy : EnemyFollower
         CacheDamageFlashTargets();
     }
 
-    // =========================================================
-    // MODIFIED: ATTACK TRIGGERS VISUAL FIRE BURST AND DIRECT PLAYER DAMAGE
-    // =========================================================
     protected override void PerformAttack(Vector3 dir)
     {
         if (isDying) return;
@@ -89,26 +83,20 @@ public class BossEnemy : EnemyFollower
         SetMoving(false);
         TriggerAttack();
 
-        // Standardized project master volume calculation logic
         if (AudioManager.Instance != null && attackSFX != null)
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
 
-        // Standard Proximity Damage: Hurts player instantly if they are within the attack zone
         if (player.TryGetComponent<PlayerController>(out var pc))
             pc.TakeDamage(false, transform.position);
 
-        // Run fire breath particle stream burst purely for visual effect/juice!
         StartCoroutine(ExecuteFireBreathSequence());
 
         nextMoveTime = Time.time + attackAnimDuration;
     }
 
-    // =========================================================
-    // VISUAL FIRE STREAM COROUTINE GENERATOR LOOP
-    // =========================================================
     private IEnumerator ExecuteFireBreathSequence()
     {
-        isAttacking = true; // Lock out movement steps!
+        isAttacking = true; 
         
         float elapsed = 0;
         float spawnRate = burstDuration / Mathf.Max(cubesPerBurst, 1);
@@ -120,21 +108,20 @@ public class BossEnemy : EnemyFollower
             yield return new WaitForSeconds(spawnRate);
         }
 
-        // Wait out the rest of the physical animation length before unlocking AI tracking
         float remainingTime = attackAnimDuration - burstDuration;
         if (remainingTime > 0f)
         {
             yield return new WaitForSeconds(remainingTime);
         }
 
-        isAttacking = false; // Safely unlock movement now that full animation has played out!
+        isAttacking = false; 
     }
 
     private void SpawnFirePixel()
     {
-        // Use either the programmatically generated snout location or fall back to center body
         Transform originNode = (shootPoint != null) ? shootPoint : transform;
 
+        // Fire cone vector calculations
         Quaternion randomRot = originNode.rotation * Quaternion.Euler(
             Random.Range(-coneAngle, coneAngle),
             Random.Range(-coneAngle, coneAngle),
@@ -154,71 +141,51 @@ public class BossEnemy : EnemyFollower
         SetMoving(true);
     }
 
-    private Vector3 moveStartPosition;
-
-    // --- OVERRIDDEN MULTI-TILE VALIDATION AND MOVEMENT ---
-
+    // --- UPGRADED: 3x2 FOOTPRINT TRYMOVE LOGIC ---
     protected new bool TryMove(Vector3 direction)
     {
-        // Safety lock: if animating an attack, do not attempt to process steps or shift forward vectors
-        if (isAttacking) return false;
+        if (isAttacking || isDying) return false;
 
-        // --- FIX: ATTACK RANGE CHECK BEFORE MOVEMENT CALCULATIONS ---
-        // Calculate the grid tile that is exactly 2 blocks away from our *current* center
+        // Range Check: Attack if the player is standing directly within the 3x2 footprint path ahead
         Vector3 attackCheckPos = RoundToGrid(transform.position + (direction * 2f));
-        Vector2 attackCheckKey = GetGridKey(attackCheckPos);
+        UpdateOccupiedTilesMap(attackCheckPos, direction, targetOccupiedKeys);
         Vector2 playerKey = GetGridKey(player.position);
 
-        // If the player is standing on the center line 2 blocks ahead, attack!
-        if (playerKey == attackCheckKey)
+        if (targetOccupiedKeys.Contains(playerKey))
         {
             PerformAttack(direction);
             return true;
         }
-
-        // Also check if the player is standing 2 blocks ahead but diagonally touching our wings
-        Vector3 rightOffset = Vector3.Cross(Vector3.up, direction).normalized;
-        Vector2 attackLeftWingKey = GetGridKey(attackCheckPos - rightOffset);
-        Vector2 attackRightWingKey = GetGridKey(attackCheckPos + rightOffset);
-
-        if (playerKey == attackLeftWingKey || playerKey == attackRightWingKey)
-        {
-            PerformAttack(direction);
-            return true;
-        }
-        // -------------------------------------------------------------
 
         Vector3 centerDest3D = RoundToGrid(transform.position + direction);
 
-        // Calculate what our 3-tile footprint will look like at the destination
+        // Recalculate target tiles for environmental/obstacle validation checks
         UpdateOccupiedTilesMap(centerDest3D, direction, targetOccupiedKeys);
 
-        // Multi-Tile Validation Check Loop
+        // Multi-Tile Validation Loop
         foreach (Vector2 targetKey in targetOccupiedKeys)
         {
             Vector3 worldCheckPos = new Vector3(targetKey.x, centerDest3D.y, targetKey.y);
 
-            // Does a physical floor tile exist under this specific footprint segment?
+            // 1. Structural Floor Validation
             bool segmentHasFloor = Physics.Raycast(worldCheckPos + Vector3.up, Vector3.down, 2f, floorLayer);
-            if (!segmentHasFloor) return false; // Entire move fails if any part hangs over a void
+            if (!segmentHasFloor) return false; 
 
-            // Is this tile blocked by another enemy? 
+            // 2. Occupied Block checking (Disregard tiles we currently already own)
             if (OccupiedTiles.Contains(targetKey) && !currentOccupiedKeys.Contains(targetKey))
             {
-                return false; // Path blocked by another entity
+                return false; 
             }
         }
 
-        // Movement Execution: Clear old footprint coordinates, write new ones
+        // SWAP OCCUPATION MAPS: Clear old footprint coordinates out, register new ones
         foreach (Vector2 oldKey in currentOccupiedKeys) OccupiedTiles.Remove(oldKey);
         foreach (Vector2 newKey in targetOccupiedKeys) OccupiedTiles.Add(newKey);
 
-        // Swap local trackers
         List<Vector2> temp = currentOccupiedKeys;
         currentOccupiedKeys = targetOccupiedKeys;
         targetOccupiedKeys = temp;
 
-        // --- PLAY BOSS WALK SFX ---
         if (AudioManager.Instance != null && moveSFX != null)
         {
             AudioManager.Instance.PlaySFX(moveSFX, transform.position, volume);
@@ -250,13 +217,10 @@ public class BossEnemy : EnemyFollower
             transform.position = targetPosition;
             CheckForVoid();
             
-            // MODIFIED: Added !isAttacking check to prevent calculation attempts mid-animation
             if (!isFalling && !isAttacking && Time.time >= nextMoveTime)
                 DetermineNextStep();
         }
     }
-
-    private float moveTimer;
 
     protected override void FinishMovement()
     {
@@ -266,28 +230,24 @@ public class BossEnemy : EnemyFollower
         SetMoving(false);
         nextMoveTime = Time.time + timeBetweenSteps;
 
-        // Double-check alignment precision for all 3 tracked sub-tiles
+        // Re-align precision profiles
         UpdateOccupiedTilesMap(transform.position, transform.forward, currentOccupiedKeys);
     }
 
     protected override void DetermineNextStep()
     {
-        // Absolute check backup
         if (isAttacking) return;
 
         Vector3 diff = player.position - transform.position;
         Vector3 primary = Mathf.Abs(diff.x) > Mathf.Abs(diff.z) ?
             new Vector3(Mathf.Sign(diff.x), 0, 0) : new Vector3(0, 0, Mathf.Sign(diff.z));
 
-        // Call our localized multi-tile TryMove instead of base.TryMove
         if (!TryMove(primary))
         {
             Vector3 secondary = (primary.x != 0) ? new Vector3(0, 0, Mathf.Sign(diff.z)) : new Vector3(Mathf.Sign(diff.x), 0, 0);
             TryMove(secondary);
         }
     }
-
-    // --- OVERRIDDEN VOID DETECTION ---
 
     protected override void CheckForVoid()
     {
@@ -297,8 +257,6 @@ public class BossEnemy : EnemyFollower
             ClearEntireFootprint();
         }
     }
-
-    // --- DAMAGE AND LIFECYCLE MANAGEMENT ---
 
     public override void Die(Vector3? deathSourcePosition = null)
     {
@@ -314,6 +272,8 @@ public class BossEnemy : EnemyFollower
             return;
         }
 
+        // If dead, wipe keys instantly so entities don't get trapped by an ongoing corpse animation sequence
+        ClearEntireFootprint();
         StartCoroutine(BossDeathSequence(deathSourcePosition));
     }
 
@@ -350,8 +310,10 @@ public class BossEnemy : EnemyFollower
         eyeLights = GetComponentsInChildren<Light>(true);
         eyeLightOriginalColors = new Color[eyeLights.Length];
         for (int i = 0; i < eyeLights.Length; i++)
-            eyeLightOriginalColors[i] = eyeLights[i].color;
+            boxOriginalColor(i);
     }
+
+    private void boxOriginalColor(int i) => eyeLightOriginalColors[i] = eyeLights[i].color;
 
     private void PlayDamageFlash()
     {
@@ -429,7 +391,6 @@ public class BossEnemy : EnemyFollower
         isDying = true;
         isMoving = false;
         SetMoving(false);
-        ClearEntireFootprint();
         FaceDeathSource(deathSourcePosition);
         TriggerDie();
         PlayDeathSfx();
@@ -470,23 +431,45 @@ public class BossEnemy : EnemyFollower
 
     protected override void OnDestroy()
     {
-        ClearEntireFootprint();
+        // Guard checking prevents clearing a spot that a brand-new spawn just claimed!
+        if (!isDying)
+        {
+            ClearEntireFootprint();
+        }
     }
 
-    // --- FOOTPRINT CALCULATOR UTILITIES ---
-
+    // =========================================================
+    // DYNAMIC 3x2 BOUNDING BOX FOOTPRINT GENERATOR
+    // =========================================================
     private void UpdateOccupiedTilesMap(Vector3 centerPos, Vector3 forwardDir, List<Vector2> listToFill)
     {
         listToFill.Clear();
-        Vector3 rightOffset = Vector3.Cross(Vector3.up, forwardDir).normalized;
 
-        Vector3 centerTile = centerPos;
-        Vector3 leftTile = centerPos - rightOffset;
-        Vector3 rightTile = centerPos + rightOffset;
+        // Round directions to absolute clean grid cardinals
+        Vector3 fwd = new Vector3(Mathf.Round(forwardDir.x), 0f, Mathf.Round(forwardDir.z)).normalized;
+        if (fwd.sqrMagnitude < 0.1f) fwd = Vector3.forward;
 
-        listToFill.Add(GetGridKey(centerTile));
-        listToFill.Add(GetGridKey(leftTile));
-        listToFill.Add(GetGridKey(rightTile));
+        // Calculate a perpendicular right vector relative to our forward look vector
+        Vector3 side = new Vector3(-fwd.z, 0f, fwd.x); 
+
+        // Let centerPos be the front-row center tile. 
+        // The front row is 3 tiles wide (Left, Center, Right)
+        Vector3 frontCenter = centerPos;
+        Vector3 frontLeft = centerPos - side;
+        Vector3 frontRight = centerPos + side;
+
+        // The back row sits exactly 1 step backwards behind the front row (-fwd)
+        Vector3 backCenter = frontCenter - fwd;
+        Vector3 backLeft = frontLeft - fwd;
+        Vector3 backRight = frontRight - fwd;
+
+        // Register all 6 tile vectors securely into the collection output
+        listToFill.Add(GetGridKey(frontCenter));
+        listToFill.Add(GetGridKey(frontLeft));
+        listToFill.Add(GetGridKey(frontRight));
+        listToFill.Add(GetGridKey(backCenter));
+        listToFill.Add(GetGridKey(backLeft));
+        listToFill.Add(GetGridKey(backRight));
     }
 
     private void ClearEntireFootprint()

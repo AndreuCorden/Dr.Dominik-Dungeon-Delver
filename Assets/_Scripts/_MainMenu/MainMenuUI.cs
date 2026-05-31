@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class MainMenuUI : MonoBehaviour
 {
-    // These methods are what your UI Buttons will call in the Inspector!
-
     void Start()
     {
         if (AudioManager.Instance != null)
@@ -22,5 +20,12 @@ public class MainMenuUI : MonoBehaviour
     {
         if (NavigationManager.Instance != null)
             NavigationManager.Instance.OpenCreditsScene();
+    }
+
+    // New bridge method for your Main Menu Button Event Clicker
+    public void OnClickToggleInstructions()
+    {
+        if (NavigationManager.Instance != null)
+            NavigationManager.Instance.ToggleInstructions();
     }
 }
