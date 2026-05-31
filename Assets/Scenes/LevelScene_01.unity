@@ -1340,6 +1340,9 @@ MonoBehaviour:
   - {fileID: 21300022, guid: ac5bc8ea779f69f46b9c4ee09357056f, type: 3}
   - {fileID: 21300024, guid: ac5bc8ea779f69f46b9c4ee09357056f, type: 3}
   heartFrameDuration: 0.05
+  pauseUiParent: {fileID: 759838018}
+  pauseMenuPrefab: {fileID: 1042116388939591600, guid: 2f60c5f2602574c4c88232336d52c851, type: 3}
+  pauseMenuPanel: {fileID: 0}
 --- !u!4 &1438493188
 Transform:
   m_ObjectHideFlags: 0
@@ -1479,7 +1482,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6373611213713652018, guid: 8b968c6416e8b854092e84ed3cfd4bb1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnClickExitToMainMenu
+      value: OnClickPause
       objectReference: {fileID: 0}
     - target: {fileID: 6373611213713652018, guid: 8b968c6416e8b854092e84ed3cfd4bb1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -1491,7 +1494,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7257545562623911698, guid: 8b968c6416e8b854092e84ed3cfd4bb1, type: 3}
       propertyPath: m_text
-      value: Exit
+      value: Pausa
       objectReference: {fileID: 0}
     - target: {fileID: 7257545562623911698, guid: 8b968c6416e8b854092e84ed3cfd4bb1, type: 3}
       propertyPath: m_ActiveFontFeatures.Array.size
