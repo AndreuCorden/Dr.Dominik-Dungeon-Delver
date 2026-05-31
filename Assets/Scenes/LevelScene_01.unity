@@ -1320,7 +1320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
   coinText: {fileID: 1245241497}
-  roomText: {fileID: 0}
+  roomText: {fileID: 1078924763}
   heartImages:
   - {fileID: 1955561982}
   - {fileID: 1055268294}

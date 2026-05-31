@@ -37,6 +37,9 @@ public abstract class BaseEnemy : MonoBehaviour
     protected float nextMoveTime;
     protected Transform player;
     protected bool isDying = false;
+    protected bool isAttacking = false;
+
+    [SerializeField] private float attackAnimFallbackDuration = 0.6f;
 
     private readonly List<AnimatorBinding> animatorBindings = new List<AnimatorBinding>();
     private static readonly int IsMovingId = Animator.StringToHash("IsMoving");
@@ -85,7 +88,7 @@ public abstract class BaseEnemy : MonoBehaviour
         else
         {
             CheckForVoid(); // Always check if floor exists beneath feet
-            if (!isFalling && Time.time >= nextMoveTime) DetermineNextStep();
+            if (!isFalling && !isAttacking && Time.time >= nextMoveTime) DetermineNextStep();
         }
     }
 
@@ -116,6 +119,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (GetGridKey(player.position) == GetGridKey(dest3D))
         {
+            if (IsPlayerDying())
+                return false;
+
             PerformAttack(direction);
             return true;
         }
@@ -137,6 +143,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void PerformAttack(Vector3 dir)
     {
+        if (IsPlayerDying())
+            return;
+
         transform.forward = dir;
         TriggerAttack();
 
@@ -144,9 +153,50 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
         }
-        // Trigger Damage to Player and visual lunge here
-        if (player.TryGetComponent<PlayerController>(out var pc)) pc.TakeDamage(false, transform.position);
+
+        StartCoroutine(ApplyPlayerDamageAfterAttack());
+    }
+
+    protected IEnumerator ApplyPlayerDamageAfterAttack()
+    {
+        isAttacking = true;
+
+        float attackDuration = attackAnimFallbackDuration;
+        yield return null;
+
+        foreach (var binding in animatorBindings)
+        {
+            if (!binding.HasAttack || binding.Animator == null)
+                continue;
+
+            AnimatorStateInfo state = binding.Animator.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName("Attack") || state.length <= 0f)
+                continue;
+
+            float speed = binding.Animator.speed;
+            if (state.speed > 0f)
+                speed *= state.speed;
+
+            attackDuration = state.length / Mathf.Max(speed, 0.01f);
+            break;
+        }
+
+        yield return new WaitForSeconds(attackDuration);
+
+        isAttacking = false;
+
+        if (isDying || player == null)
+            yield break;
+
+        if (player.TryGetComponent<PlayerController>(out var pc) && !pc.IsDying)
+            pc.TakeDamage(false, transform.position);
+
         nextMoveTime = Time.time + timeBetweenSteps;
+    }
+
+    protected bool IsPlayerDying()
+    {
+        return PlayerController.Instance != null && PlayerController.Instance.IsDying;
     }
 
     protected virtual void StartMovement()

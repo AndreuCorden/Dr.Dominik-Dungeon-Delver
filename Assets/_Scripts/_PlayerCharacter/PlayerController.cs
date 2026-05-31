@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance;
@@ -35,6 +35,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private string hitTrigger = "Hit";
     [SerializeField] private string attackTrigger = "Attack";
+    [SerializeField] private string dieTrigger = "Die";
+    [SerializeField] private float dieFallbackDuration = 1.5f;
+
+    public bool IsDying => isDying;
 
     [Header("VFX")]
     [SerializeField] private GameObject slashVfxPrefab;
@@ -59,6 +63,7 @@ public class PlayerController : MonoBehaviour
     private bool isMoving = false;
     private bool isStepMoving = false;
     private bool isFalling = false;
+    private bool isDying = false;
 
     void Awake()
     {
@@ -228,7 +233,7 @@ public class PlayerController : MonoBehaviour
                 Debug.Log($"God Mode Active status: {isGodMode}");
             }
 
-            if (!isMoving)
+            if (!isMoving && !isDying)
             {
                 if (kb.spaceKey.wasPressedThisFrame)
                 {
@@ -251,7 +256,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (!isMoving)
+        if (!isMoving && !isDying)
             CheckForVoid();
 
         UpdateMovementPosition();
@@ -372,6 +377,13 @@ public class PlayerController : MonoBehaviour
         isMoving = true;
         isStepMoving = false;
         movementVisualYOffset = 0f;
+
+        if (health <= 1 && !isGodMode)
+        {
+            TakeDamage(true);
+            yield break;
+        }
+
         float fallTimer = 0f;
         while (fallTimer < 1.0f)
         {
@@ -388,6 +400,9 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(bool isFall = false, Vector3? damageSourcePosition = null)
     {
+        if (isDying)
+            return;
+
         if (damageSourcePosition.HasValue)
         {
             Vector3 damageDirection = damageSourcePosition.Value - transform.position;
@@ -401,28 +416,15 @@ public class PlayerController : MonoBehaviour
 
         ChangeHealth(-1);
 
-        if (!isFall)
-            TriggerHitAnimation();
-
         if (health <= 0)
         {
-            isMoving = false;
-            isStepMoving = false;
-            isFalling = false;
-
-            ChangeHealth(3);
-            AddCoin(-coins);
-
-            if (NavigationManager.Instance != null)
-            {
-                NavigationManager.Instance.ReturnToMainMenu();
-            }
-            else
-            {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
-            }
+            isDying = true;
+            StartCoroutine(HandlePlayerDeath());
             return;
         }
+
+        if (!isFall)
+            TriggerHitAnimation();
 
         if (isFall)
         {
@@ -441,6 +443,52 @@ public class PlayerController : MonoBehaviour
                 UnityEngine.SceneManagement.SceneManager.LoadScene(currentSceneIndex);
             }
         }
+    }
+
+    IEnumerator HandlePlayerDeath()
+    {
+        isDying = true;
+        isMoving = false;
+        isStepMoving = false;
+        isFalling = false;
+
+        TriggerDieAnimation();
+
+        yield return null;
+
+        float dieDuration = dieFallbackDuration;
+        if (animator != null)
+        {
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Die") && state.length > 0f)
+            {
+                float speed = animator.speed;
+                if (state.speed > 0f)
+                    speed *= state.speed;
+                dieDuration = state.length / Mathf.Max(speed, 0.01f);
+            }
+        }
+
+        yield return new WaitForSeconds(dieDuration);
+
+        AddCoin(-coins);
+
+        if (NavigationManager.Instance != null)
+        {
+            NavigationManager.Instance.ReturnToMainMenu();
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        }
+    }
+
+    void TriggerDieAnimation()
+    {
+        if (animator == null || string.IsNullOrWhiteSpace(dieTrigger))
+            return;
+
+        animator.SetTrigger(dieTrigger);
     }
 
     void TriggerHitAnimation()
@@ -591,10 +639,19 @@ public class PlayerController : MonoBehaviour
         isMoving = false;
         isStepMoving = false;
         isFalling = false;
+        isDying = false;
         movementVisualYOffset = 0f;
         currentMoveMultiplier = 1.0f;
         transform.localScale = Vector3.one;
         BaseEnemy.OccupiedTiles.Add(new Vector2(targetPosition.x, targetPosition.z));
+
+        if (animator != null)
+        {
+            if (!string.IsNullOrWhiteSpace(hitTrigger))
+                animator.ResetTrigger(hitTrigger);
+            if (!string.IsNullOrWhiteSpace(dieTrigger))
+                animator.ResetTrigger(dieTrigger);
+        }
 
         Renderer renderer = GetMainVisualRenderer();
         if (renderer != null)

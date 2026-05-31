@@ -46,7 +46,6 @@ public class BossEnemy : EnemyFollower
     private List<Vector2> currentOccupiedKeys = new List<Vector2>();
     private List<Vector2> targetOccupiedKeys = new List<Vector2>();
 
-    private bool isAttacking = false;
     private Vector3 moveStartPosition;
     private float moveTimer;
 
@@ -76,7 +75,8 @@ public class BossEnemy : EnemyFollower
 
     protected override void PerformAttack(Vector3 dir)
     {
-        if (isDying) return;
+        if (isDying || IsPlayerDying())
+            return;
 
         transform.forward = dir;
         isMoving = false;
@@ -85,9 +85,6 @@ public class BossEnemy : EnemyFollower
 
         if (AudioManager.Instance != null && attackSFX != null)
             AudioManager.Instance.PlaySFX(attackSFX, transform.position, sfxVolume);
-
-        if (player.TryGetComponent<PlayerController>(out var pc))
-            pc.TakeDamage(false, transform.position);
 
         StartCoroutine(ExecuteFireBreathSequence());
 
@@ -112,6 +109,12 @@ public class BossEnemy : EnemyFollower
         if (remainingTime > 0f)
         {
             yield return new WaitForSeconds(remainingTime);
+        }
+
+        if (!isDying && player != null &&
+            player.TryGetComponent<PlayerController>(out var pc) && !pc.IsDying)
+        {
+            pc.TakeDamage(false, transform.position);
         }
 
         isAttacking = false; 
@@ -153,6 +156,9 @@ public class BossEnemy : EnemyFollower
 
         if (targetOccupiedKeys.Contains(playerKey))
         {
+            if (IsPlayerDying())
+                return false;
+
             PerformAttack(direction);
             return true;
         }
